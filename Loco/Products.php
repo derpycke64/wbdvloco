@@ -369,6 +369,5 @@ if(!isset($_SESSION['username'])){
         startAutoplay();
         renderTabCatalog('sellers');
     </script>
-    </script>
 </body>
 </html> 
