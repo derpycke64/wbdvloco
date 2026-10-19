@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
+    unset($_SESSION['cart']);
+    $_SESSION['loco_game_catalog_version'] = 'original-games-v2';
+}
 
 if(!isset($_SESSION['username'])){
     header("Location: Login.php");
@@ -46,19 +50,18 @@ if(!isset($_SESSION['username'])){
             </div>
 
             <div class="loco-promo-row">
-                <a href="javascript:void(0);" onclick="handleAddToCart(event, 'NieR Replicant', '2,990.00', 'images/nierreplicant.webp')" class="loco-promo-card">
-                    <img src="images/nierreplicant.webp" class="loco-promo-img" alt="Promo 1">
+                <a href="javascript:void(0);" onclick="handleAddToCart(event, 'Nebula Drift', '2490.00', 'images/gameplay_01.jpg')" class="loco-promo-card">
+                    <img src="images/gameplay_01.jpg" class="loco-promo-img" alt="Nebula Drift original cover art">
                     <div class="loco-promo-overlay">
-                        <span class="loco-promo-title">NieR Replicant™ ver.1.22474487139...</span>
-                        <span class="loco-promo-price">P2,990.00</span>
+                        <span class="loco-promo-title">Nebula Drift</span>
+                        <span class="loco-promo-price">₱2,490.00</span>
                     </div>
                 </a>
-
-                <a href="javascript:void(0);" onclick="handleAddToCart(event, 'Saints Row IV: Re-Elected', '794.30', 'images/SaintsRowIV.jpg')" class="loco-promo-card">
-                    <img src="images/SaintsRowIV.jpg" class="loco-promo-img" alt="Promo 2">
+                <a href="javascript:void(0);" onclick="handleAddToCart(event, 'Crimson Freight', '899.00', 'images/gameplay_02.jpg')" class="loco-promo-card">
+                    <img src="images/gameplay_02.jpg" class="loco-promo-img" alt="Crimson Freight original cover art">
                     <div class="loco-promo-overlay">
-                        <span class="loco-promo-title">Saints Row IV: Re-Elected</span>
-                        <span class="loco-promo-price">P794.30</span>
+                        <span class="loco-promo-title">Crimson Freight</span>
+                        <span class="loco-promo-price">₱899.00</span>
                     </div>
                 </a>
             </div>
@@ -74,26 +77,25 @@ if(!isset($_SESSION['username'])){
             
             <div class="game-grid">
                 <div class="game-card">
-                    <img src="images/Buckshot_Roulette_Cover.jpg" class="game-thumb" alt="Game 1">
+                    <img src="images/gameplay_01.jpg" class="game-thumb" alt="Nebula Drift original cover art">
                     <div class="game-details">
-                        <h4 class="game-title">Buckshot Roulette</h4>
-                        <p class="game-desc">Play Russian roulette with a 12-gauge shotgun. Four enter. One leaves. Roll the dice with your life. Good luck!</p>
+                        <h4 class="game-title">Nebula Drift</h4>
+                        <p class="game-desc">Chart a course across luminous alien oceans and distant moons in an atmospheric cosmic exploration adventure.</p>
                     </div>
                     <div class="game-purchase-bar">
-                        <span class="game-price">₱109.95</span>
-                        <a href="javascript:void(0);" onclick="handleAddToCart(event, 'Buckshot Roulette', '109.95', 'images/Buckshot_Roulette_Cover.jpg')" class="game-buy-btn">BUY NOW</a>
-                    </div>  
+                        <span class="game-price">₱2,490.00</span>
+                        <a href="javascript:void(0);" onclick="handleAddToCart(event, 'Nebula Drift', '2490.00', 'images/gameplay_01.jpg')" class="game-buy-btn">BUY NOW</a>
+                    </div>
                 </div>
-
                 <div class="game-card">
-                    <img src="images/deltarune.jpg" class="game-thumb" alt="Game 2">
+                    <img src="images/gameplay_06.jpg" class="game-thumb" alt="Neon Velocity original cover art">
                     <div class="game-details">
-                        <h4 class="game-title">Deltarune</h4>
-                        <p class="game-desc">Dive into the parallel story to UNDERTALE! Fight or spare your way through action-packed battles as you explore a mysterious world alongside an endearing cast of new and familiar characters.</p>
+                        <h4 class="game-title">Neon Velocity</h4>
+                        <p class="game-desc">Tear through a rain-lit megacity in a high-speed future where every turn can make you a legend.</p>
                     </div>
                     <div class="game-purchase-bar">
-                        <span class="game-price">₱765.00</span>
-                        <a href="javascript:void(0);" onclick="handleAddToCart(event, 'Deltarune', '765.00', 'images/deltarune.jpg')" class="game-buy-btn">BUY NOW</a>
+                        <span class="game-price">₱1,399.00</span>
+                        <a href="javascript:void(0);" onclick="handleAddToCart(event, 'Neon Velocity', '1399.00', 'images/gameplay_06.jpg')" class="game-buy-btn">BUY NOW</a>
                     </div>
                 </div>
             </div>
@@ -104,6 +106,7 @@ if(!isset($_SESSION['username'])){
                     <button class="loco-tab-nav" onclick="switchCatalogTab('rated')">Top Rated</button>
                     <button class="loco-tab-nav" onclick="switchCatalogTab('releases')">New Releases</button>
                 </div>
+                <p id="genre-filter-status" class="loco-filter-status" aria-live="polite"></p>
                 <div class="loco-tab-content-grid" id="catalog-tab-grid"></div>
             </div>
 
@@ -115,28 +118,28 @@ if(!isset($_SESSION['username'])){
             <div class="sidebar-panel">
                 <h3 class="loco-label-retro">Find More...</h3>
                 <div class="sidebar-content-box">
-                    <a href="#" class="sidebar-link">» Action Games</a>
-                    <a href="#" class="sidebar-link">» Strategy Hub</a>
-                    <a href="#" class="sidebar-link">» Indie / RPG</a>
-                    <a href="#" class="sidebar-link">» Casual Pipeline</a>
+                    <a href="Products.php?genre=action#catalog-tab-grid" class="sidebar-link">» Action Games</a>
+                    <a href="Products.php?genre=strategy#catalog-tab-grid" class="sidebar-link">» Strategy Hub</a>
+                    <a href="Products.php?genre=indie-rpg#catalog-tab-grid" class="sidebar-link">» Indie / RPG</a>
+                    <a href="Products.php?genre=casual#catalog-tab-grid" class="sidebar-link">» Casual Games</a>
                 </div>
             </div>
 
             <div class="sidebar-panel">
                 <h3 class="loco-label-retro">Publisher Catalog</h3>
                 <div class="sidebar-content-box">
-                    <a href="#" class="sidebar-link">» Stoker Studios Inc.</a>
-                    <a href="#" class="sidebar-link">» Wally Stark studios</a>
-                    <a href="#" class="sidebar-link">» Partner API Portals</a>
+                    <a href="Products.php?publisher=stoker#catalog-tab-grid" class="sidebar-link">» Stoker Studios Inc.</a>
+                    <a href="Products.php?publisher=wally-stark#catalog-tab-grid" class="sidebar-link">» Wally Stark Studios</a>
+                    <a href="Products.php?publisher=partner#catalog-tab-grid" class="sidebar-link">» Partner Studios</a>
                 </div>
             </div>
 
             <div class="sidebar-panel">
                 <h3 class="loco-label-retro">Browse Tags</h3>
                 <div class="sidebar-content-box">
-                    <a href="#" class="sidebar-link">» Co-op Multiplayer</a>
-                    <a href="#" class="sidebar-link">» Cyberpunk Neon</a>
-                    <a href="#" class="sidebar-link">» Retro Software Engine</a>
+                    <a href="Products.php?tag=coop#catalog-tab-grid" class="sidebar-link">» Co-op Multiplayer</a>
+                    <a href="Products.php?tag=cyberpunk#catalog-tab-grid" class="sidebar-link">» Cyberpunk Neon</a>
+                    <a href="Products.php?tag=retro#catalog-tab-grid" class="sidebar-link">» Retro Software Engine</a>
                 </div>
             </div>
         </div> 
@@ -234,26 +237,10 @@ if(!isset($_SESSION['username'])){
         }
 
         const slideData = [
-            {
-                title: "Counter-Strike 2",
-                price: "Free",
-                img: "images/cs2.jpg"
-            },
-            {
-                title: "Metal Gear Rising: Revengeance",
-                price: "P569.00",
-                img: "images/mgrr.jpg"
-            },
-            {
-                title: "Metal Gear Solid 4: Guns Of The Patriots",
-                price: "P2,300.00",
-                img: "images/mgs4.avif"
-            },
-            {
-                title: "Witcher 3: Wild Hunt - Songs of the Past",
-                price: "P2,099.00",
-                img: "images/witcher3.jpeg"
-            }
+            { title: "Nebula Drift", price: "₱2,490.00", img: "images/gameplay_01.jpg" },
+            { title: "Crimson Freight", price: "₱899.00", img: "images/gameplay_02.jpg" },
+            { title: "Ashen Crown", price: "₱1,299.00", img: "images/gameplay_08.jpg" },
+            { title: "Starfall Cartographer", price: "₱899.00", img: "images/gameplay_12.jpg" }
         ];
 
         let activeIndex = 0;
@@ -311,30 +298,108 @@ if(!isset($_SESSION['username'])){
 
         const tabbedCatalogData = {
             sellers: [
-                { title: "NieR Automata", price: "P2,990.00", img: "images/Nier_Automata_cover_art.jpg" },
-                { title: "Yakuza 0", price: "P1,990.00", img: "images/yakuza0.jpg" },
-                { title: "Half-Life Alyx", price: "P1,070.00", img: "images/Half-life_Alyx_Cover_Art.jpg" },
-                { title: "Apex Legends", price: "Free", img: "images/apex.jpg" }
+                { title: "Nebula Drift", price: "₱2,490.00", img: "images/gameplay_01.jpg" },
+                { title: "Crimson Freight", price: "₱899.00", img: "images/gameplay_02.jpg" },
+                { title: "Moonroot Hollow", price: "₱699.00", img: "images/gameplay_03.jpg" },
+                { title: "Abyss Protocol", price: "₱1,299.00", img: "images/gameplay_04.jpg" },
+                { title: "Stormbanner Tactics", price: "₱1,150.00", img: "images/gameplay_05.jpg" },
+                { title: "Neon Velocity", price: "₱1,399.00", img: "images/gameplay_06.jpg" }
             ],
             rated: [
-                { title: "DOTA 2", price: "Free", img: "images/dota2.jpg" },
-                { title: "Left 4 Dead", price: "P335.00", img: "images/left4dead.webp" },
-                { title: "Left 4 Dead 2", price: "P335.00", img: "images/Left4dead2cover.webp" },
-                { title: "Half-Life 2", price: "P335.00", img: "images/halflife2.jpg" }
+                { title: "Clockwork Reverie", price: "₱599.00", img: "images/gameplay_07.jpg" },
+                { title: "Ashen Crown", price: "₱1,299.00", img: "images/gameplay_08.jpg" },
+                { title: "Skydrift Homestead", price: "₱799.00", img: "images/gameplay_09.jpg" },
+                { title: "The Last Bell", price: "₱499.00", img: "images/gameplay_10.jpg" },
+                { title: "Emberline Chronicles", price: "₱1,499.00", img: "images/gameplay_11.jpg" },
+                { title: "Starfall Cartographer", price: "₱899.00", img: "images/gameplay_12.jpg" }
             ],
             releases: [
-                { title: "Hades", price: "P765.00", img: "images/hades.jpg" },
-                { title: "Hollow Knight: Silksong", price: "P615.00", img: "images/silksong.jpg" },
-                { title: "Omori", price: "P449.95", img: "images/omori.jpg" },
-                { title: "Doki Doki Literature Club Plus", price: "P565.95", img: "images/Doki_Doki_Literature_Club_Cover.jpg" }
+                { title: "Riftbound Arena", price: "Free", img: "images/gameplay_13.jpg" },
+                { title: "Lanterns of Luma", price: "₱649.00", img: "images/gameplay_14.jpg" },
+                { title: "Iron Orchard", price: "₱1,099.00", img: "images/gameplay_15.jpg" },
+                { title: "Echoes Below", price: "₱999.00", img: "images/gameplay_16.jpg" },
+                { title: "Glass Harbor", price: "₱549.00", img: "images/gameplay_17.jpg" },
+                { title: "Wild Circuit", price: "₱1,199.00", img: "images/gameplay_18.jpg" }
             ]
+        };
+
+        const gameGenres = {
+            "Nebula Drift": ["action"],
+            "Crimson Freight": ["action", "strategy"],
+            "Moonroot Hollow": ["indie-rpg", "casual"],
+            "Abyss Protocol": ["action"],
+            "Stormbanner Tactics": ["strategy"],
+            "Neon Velocity": ["action"],
+            "Clockwork Reverie": ["casual"],
+            "Ashen Crown": ["action", "indie-rpg"],
+            "Skydrift Homestead": ["casual"],
+            "The Last Bell": ["indie-rpg", "casual"],
+            "Emberline Chronicles": ["indie-rpg"],
+            "Starfall Cartographer": ["strategy", "indie-rpg"],
+            "Riftbound Arena": ["action"],
+            "Lanterns of Luma": ["indie-rpg", "casual"],
+            "Iron Orchard": ["strategy"],
+            "Echoes Below": ["action"],
+            "Glass Harbor": ["indie-rpg", "casual"],
+            "Wild Circuit": ["action"]
+        };
+        const queryParams = new URLSearchParams(window.location.search);
+        const requestedGenre = queryParams.get('genre');
+        const requestedPublisher = queryParams.get('publisher');
+        const requestedTag = queryParams.get('tag');
+        const genreLabels = { action: 'Action Games', strategy: 'Strategy Games', 'indie-rpg': 'Indie / RPG', casual: 'Casual Games' };
+        const publisherLabels = { stoker: 'Stoker Studios Inc.', 'wally-stark': 'Wally Stark Studios', partner: 'Partner Studios' };
+        const tagLabels = { coop: 'Co-op Multiplayer', cyberpunk: 'Cyberpunk Neon', retro: 'Retro Software Engine' };
+        const gamePublishers = {
+            'Nebula Drift': 'stoker', 'Crimson Freight': 'wally-stark', 'Moonroot Hollow': 'partner',
+            'Abyss Protocol': 'stoker', 'Stormbanner Tactics': 'wally-stark', 'Neon Velocity': 'partner',
+            'Clockwork Reverie': 'stoker', 'Ashen Crown': 'wally-stark', 'Skydrift Homestead': 'partner',
+            'The Last Bell': 'stoker', 'Emberline Chronicles': 'wally-stark', 'Starfall Cartographer': 'partner',
+            'Riftbound Arena': 'stoker', 'Lanterns of Luma': 'partner', 'Iron Orchard': 'wally-stark',
+            'Echoes Below': 'stoker', 'Glass Harbor': 'partner', 'Wild Circuit': 'wally-stark'
+        };
+        const gameTags = {
+            'Nebula Drift': ['coop'], 'Crimson Freight': ['coop', 'retro'], 'Moonroot Hollow': ['coop', 'retro'],
+            'Abyss Protocol': ['coop'], 'Stormbanner Tactics': ['retro'], 'Neon Velocity': ['cyberpunk'],
+            'Clockwork Reverie': ['retro'], 'Ashen Crown': ['coop', 'retro'], 'Skydrift Homestead': ['coop'],
+            'The Last Bell': ['retro'], 'Emberline Chronicles': ['coop'], 'Starfall Cartographer': ['retro'],
+            'Riftbound Arena': ['coop', 'cyberpunk'], 'Lanterns of Luma': ['retro'], 'Iron Orchard': ['retro'],
+            'Echoes Below': ['coop'], 'Glass Harbor': ['retro'], 'Wild Circuit': ['cyberpunk']
         };
 
         function renderTabCatalog(categoryKey) {
             const gridTarget = document.getElementById('catalog-tab-grid');
-            gridTarget.innerHTML = ''; 
+            const status = document.getElementById('genre-filter-status');
+            gridTarget.innerHTML = '';
 
-            const activeList = tabbedCatalogData[categoryKey];
+            let activeList = tabbedCatalogData[categoryKey] || [];
+            const uniqueGames = Object.values(tabbedCatalogData).flat()
+                .filter((item, index, all) => all.findIndex(other => other.title === item.title) === index);
+            const filterParts = [];
+            if (requestedGenre && genreLabels[requestedGenre]) {
+                activeList = uniqueGames.filter(item => (gameGenres[item.title] || []).includes(requestedGenre));
+                filterParts.push(genreLabels[requestedGenre]);
+            }
+            if (requestedPublisher && publisherLabels[requestedPublisher]) {
+                activeList = (requestedGenre && genreLabels[requestedGenre] ? activeList : uniqueGames)
+                    .filter(item => gamePublishers[item.title] === requestedPublisher);
+                filterParts.push(publisherLabels[requestedPublisher]);
+            }
+            if (requestedTag && tagLabels[requestedTag]) {
+                activeList = (filterParts.length ? activeList : uniqueGames)
+                    .filter(item => (gameTags[item.title] || []).includes(requestedTag));
+                filterParts.push(tagLabels[requestedTag]);
+            }
+            if (filterParts.length) {
+                status.innerHTML = 'Showing: <strong>' + filterParts.join(' · ') + '</strong> · <a href="Products.php#catalog-tab-grid">Clear filters</a>';
+            } else {
+                status.textContent = 'Choose a genre, publisher, or tag to filter the catalog.';
+            }
+
+            if (!activeList.length) {
+                gridTarget.innerHTML = '<p class="loco-empty-state">No games are listed in this genre yet.</p>';
+                return;
+            }
             activeList.forEach(item => {
                 const cellWrapper = document.createElement('a');
                 cellWrapper.className = 'loco-mini-game-card';
@@ -368,6 +433,10 @@ if(!isset($_SESSION['username'])){
         renderActiveSlide();
         startAutoplay();
         renderTabCatalog('sellers');
+        if ((requestedGenre && genreLabels[requestedGenre]) || (requestedPublisher && publisherLabels[requestedPublisher]) || (requestedTag && tagLabels[requestedTag])) {
+            document.querySelectorAll('.loco-tab-nav').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('catalog-tab-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     </script>
 </body>
 </html> 
