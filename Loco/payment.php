@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
+    header("Location: Login.php");
     exit();
 }
 
@@ -99,10 +99,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && !$is_cart_empty) {
                     LOCO
                 </a>
                 <nav class="loco-nav-links">
-                    <a href="products.php" class="loco-nav-link">STORE</a>
-                    <a href="community.php" class="loco-nav-link">COMMUNITY</a>
-                    <a href="about.php" class="loco-nav-link">ABOUT</a>
-                    <a href="support.php" class="loco-nav-link active">SUPPORT</a>
+                    <?php
+                    $current_page = basename($_SERVER['SCRIPT_NAME']);
+                    ?>
+                    
+                    <a href="products.php" class="loco-nav-link <?php echo ($current_page == 'products.php') ? 'active' : ''; ?>">STORE</a>
+                    <a href="community.php" class="loco-nav-link <?php echo ($current_page == 'community.php') ? 'active' : ''; ?>">COMMUNITY</a>
+                    <a href="about.php" class="loco-nav-link <?php echo ($current_page == 'about.php') ? 'active' : ''; ?>">ABOUT</a>
+                    <a href="support.php" class="loco-nav-link <?php echo ($current_page == 'support.php') ? 'active' : ''; ?>">SUPPORT</a>
                 </nav>
             </div>
             

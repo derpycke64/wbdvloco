@@ -1,21 +1,63 @@
 <?php
 session_start();
+require_once 'db.php';
+
 if(isset($_SESSION['username'])){
     header("Location: products.php");
     exit();
 }
 
 $message = "";
+
 if($_SERVER['REQUEST_METHOD'] == "POST"){
     $username = trim($_POST['username']);
-    if(!empty($username)){
-        header("Location: Login.php?registered=" . urlencode($username));
-        exit();
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+    $confirm_passwrd = $_POST['confirm_password'];
+    $birth_year  = $_POST['dob-year'] ?? null;
+    $birth_month = $_POST['dob-month'] ?? null;
+    $birth_day   = $_POST['dob-day'] ?? null;
+
+    if(empty($username) || empty($email) || empty($password) || empty($confirm_passwrd) || empty($birth_year) || empty($birth_month) || empty($birth_day)){
+        $message = "All fields are required.";
+    }
+    elseif($password !== $confirm_passwrd){
+        $message = "Your Passwords do not match.";
     }
     else{
-        $message = "Please enter a valid name.";
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $birthday = sprintf('%04d-%02d-%02d', $birth_year, $birth_month, $birth_day);
+        try{
+            $pdo -> beginTransaction();
+            $sql_user = "INSERT INTO users (username, email, password, birthday, wallet_balance) VALUES (:username, :email, :password, :birthday, 0.00)";
+            $statement_user = $pdo->prepare($sql_user);
+            $statement_user->execute([
+                ':username' => $username,
+                ':email' => $email,
+                ':password' => $hashed_password,
+                ':birthday' => $birthday
+            ]);
+
+            $new_user_id = $pdo ->lastinsertid();
+            $sql_profile = "INSERT INTO user_profiles (user_id, display_name, avatar_url) VALUES (:user_id, :display_name, 'images/default_avatar.png')";
+            $stmt_profile = $pdo-> prepare($sql_profile);
+            $stmt_profile->execute([
+                ':user_id'      => $new_user_id,
+                ':display_name' => $username
+            ]);
+            $pdo -> commit();
+            header("Location: Login.php?registered=" . urlencode($username));
+            exit();
+        }catch(\PDOexception $e){
+            $pdo->rollBack();
+            if($e->getCode() == 23000){
+                $message = "Username or Email already exists.";
+            } else {
+                 $message = "Database Error: " . $e->getMessage(); 
+            }
+        }
     }
-}
+} 
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -48,7 +90,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
         <form method="POST" action="register.php">
             <div class="loco-group">
                 <label class="loco-label">CREATE A PROFILE USERNAME</label>
-                <input type="text" name="username" class="loco-input" placeholder="Your Full Name" required autocomplete="off">
+                <input type="text" name="username" class="loco-input" placeholder="Your Username" required autocomplete="off">
             </div>
 
             <div class="loco-group">

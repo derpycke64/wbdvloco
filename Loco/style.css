@@ -303,9 +303,13 @@ body.loco-store-body {
     transition: color 0.2s ease;
 }
 
-.loco-nav-link:hover,
-.loco-nav-link.active {
+.loco-nav-link:hover {
     color: #ffffff;
+}
+
+.loco-nav-link.active {
+    color: #ff0000;
+    border-bottom: 1px solid #e60000;
 }
 
 
