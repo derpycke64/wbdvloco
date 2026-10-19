@@ -1,0 +1,1262 @@
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: radial-gradient(circle, #9c0000 0%, #150000 100%); 
+    margin: 0;
+    padding: 0; 
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    min-height: 100vh; 
+    box-sizing: border-box;
+    justify-content: flex-start; 
+}
+
+.loco-header-outside {
+    width: 100%;
+    max-width: 460px;
+    text-align: left;
+    margin-top: 100px; 
+    margin-bottom: 20px;
+}
+
+.loco-forgot-container {
+    width: 100%;
+    text-align: right;
+    margin-top: -15px; 
+    margin-bottom: 25px;
+}
+
+
+.loco-forgot-link {
+    color: #b0b3b8; 
+    font-size: 0.85rem;
+    text-decoration: none; 
+    transition: color 0.2s ease;
+}
+
+.loco-forgot-link:hover {
+    color: #e60000; 
+    text-decoration: underline; 
+}
+.loco-redirect-canvas {
+    width: 100%;
+    max-width: 950px; 
+    margin: 40px auto 20px auto;
+    box-sizing: border-box;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);   
+    border-left: 1px solid rgba(255, 255, 255, 0.04);   
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    background: linear-gradient(to bottom, rgba(20, 22, 26, 0.4) 0%, rgba(12, 13, 16, 0.5) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 15px rgba(0, 0, 0, 0.3);
+    border-radius: 4px; 
+    padding: 30px 40px; 
+}
+
+
+.loco-redirect-split-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 60px; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.loco-redirect-action-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-width: 180px;
+}
+
+.loco-redirect-action-box h2 {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+
+.loco-brand-gloss-btn {
+    background: linear-gradient(to bottom, #ff3333 0%, #b30000 100%);
+    border: 1px solid #9c0000;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 8px 18px;
+    border-radius: 4px; 
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 4px rgba(0,0,0,0.4);
+    white-space: nowrap;
+    display: inline-block;
+    transition: all 0.2s ease;
+}
+
+.loco-brand-gloss-btn:hover {
+    background: linear-gradient(to bottom, #ff5555 0%, #d30000 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 12px rgba(230, 0, 0, 0.6);
+}
+
+
+.loco-redirect-desc-box {
+    max-width: 280px;
+    text-align: left;
+}
+
+.loco-redirect-desc-box p {
+    color: #b0b3b8; 
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+
+.loco-redirect-desc-box a {
+    color: #ffffff;
+    text-decoration: underline;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.loco-redirect-desc-box a:hover {
+    color: #e60000; 
+}
+.loco-panel { 
+    background-color: #171a21;          
+    border: 2px solid #e60000;          
+    padding: 40px; 
+    width: 100%; 
+    max-width: 460px; 
+    border-radius: 4px;                 
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 
+                0 25px 50px rgba(0, 0, 0, 0.7);
+    margin-bottom: 30px; 
+    box-sizing: border-box;
+    position: relative;
+}
+
+.loco-panel form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+body.loco-store-body {
+    background: radial-gradient(circle, #9c0000 0%, #150000 100%) !important;
+    padding-top: 80px;
+    display: block;
+}
+
+
+
+
+.loco-logo-text {
+    color: white; 
+    font-size: 2.2rem;
+    margin: 0;
+    letter-spacing: 2px;
+    font-weight: 800;
+    padding-bottom: 40px;
+}
+
+.loco-group {
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+.loco-label {
+    display: block;
+    color: #e60000; 
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.loco-label-password {
+    display: block;
+    color: #b0b3b8; 
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.loco-input { 
+    width: 100%; 
+    padding: 14px; 
+    border: 1px solid #333;
+    border-radius: 4px; 
+    box-sizing: border-box; 
+    font-size: 1rem; 
+    background-color: #111215; 
+    color: #ffffff; 
+    transition: all 0.2s ease;
+}
+
+.loco-input:focus {
+    border-color: #e60000;
+    outline: none;
+    box-shadow: 0 0 8px rgba(230, 0, 0, 0.4);
+}
+
+.loco-button { 
+    background-color: #e60000; 
+    color: white; 
+    border: none; 
+    padding: 14px 40px; 
+    border-radius: 4px; 
+    font-size: 0.95rem; 
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer; 
+    display: block;
+    width: 100%;
+    transition: background-color 0.2s;
+    margin-top: 10px;
+}
+
+.loco-button:hover { 
+    background-color: #b30000; 
+}
+
+.loco-alert-success { 
+    color: #4caf50; 
+    font-weight: bold; 
+    font-size: 0.9rem; 
+    margin-top: 15px; 
+    text-align: left;
+}
+
+.loco-alert-danger { 
+    color: #e60000; 
+    font-weight: bold; 
+    font-size: 0.9rem; 
+    margin-bottom: 15px; 
+    text-align: left;
+}
+
+
+.loco-global-nav {
+    width: 100%;
+    background-color: #171a21;
+    padding: 12px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.loco-nav-inner {
+    max-width: 950px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; 
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.loco-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 40px; 
+}
+
+.loco-nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px; 
+    color: #e60000;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-decoration: none;
+    letter-spacing: 2px;
+}
+
+.loco-logo-img {
+    height: 50px;   
+    width: 50px;    
+    object-fit: contain;
+    display: inline-block;
+}
+
+.loco-nav-links {
+    display: flex;
+    gap: 25px;
+}
+
+.loco-nav-link {
+    color: #b8b6b4;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: color 0.2s ease;
+}
+
+.loco-nav-link:hover,
+.loco-nav-link.active {
+    color: #ffffff;
+}
+
+
+.loco-profile-badge {
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background-color: #24272c;
+    padding: 8px 16px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.loco-logout-link {
+    color: #e60000;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.8rem;
+    border-left: 1px solid #444;
+    padding-left: 12px;
+    transition: color 0.2s ease;
+}
+
+.loco-logout-link:hover {
+    color: #ff3333;
+    text-decoration: underline;
+}
+
+
+.loco-dob-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+    box-sizing: border-box;
+}
+
+.loco-dob-select {
+    flex: 1;
+    padding: 14px; 
+    border: 1px solid #333;
+    border-radius: 4px; 
+    box-sizing: border-box; 
+    font-size: 1rem; 
+    background-color: #111215; 
+    color: #ffffff; 
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.loco-dob-select:focus, .loco-dob-select:hover {
+    border-color: #e60000;
+    outline: none;
+    box-shadow: 0 0 8px rgba(230, 0, 0, 0.4);
+}
+
+.loco-dob-select option {
+    background-color: #111215;
+    color: #ffffff;
+}
+
+
+.store-wrapper {
+    max-width: 950px;
+    margin: 30px auto 100px auto;
+    background-color: #1a1c20; 
+    border: 2px solid #e60000;  
+    padding: 20px;             
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    box-sizing: border-box;
+    display: flex;             
+    gap: 20px;                 
+    align-items: flex-start;   
+}
+
+.loco-store-main-col {
+    flex: 7;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box;
+}
+
+.loco-store-sidebar-col {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 250px;
+    box-sizing: border-box;
+}
+
+.loco-promo-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 5px; 
+}
+
+.loco-install-banner {
+    background-color: #111215; 
+    border: 1px solid #333;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+
+.loco-install-btn {
+    background: linear-gradient(#ff3333, #b30000);
+    border: 1px solid #e60000;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 24px;
+    font-size: 0.8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+}
+
+.loco-install-btn:hover {
+    background: linear-gradient(#ff5555, #d30000);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 10px rgba(230, 0, 0, 0.4);
+}
+
+
+.loco-install-text {
+    color: #b0b3b8;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    text-align: left;
+    margin: 0;
+}
+
+.loco-promo-card {
+    flex: 1; 
+    background-color: #111215;
+    border: 1px solid #333;
+    overflow: hidden;
+    position: relative;
+    height: 95px; 
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.loco-promo-card:hover {
+    border-color: #e60000;
+}
+
+
+.loco-promo-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.loco-promo-card:hover .loco-promo-img {
+    opacity: 1.0;
+}
+
+
+.loco-promo-overlay {
+    position: relative;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 4px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: 2;
+}
+
+.loco-promo-title {
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+.loco-promo-price {
+    color: #4caf50;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.store-hero {
+    border: 2px solid #e60000; 
+    border-bottom: none;       
+    border-radius: 0px;
+    height: 240px;
+    width: 100%;
+    box-sizing: border-box;
+    background-size: cover;            
+    background-position: center;       
+    background-repeat: no-repeat;      
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: relative;
+    background-color: #111215;         
+    pointer-events: auto !important; 
+    z-index: 5;
+}
+
+.store-hero h2 { 
+    color: #ffffff; 
+    margin: 0 0 5px 0; 
+    font-size: 1.5rem; 
+    font-weight: bold;
+    text-shadow: 2px 2px 0px #000;
+}
+
+.store-hero p { 
+    color: #b0b3b8; 
+    margin: 0; 
+    font-size: 0.85rem;
+}
+
+
+.carousel-control-bar {
+    width: 100%;
+    background-color: #111215; 
+    border-left: 2px solid #e60000;
+    border-right: 2px solid #e60000;
+    border-bottom: 2px solid #e60000;
+    border-top: 1px solid #333333;   
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    margin-bottom: 25px;
+}
+
+
+.carousel-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+
+.carousel-tab-item {
+    width: 14px;
+    height: 10px;
+    background-color: #2a2d32;
+    border: 1px solid #444;
+    cursor: pointer;
+    border-radius: 1px;
+}
+
+
+.carousel-tab-item.active {
+    background-color: #b0b3b8; 
+    border-color: #ffffff;
+}
+
+
+.carousel-status-text {
+    color: #b0b3b8;
+    font-size: 0.8rem;
+    font-weight: bold;
+    flex: 1;
+    text-align: left;
+    padding-left: 15px;
+}
+
+
+.carousel-price-tag {
+    color: #4caf50; 
+    font-weight: bold;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+
+h3.loco-label-thingy {
+    background-color: #e60000; 
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 6px 10px;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid #111215;
+    text-align: left;
+}
+
+.game-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+
+.game-card {
+    background-color: #111215;
+    border: 1px solid #333;
+    border-radius: 0px;
+    display: flex;          
+    overflow: hidden;
+    height: 100px;         
+}
+
+.game-card:hover {
+    border-color: #e60000;
+    background-color: #17191d;
+}
+
+.game-thumb {
+    width: 180px;
+    height: 100%;
+    object-fit: cover;
+    border-right: 1px solid #333;
+}
+
+.game-details {
+    padding: 12px;
+    text-align: left;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.game-title { color: #ffffff; margin: 0 0 4px 0; font-size: 1.05rem; font-weight: bold; }
+.game-desc { color: #b0b3b8; font-size: 0.8rem; margin: 0; line-height: 1.3; }
+
+
+.game-purchase-bar {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    background-color: #1a1c20;
+    padding: 0 20px;
+    border-left: 1px solid #333;
+    min-width: 110px;
+    gap: 6px;
+}
+
+.game-price { color: #4caf50; font-weight: bold; font-size: 0.95rem; }
+
+.game-buy-btn {
+    background: linear-gradient(#e60000, #b30000);
+    border: 1px solid #9c0000;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 2px;
+}
+
+.loco-tabbed-section {
+    background-color: #111215;
+    border: 1px solid #333;
+    padding: 12px;
+    margin-top: 15px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.loco-tabs-header {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+}
+
+.loco-tab-nav {
+    background-color: #22252a;
+    color: #b8b6b4;
+    border: 1px solid #333;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border-radius: 2px 2px 0 0;
+}
+
+.loco-tab-nav:hover {
+    color: #ffffff;
+    background-color: #2e3238;
+}
+
+.loco-tab-nav.active {
+    background-color: #e60000; 
+    color: #ffffff;
+    border-color: #e60000;
+}
+
+.loco-tab-content-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+}
+
+.loco-mini-game-card {
+    background-color: #1a1c20;
+    border: 1px solid #2d3035;
+    display: flex;
+    align-items: center;
+    padding: 6px;
+    height: 54px; 
+    box-sizing: border-box;
+}
+
+.loco-mini-game-card:hover {
+    border-color: #e60000;
+}
+
+.loco-mini-thumb {
+    width: 70px;
+    height: 100%;
+    object-fit: cover;
+    background-color: #0b0c0e;
+    margin-right: 10px;
+    border: 1px solid #222;
+}
+
+.loco-mini-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    overflow: hidden;
+}
+
+.loco-mini-title {
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin: 0 0 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.loco-mini-price {
+    color: #4caf50; 
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin: 0;
+}
+.sidebar-panel {
+    background-color: #111215;
+    border: 1px solid #333;
+    box-sizing: border-box;
+    margin-bottom: 15px; 
+}
+
+.sidebar-panel h3.loco-label-retro {
+    background-color: #e60000; 
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 6px 10px;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #333;
+    text-align: left;
+}
+
+.sidebar-content-box {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+}
+
+.sidebar-link {
+    color: #b0b3b8;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.sidebar-link:hover {
+    color: #e60000; 
+    text-decoration: underline;
+}
+.loco-cart-item-box {
+    background-color: #111215;
+    border: 1px solid #333;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.loco-cart-item-details {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.loco-cart-thumb {
+    width: 120px;
+    height: 55px;
+    object-fit: cover;
+    background-color: #1a1c20;
+    border: 1px solid #222;
+}
+
+.loco-cart-text-meta {
+    text-align: left;
+}
+
+.loco-cart-text-meta h4 {
+    color: #ffffff;
+    margin: 0 0 4px 0;
+    font-size: 1.05rem;
+    font-weight: bold;
+}
+
+.loco-cart-device-tag {
+    color: #7a7e85;
+    font-size: 0.75rem;
+    background-color: #1a1c20;
+    padding: 2px 6px;
+    border-radius: 2px;
+}
+
+.loco-cart-price-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.loco-cart-item-cost {
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.loco-cart-remove-link {
+    color: #666e7a;
+    font-size: 0.75rem;
+    text-decoration: underline;
+}
+
+.loco-cart-remove-link:hover {
+    color: #e60000;
+}
+
+
+.loco-cart-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.loco-cart-secondary-btn {
+    background-color: #22252a;
+    border: 1px solid #333;
+    color: #b0b3b8;
+    text-decoration: none;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 2px;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.loco-cart-secondary-btn:hover {
+    color: #ffffff;
+    background-color: #2e3238;
+    border-color: #444;
+}
+
+
+.loco-cart-rec-heading {
+    color: #ffffff !important;
+    font-size: 0.85rem !important;
+    font-weight: bold !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    margin: 35px 0 15px 0 !important;
+    text-align: left !important;
+    display: block !important;
+}
+
+
+.loco-cart-rec-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important; 
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.loco-cart-rec-grid .game-card {
+    background-color: #111215 !important;
+    border: 1px solid #333 !important;
+    border-radius: 0px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important; 
+    height: auto !important; 
+}
+
+.loco-cart-rec-grid .game-thumb {
+    width: 100% !important;
+    height: 110px !important; 
+    object-fit: cover !important;
+    display: block !important;
+}
+
+
+.loco-cart-rec-grid .loco-cart-rec-bar {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    background-color: #1a1c20 !important;
+    padding: 10px 14px !important; 
+    border-top: 1px solid #282a30 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+
+.loco-cart-rec-grid .loco-cart-rec-bar .game-price {
+    color: #4caf50 !important; 
+    font-weight: 700 !important; 
+    font-size: 0.9rem !important; 
+    letter-spacing: 0.5px !important;
+    text-align: left !important;
+    margin: 0 !important; 
+}
+.loco-receipt-card {
+    background-color: #171a21; 
+    border: 2px solid #e60000;  
+    border-radius: 4px;       
+    padding: 40px;
+    width: 100%;
+    max-width: 600px;          
+    margin: 80px auto;         
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 40px rgba(0, 0, 0, 0.6);
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.loco-receipt-card h2 {
+    color: #ffffff;
+    font-size: 1.6rem;
+    font-weight: bold;
+    margin: 0 0 15px 0;
+    letter-spacing: 0.5px;
+}
+
+.loco-receipt-card p {
+    color: #4caf50;
+    font-size: 0.95rem;
+    font-weight: bold;
+    line-height: 1.6;
+    margin: 0 0 30px 0;
+}
+.loco-market-row {
+    background-color: #111215;
+    border: 1px solid #2d3035;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.loco-market-item-details { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+}
+
+.loco-item-avatar { 
+    width: 40px; 
+    height: 40px; 
+    border: 1px solid #e60000; 
+    object-fit: cover; 
+    background-color: #222; 
+}
+
+
+.loco-workshop-grid { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+    margin-top: 15px; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.loco-workshop-card { 
+    background-color: #111215; 
+    border: 1px solid #333; 
+    padding: 10px; 
+    text-align: left; 
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.loco-workshop-thumb { 
+    width: 100%; 
+    height: 120px; 
+    object-fit: cover; 
+    border: 1px solid #222; 
+    margin-bottom: 8px; 
+    display: block;
+}
+.loco-footer-bar {
+    width: 100%;
+    background-color: #111215; 
+    padding: 60px 0; 
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 80px;
+    box-sizing: border-box;
+}
+
+.loco-sub-footer-inner {
+    max-width: 1100px; 
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    gap: 50px;
+    padding: 0 40px;
+    box-sizing: border-box;
+}
+
+.loco-footer-brand-col {
+    flex: 1;
+    max-width: 320px;
+    text-align: left;
+}
+
+.loco-footer-logos {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.loco-footer-logo-text {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+}
+
+.loco-footer-logo-sub {
+    border: 1px solid #7a7e85;
+    color: #7a7e85;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.loco-copyright-text {
+    color: #666e7a;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    margin: 0 0 20px 0;
+}
+
+.loco-social-row {
+    display: flex;
+    gap: 15px;
+}
+
+.loco-social-link {
+    color: #666e7a;
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: bold;
+    transition: color 0.2s ease;
+}
+
+.loco-social-link:hover {
+    color: #e60000;
+}
+
+.loco-footer-links-grid {
+    flex: 2;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.loco-links-col {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.loco-links-col h4 {
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    margin: 0 0 15px 0;
+    text-transform: uppercase;
+}
+
+.loco-links-col a {
+    color: #666e7a;
+    text-decoration: none;
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+    transition: color 0.2s ease;
+    font-weight: normal;
+}
+
+.loco-links-col a:hover {
+    color: #ffffff;
+}
+
+/* Symmetrical Mobile Media Adjustments */
+@media (max-width: 768px) {
+    .loco-sub-footer-inner {
+        flex-direction: column;
+        gap: 40px;
+    }
+    .loco-footer-links-grid {
+        flex-wrap: wrap;
+        gap: 30px 20px;
+    }
+    .loco-links-col {
+        min-width: 120px;
+    }
+}
+
+/* LOCO marketplace and catalog improvements */
+.loco-market-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    gap: 10px;
+    margin: 16px 0 8px;
+}
+.loco-market-search-wrap { min-width: 0; }
+.loco-market-tools .loco-input {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    margin: 0;
+}
+.loco-filter-status {
+    color: #aeb4bf;
+    font-size: 0.78rem;
+    margin: 8px 0 12px;
+}
+.loco-filter-status a { color: #ff7777; text-decoration: underline; }
+.loco-market-tag {
+    display: inline-block;
+    width: fit-content;
+    margin-top: 5px;
+    padding: 3px 7px;
+    border: 1px solid #393d46;
+    border-radius: 3px;
+    color: #b8bec8;
+    font-size: 0.68rem;
+    line-height: 1.3;
+}
+.loco-seller-rating { color: #e8c46a; font-weight: 700; }
+.loco-market-row[hidden] { display: none !important; }
+.loco-market-row { gap: 14px; }
+.loco-market-item-details { min-width: 0; }
+.loco-market-item-details > div { min-width: 0; }
+.loco-workshop-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 10px; }
+.loco-workshop-subscribe {
+    margin-top: 6px;
+    padding: 5px 9px;
+    border: 1px solid #27683b;
+    border-radius: 3px;
+    background: #14251a;
+    color: #70df91;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.loco-workshop-subscribe:hover,
+.loco-workshop-subscribe.is-subscribed {
+    background: #1d4930;
+    color: #fff;
+}
+.loco-empty-state { color: #aeb4bf; padding: 18px; grid-column: 1 / -1; }
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+@media (max-width: 640px) {
+    .loco-market-tools { grid-template-columns: 1fr; }
+}
+
+/* LOCO Community Hub additions — keeps the existing red/black visual theme. */
+.loco-community-wrap{max-width:1240px;width:calc(100% - 36px);margin:70px auto 55px;color:#fff}
+.loco-community-heading{display:flex;align-items:center;justify-content:space-between;gap:22px;margin-bottom:22px}
+.loco-community-heading .loco-logo-text{font-size:1.9rem;padding:0;margin:0 0 8px;letter-spacing:1px}
+.loco-community-heading p{color:#aeb4bf;margin:0;line-height:1.55;font-size:.9rem}
+.loco-eyebrow{font-size:.68rem!important;letter-spacing:2px;color:#ff6464!important;font-weight:800;margin:0 0 7px!important}
+.loco-community-user,.loco-profile-summary{display:flex;align-items:center;gap:12px;background:#171a21;border:1px solid #343740;padding:13px 16px;border-radius:5px;min-width:190px}
+.loco-community-user strong,.loco-profile-summary h3{display:block;color:#fff}.loco-community-user small{display:block;color:#969ca7;font-size:.72rem;margin-top:4px}
+.loco-avatar{width:43px;height:43px;display:grid;place-items:center;border-radius:50%;background:#2a1114;border:1px solid #8e2028;font-size:1.25rem;flex-shrink:0}.loco-avatar.small{width:30px;height:30px;font-size:.9rem}.loco-avatar.large{width:64px;height:64px;font-size:1.7rem}
+.loco-notice{padding:12px 15px;margin:0 0 15px;border:1px solid #333;border-radius:4px;font-size:.86rem}.loco-notice.success{background:#112519;border-color:#28653a;color:#8ae7a4}.loco-notice.error{background:#2a1114;border-color:#922b34;color:#ffaaaa}
+.loco-community-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px;padding:6px;background:#171a21;border:1px solid #30333b;border-radius:4px}.loco-community-tabs a{padding:10px 13px;color:#b9bec7;text-decoration:none;font-size:.79rem;font-weight:700;border-radius:3px}.loco-community-tabs a:hover,.loco-community-tabs a.active{background:#a90000;color:#fff}
+.loco-community-panel,.loco-workshop-keep{background:#171a21;border:1px solid #333740;border-radius:5px;padding:22px;margin-bottom:20px;box-shadow:0 10px 25px #0002}
+.loco-section-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}.loco-section-heading h2{font-size:1.3rem;margin:0 0 6px;color:#fff}.loco-section-heading p{font-size:.82rem;color:#aeb4bf;margin:0;line-height:1.5}
+.loco-market-tools{display:grid;grid-template-columns:minmax(200px,1fr) minmax(145px,.42fr) minmax(145px,.42fr);gap:10px;margin-bottom:8px}.loco-market-tools .loco-input{margin:0;min-width:0}.loco-filter-status{min-height:16px}
+.loco-listing-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.loco-listing-card{min-width:0;padding:16px;border:1px solid #343943;background:linear-gradient(150deg,#20232b,#14161b);border-radius:4px;display:flex;flex-direction:column;gap:10px}.loco-listing-card[hidden]{display:none!important}.loco-listing-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.loco-listing-card .loco-market-tag{margin:0}.loco-icon-button{border:1px solid #4c3137;background:#24161a;color:#ff777f;width:33px;height:30px;border-radius:3px;font-size:1.2rem;cursor:pointer}.loco-icon-button:hover{background:#571a20}.loco-listing-symbol{width:45px;height:45px;display:grid;place-items:center;background:#2a1014;border:1px solid #7e1d27;color:#ff666f;font-size:1.6rem;border-radius:4px}.loco-listing-card h3,.loco-inventory-card h3{font-size:.95rem;line-height:1.4;margin:0;color:#fff}.loco-listing-description{font-size:.79rem;color:#aeb4bf;line-height:1.5;margin:0;min-height:36px}.loco-listing-meta{display:flex;flex-wrap:wrap;gap:6px}.loco-listing-meta span{font-size:.68rem;padding:4px 7px;background:#111318;color:#c5c9d0;border:1px solid #353943;border-radius:3px}.loco-listing-seller{display:flex;align-items:center;gap:8px;margin-top:auto}.loco-listing-seller strong,.loco-listing-seller small{display:block}.loco-listing-seller strong{font-size:.76rem}.loco-listing-seller small{font-size:.68rem;color:#d6b866;margin-top:3px}.loco-listing-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #353943;padding-top:12px}.loco-listing-price{font-size:1rem;color:#64d98a}.loco-button-small{border:1px solid #a90000;background:linear-gradient(#ef3333,#a90000);color:#fff;padding:7px 10px;border-radius:3px;font-size:.73rem;font-weight:800;cursor:pointer}.loco-button-small:hover{filter:brightness(1.15)}.loco-small-link{font-size:.75rem;color:#ff8585;background:none;border:0;text-decoration:underline;cursor:pointer}.loco-report-details{border-top:1px solid #30343c;padding-top:8px;color:#9fa5af;font-size:.72rem}.loco-report-details summary,.loco-discussion-card details summary{cursor:pointer}.loco-report-form{display:flex;gap:6px;margin-top:8px}.loco-report-form input,.loco-reply-form input{min-width:0;flex:1;background:#0f1014;border:1px solid #3b3e46;color:#fff;padding:8px;border-radius:3px}.loco-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.loco-form-grid label,.loco-modal-card label{display:flex;flex-direction:column;gap:7px;color:#d9dce2;font-size:.77rem;font-weight:700}.loco-form-grid input,.loco-form-grid select,.loco-form-grid textarea,.loco-modal-card select{width:100%;box-sizing:border-box;background:#101116;color:#fff;border:1px solid #3c4049;border-radius:3px;padding:11px;font:inherit;font-weight:400}.loco-form-grid textarea{resize:vertical}.loco-form-grid input:focus,.loco-form-grid select:focus,.loco-form-grid textarea:focus{outline:1px solid #e60000;border-color:#e60000}.loco-full-width{grid-column:1/-1}.loco-form-actions{display:flex;align-items:center;gap:10px;grid-column:1/-1}.loco-secondary-btn{display:inline-block;padding:9px 14px;color:#ddd;border:1px solid #454954;text-decoration:none;border-radius:3px;font-size:.8rem}.loco-subheading{font-size:.95rem;margin:26px 0 12px;border-bottom:1px solid #363943;padding-bottom:9px}.loco-owned-listings{display:flex;flex-direction:column;gap:8px}.loco-owned-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:#111318;border:1px solid #30343c;border-radius:3px}.loco-owned-row strong,.loco-owned-row small{display:block}.loco-owned-row strong{font-size:.82rem;color:#fff}.loco-owned-row small{font-size:.72rem;color:#9da3ad;margin-top:5px}.loco-row-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.loco-row-actions form,.loco-inline-form{margin:0}.loco-danger-link{border:0;background:none;color:#ff7777;text-decoration:underline;cursor:pointer;font-size:.75rem}.loco-muted{color:#9da3ad;font-size:.83rem}.loco-trade-list,.loco-discussion-list{display:flex;flex-direction:column;gap:10px}.loco-trade-card{display:flex;justify-content:space-between;gap:16px;padding:15px;border:1px solid #343943;background:#111318;border-radius:4px}.loco-trade-card h3{font-size:.9rem;margin:9px 0 5px}.loco-trade-card p,.loco-trade-card small{font-size:.75rem;color:#aeb4bf;margin:0 0 5px}.loco-status-pill{display:inline-block;font-size:.67rem;font-weight:800;text-transform:uppercase;padding:4px 7px;border:1px solid #4b4e57;border-radius:3px;color:#d0d4db}.loco-status-pill.pending{color:#f2cf71;border-color:#79622d}.loco-status-pill.accepted{color:#7ce59b;border-color:#28653a}.loco-status-pill.rejected,.loco-status-pill.cancelled{color:#ff9292;border-color:#79353b}.loco-inventory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}.loco-inventory-card{background:#111318;border:1px solid #343943;padding:15px;border-radius:4px;display:flex;flex-direction:column;align-items:flex-start;gap:9px}.loco-inventory-card p{font-size:.75rem;color:#aeb4bf;margin:0}.loco-inventory-card form{margin-top:4px}.loco-discussion-card{background:#111318;border:1px solid #343943;border-radius:4px;padding:16px}.loco-discussion-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}.loco-discussion-meta small{font-size:.7rem;color:#9299a4}.loco-discussion-card h3{font-size:1rem;margin:12px 0 7px}.loco-discussion-card>p{font-size:.82rem;line-height:1.6;color:#c0c5ce;margin:0 0 12px;overflow-wrap:anywhere}.loco-discussion-card details{border-top:1px solid #30343c;padding-top:10px;color:#aeb4bf;font-size:.76rem}.loco-reply{margin:10px 0 10px 12px;padding-left:10px;border-left:2px solid #9c0000}.loco-reply p{color:#d0d3da;margin:5px 0}.loco-reply-form{display:flex;gap:8px;margin-top:12px}.loco-profile-summary{margin-bottom:18px}.loco-profile-summary h3{margin:0 0 5px}.loco-profile-summary p{margin:0;color:#aeb4bf;font-size:.78rem;line-height:1.5}.loco-session-note{background:#211a12;border:1px solid #6a4e24;color:#e5c98b;padding:10px 12px;border-radius:3px;font-size:.73rem;line-height:1.5;margin:14px 0}.loco-workshop-keep .loco-workshop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.loco-workshop-keep .loco-workshop-card{background:#111318;border:1px solid #343943;border-radius:4px;padding:12px;min-width:0}.loco-workshop-keep .loco-workshop-thumb{width:100%;height:115px;object-fit:cover;border-radius:3px}.loco-workshop-keep .loco-workshop-card h3{font-size:.8rem;line-height:1.4;color:#fff;margin:9px 0 4px}.loco-modal{display:none;position:fixed;inset:0;z-index:9999;background:#000b;padding:18px;align-items:center;justify-content:center}.loco-modal.is-open{display:flex}.loco-modal-card{position:relative;width:min(100%,460px);background:#171a21;border:1px solid #a90000;box-shadow:0 20px 70px #000b;padding:25px;border-radius:5px}.loco-modal-card h2{margin:0 0 12px;font-size:1.25rem}.loco-modal-card>p:not(.loco-eyebrow){color:#c2c6ce;font-size:.83rem;line-height:1.5}.loco-modal-card form{display:flex;flex-direction:column;gap:12px}.loco-modal-close{position:absolute;right:12px;top:8px;background:none;border:0;color:#fff;font-size:1.7rem;cursor:pointer}
+@media(max-width:800px){.loco-community-heading{align-items:flex-start;flex-direction:column}.loco-community-user{width:100%;box-sizing:border-box}.loco-listing-grid{grid-template-columns:1fr}.loco-market-tools{grid-template-columns:1fr}.loco-inventory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.loco-community-panel{padding:15px}}
+@media(max-width:520px){.loco-community-wrap{width:calc(100% - 20px);margin-top:45px}.loco-community-heading .loco-logo-text{font-size:1.5rem}.loco-community-tabs a{padding:9px;font-size:.72rem}.loco-form-grid{grid-template-columns:1fr}.loco-full-width,.loco-form-actions{grid-column:auto}.loco-section-heading{align-items:flex-start;flex-direction:column}.loco-owned-row,.loco-trade-card{align-items:flex-start;flex-direction:column}.loco-inventory-grid,.loco-workshop-keep .loco-workshop-grid{grid-template-columns:1fr}.loco-report-form{flex-direction:column}.loco-discussion-meta{align-items:flex-start;flex-direction:column}}
+
+.loco-market-item-image{display:block;width:100%;height:158px;object-fit:contain;background:linear-gradient(135deg,#10131c,#21121a);border:1px solid #343943;border-radius:4px;box-sizing:border-box;padding:4px}.loco-listing-card{gap:12px}.loco-listing-card h3{font-size:1rem}@media(max-width:800px){.loco-market-item-image{height:180px}}
