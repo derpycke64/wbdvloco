@@ -5,7 +5,6 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Quick interactive trace handling marketplace item interactions without SQL
 $trade_success = isset($_GET['action']) && $_GET['action'] === 'trade';
 ?>
 <!DOCTYPE html>
