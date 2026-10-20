@@ -270,7 +270,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
         </div>
     </section>
     <?php elseif ($tab === 'sell'): ?>
-    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2><?=$editListing?'Edit listing':'Create a listing'?></h2><p>Only listings created by your current session username can be edited or removed.</p></div></div>
+    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2><?=$editListing?'Edit listing':'Create a listing'?></h2><p>Only listings owned by your account can be edited or removed.</p></div></div>
         <form method="post" class="loco-form-grid"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="<?=$editListing?'edit_listing':'create_listing'?>"><?php if($editListing): ?><input type="hidden" name="listing_id" value="<?=$editListing['id']?>"><?php endif; ?>
             <label>Item title<input name="title" maxlength="90" required value="<?=h($editListing['title']??'')?>" placeholder="e.g. Crimson Blade Skin"></label>
             <label>Game<select name="game" required><option value="">Choose a game</option><?php foreach($gameOptions as $gameOption): ?><option value="<?=h($gameOption)?>" <?=($editListing['game']??'')===$gameOption?'selected':''?>><?=h($gameOption)?></option><?php endforeach; ?></select></label>
