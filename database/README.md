@@ -90,3 +90,12 @@ Administrators see a **Private moderator note** field and a separate **Response 
 ## Admin report queue vs. history
 
 `Loco/admin.php` separates **Active report queue** (open/reviewing) from **Report history** (resolved/dismissed). Closed reports are not deleted and remain visible to the reporter with their public response. Admins can expand a historical report, update its response, or reopen it. The moderation action is audited as before. This feature requires no new migration beyond `community_admin_response.sql`.
+
+## Classic LOCO Steam-style UI upgrade (development branch)
+
+1. Back up `loco_db`. Import `database/game_wishlist.sql` once into the existing database (safe to rerun). **Do not reimport the root `loco_db.sql`; it may reset tables.**
+2. Pull `development`. Refresh browser with Ctrl+Shift+R to bypass cached CSS.
+3. Shared header now uses Store / Library / Community dropdowns and a player account dropdown; wallet balance appears next to the avatar only when positive.
+4. `wishlist.php` has **Games** (default) and **Community Marketplace** tabs. Game favorites persist in `game_wishlists`, while marketplace saved listings remain in `marketplace_wishlists`.
+5. `payment.php` and `wallet.php` support simulated card, GCash and PayPal checkout displays. All GCash/PayPal actions are *local demonstrations*, not real integrations. The existing transaction history schema stores simulated provider purchases using `sandbox_card` for compatibility and records the chosen provider in `notes`.
+6. Confirm game checkout, wallet top-up, wishlist save/remove, and marketplace/community actions locally. No live payment credentials or real OTPs should ever be used.
