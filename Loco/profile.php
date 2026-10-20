@@ -68,12 +68,14 @@ try {
                 <img src="profile_avatar.php?id=<?=(int)$current_user_id?>" class="loco-avatar" alt="Avatar" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;">
                 <div>
                     <strong><?=h($currentUser)?></strong>
-                    <small>Wallet Balance: <span style="color: #72d57a; font-weight: bold;">₱<?=number_format((float)$user_profile['wallet_balance'], 2)?></span></small>
+                    <?php if((float)$user_profile['wallet_balance']>0): ?><small>Wallet Balance: <span style="color:#72d57a;font-weight:bold">₱<?=number_format((float)$user_profile['wallet_balance'],2)?></span></small><?php endif; ?>
                     <a href="transaction_history.php" style="display:inline-block;margin-top:8px;color:#d8d8d8;font-size:12px">View transaction history →</a>
                 </div>
             </div>
         </div>
 
+        <div class="loco-profile-classic-layout">
+          <div class="loco-profile-main">
         <!-- Biography Box using Panel Architecture styles -->
         <section class="loco-community-panel" style="margin-bottom: 30px;">
             <div class="loco-section-heading">
@@ -89,12 +91,7 @@ try {
             </div>
         </section>
 
-        <section class="loco-community-panel" style="margin-bottom:24px">
-            <div class="loco-section-heading"><div><h2>Favorite games</h2><p><?=h($user_profile['favorite_games'] ?: 'None selected yet.')?></p></div>
-                <a class="loco-button-small" href="community.php?tab=profile">Edit profile / photo</a>
-            </div>
-        </section>
-        <!-- Games Catalog Grid Section using standard game-grid structure -->
+         <!-- Games Catalog Grid Section using standard game-grid structure -->
         <section id="library" class="loco-community-panel">
             <div class="loco-section-heading">
                 <div>
@@ -117,13 +114,38 @@ try {
                                 <p class="game-desc" style="font-size: 11px; color: #888;">Acquired on <?=date('M d, Y', strtotime($game['purchase_date']))?></p>
                             </div>
                             <div class="game-purchase-bar">
-                                <a href="#" class="game-buy-btn" style="text-align: center; width: 100%;">READY TO PLAY</a>
+                                <span class="game-buy-btn" style="text-align:center;background:#343a42;border-color:#49535d;width:100%">IN LIBRARY</span>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </section>
+          </div>
+          <aside class="loco-profile-side">
+            <section class="loco-community-panel">
+              <div class="loco-section-heading"><h2>PLAYER DETAILS</h2></div>
+              <div class="loco-profile-side-avatar"><img src="profile_avatar.php?id=<?=(int)$current_user_id?>" alt="Player avatar"></div>
+              <strong style="display:block;color:#fff;margin-top:10px"><?=h($user_profile['display_name']?:$currentUser)?></strong>
+              <small style="color:#c1bec4">@<?=h($currentUser)?></small>
+              <div class="loco-profile-statline"><span>Owned games</span><strong><?=count($purchased_games)?></strong></div>
+              <div class="loco-profile-statline"><span>Platform</span><strong>LOCO</strong></div>
+            </section>
+            <section class="loco-community-panel">
+              <div class="loco-section-heading"><h2>FAVORITE GAMES</h2></div>
+              <p style="font-size:.82rem;color:#e0dce1;line-height:1.55"><?=h($user_profile['favorite_games']?:'None selected yet.')?></p>
+            </section>
+            <section class="loco-community-panel">
+              <div class="loco-section-heading"><h2>ACCOUNT LINKS</h2></div>
+              <div class="loco-profile-side-links">
+                <a href="community.php?tab=profile">Edit Profile & Photo</a>
+                <a href="community.php?tab=inventory">My Inventory</a>
+                <a href="wishlist.php">My Wishlist</a>
+                <a href="transaction_history.php">Purchase History</a>
+              </div>
+            </section>
+          </aside>
+        </div>
     </div>
 
     <!-- Footer Bar -->
