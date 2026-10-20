@@ -269,6 +269,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!isset($_SESSION['loco_discussions'][$id]) || $reply === '') $error = 'Enter a reply to an existing discussion.';
                 else { $_SESSION['loco_discussions'][$id]['replies'][] = ['author'=>$currentUser,'body'=>$reply,'created'=>time()]; $notice = 'Reply added.'; }
                 break;
+            case 'publish_workshop':
+                $title=postText('workshop_title',150);
+                $description=postText('workshop_description',2000);
+                $gameId=(int)($_POST['workshop_game_id']??0);
+                $archive=$_FILES['workshop_archive']??null;
+                $cover=$_FILES['workshop_cover']??null;
+                if($title===''||$description===''||$gameId<1){$error='Enter a title, game, and description.';break;}
+                if(!$archive || (int)$archive['error']!==UPLOAD_ERR_OK){$error='Upload a ZIP archive (maximum 10 MB).';break;}
+                if((int)$archive['size']<1 || (int)$archive['size']>10*1024*1024 || strtolower(pathinfo((string)$archive['name'],PATHINFO_EXTENSION))!=='zip'){$error='Workshop files must be ZIP archives of 10 MB or less.';break;}
+                $uploadDir=__DIR__.'/uploads/workshop';
+                $createdFiles=[];
+                try {
+                    $q=$pdo->prepare('SELECT id FROM games WHERE id=:id LIMIT 1');
+                    $q->execute([':id'=>$gameId]);
+                    if(!$q->fetch())throw new RuntimeException('Select a valid LOCO game.');
+                    $mime=(new finfo(FILEINFO_MIME_TYPE))->file($archive['tmp_name']);
+                    if(!in_array($mime,['application/zip','application/x-zip-compressed','application/octet-stream'],true))throw new RuntimeException('The uploaded file is not a valid ZIP archive.');
+                    $header=file_get_contents($archive['tmp_name'],false,null,0,4);
+                    if(!in_array($header,["PK\\x03\\x04","PK\\x05\\x06","PK\\x07\\x08"],true))throw new RuntimeException('The uploaded file is not a ZIP archive.');
+                    if(!is_dir($uploadDir) && !mkdir($uploadDir,0750,true) && !is_dir($uploadDir))throw new RuntimeException('Unable to create the Workshop upload folder.');
+                    $archiveName=bin2hex(random_bytes(16)).'.zip';
+                    if(!move_uploaded_file($archive['tmp_name'],$uploadDir.'/'.$archiveName))throw new RuntimeException('Unable to save the ZIP archive.');
+                    $createdFiles[]=$archiveName;
+                    $coverName=null;
+                    if($cover && (int)$cover['error']!==UPLOAD_ERR_NO_FILE){
+                        if((int)$cover['error']!==UPLOAD_ERR_OK || (int)$cover['size']<1 || (int)$cover['size']>2*1024*1024)throw new RuntimeException('Cover image must be 2 MB or less.');
+                        $info=@getimagesize($cover['tmp_name']);
+                        $allowed=[IMAGETYPE_JPEG=>'jpg',IMAGETYPE_PNG=>'png',IMAGETYPE_WEBP=>'webp'];
+                        if(!$info || !isset($allowed[$info[2]]) || $info[0]>4000 || $info[1]>4000)throw new RuntimeException('Use a JPG, PNG, or WebP cover image up to 4000 pixels.');
+                        $coverName=bin2hex(random_bytes(16)).'.'.$allowed[$info[2]];
+                        if(!move_uploaded_file($cover['tmp_name'],$uploadDir.'/'.$coverName))throw new RuntimeException('Unable to save the cover image.');
+                        $createdFiles[]=$coverName;
+                    }
+                    $original=basename((string)$archive['name']);
+                    $original=function_exists('mb_substr')?mb_substr($original,0,180,'UTF-8'):substr($original,0,180);
+                    $q=$pdo->prepare('INSERT INTO workshop_creations (user_id,game_id,title,description,archive_filename,original_filename,cover_filename) VALUES (:uid,:gid,:title,:description,:archive,:original,:cover)');
+                    $q->execute([':uid'=>(int)$_SESSION['user_id'],':gid'=>$gameId,':title'=>$title,':description'=>$description,':archive'=>$archiveName,':original'=>$original,':cover'=>$coverName]);
+                    $notice='Your Workshop creation has been published.';
+                } catch(Throwable $e){
+                    foreach($createdFiles as $file)@unlink($uploadDir.'/'.$file);
+                    if($e instanceof PDOException){error_log('Workshop publish failed: '.$e->getMessage());$error='Workshop database is unavailable. Import database/community_workshop.sql.';}
+                    else $error=$e->getMessage();
+                }
+                break;
+            case 'toggle_workshop_subscription':
+                $id=(int)($_POST['creation_id']??0);
+                try{
+                    $q=$pdo->prepare('SELECT user_id FROM workshop_creations WHERE id=:id LIMIT 1');
+                    $q->execute([':id'=>$id]);$owner=$q->fetchColumn();
+                    if($owner===false){$error='Creation not found.';break;}
+                    if((int)$owner===(int)$_SESSION['user_id']){$error='You already own this creation.';break;}
+                    $q=$pdo->prepare('SELECT 1 FROM workshop_subscriptions WHERE user_id=:uid AND creation_id=:id LIMIT 1');
+                    $q->execute([':uid'=>(int)$_SESSION['user_id'],':id'=>$id]);
+                    if($q->fetchColumn()){
+                        $q=$pdo->prepare('DELETE FROM workshop_subscriptions WHERE user_id=:uid AND creation_id=:id');
+                        $q->execute([':uid'=>(int)$_SESSION['user_id'],':id'=>$id]);
+                        $notice='Unsubscribed from the creation.';
+                    }else{
+                        $q=$pdo->prepare('INSERT INTO workshop_subscriptions (user_id,creation_id) VALUES (:uid,:id)');
+                        $q->execute([':uid'=>(int)$_SESSION['user_id'],':id'=>$id]);
+                        $notice='Subscribed! You can now download the creation.';
+                    }
+                }catch(PDOException $e){error_log('Workshop subscription failed: '.$e->getMessage());$error='Unable to update subscription. Check the Workshop database tables.';}
+                break;
+            case 'delete_workshop':
+                $id=(int)($_POST['creation_id']??0);
+                try{
+                    $q=$pdo->prepare('SELECT archive_filename,cover_filename FROM workshop_creations WHERE id=:id AND user_id=:uid LIMIT 1');
+                    $q->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
+                    $own=$q->fetch(PDO::FETCH_ASSOC);
+                    if(!$own){$error='You can only delete your own creations.';break;}
+                    $q=$pdo->prepare('DELETE FROM workshop_creations WHERE id=:id AND user_id=:uid');
+                    $q->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
+                    if($q->rowCount()===1){
+                        foreach(['archive_filename','cover_filename'] as $field){
+                            $name=$own[$field]??'';
+                            if(preg_match('/^[a-f0-9]{32}\\.(?:zip|jpg|png|webp)$/D',$name))@unlink(__DIR__.'/uploads/workshop/'.$name);
+                        }
+                        $notice='Workshop creation deleted.';
+                    }
+                }catch(PDOException $e){error_log('Workshop delete failed: '.$e->getMessage());$error='Unable to delete creation.';}
+                break;
             case 'report_listing':
                 $id=(int)($_POST['listing_id']??0); $reason=postText('reason',250);
                 $q=$pdo->prepare("SELECT gi.item_name AS title FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id WHERE ml.id=:id AND ml.status='active' LIMIT 1");
@@ -282,7 +364,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $tab=(string)($_GET['tab']??'market');
-$allowedTabs=['market','sell','saved','trades','inventory','discussions','profile'];
+$allowedTabs=['market','sell','saved','trades','inventory','discussions','profile','workshop'];
 if(!in_array($tab,$allowedTabs,true))$tab='market';
 $editId=(int)($_GET['edit']??0);$editListing=null;
 $inventoryItems=[];$tradeInventoryItems=[];
@@ -306,6 +388,16 @@ try{
     $q=$pdo->prepare("SELECT th.id,th.trade_request_id,th.old_status,th.new_status,th.note,th.changed_at,gi.item_name AS listing_title FROM trade_request_history th JOIN trade_requests tr ON tr.id=th.trade_request_id JOIN marketplace_listings ml ON ml.id=tr.listing_id JOIN game_items gi ON gi.id=ml.item_id WHERE tr.requester_id=:requester OR tr.seller_id=:seller ORDER BY th.changed_at DESC,th.id DESC LIMIT 100");
     $q->execute([':requester'=>(int)$_SESSION['user_id'],':seller'=>(int)$_SESSION['user_id']]);$myHistory=$q->fetchAll(PDO::FETCH_ASSOC);
 }catch(PDOException $e){error_log('LOCO trade data unavailable: '.$e->getMessage());if(($_GET['tab']??'')==='trades')$error=$error?:'Trade database is not ready. Import database/loco_db_upgrade.sql.';}
+$workshopCreations=[];$workshopGames=[];$myWorkshopSubscriptions=[];
+try{
+    $workshopGames=$pdo->query('SELECT id,title FROM games ORDER BY title')->fetchAll(PDO::FETCH_ASSOC);
+    $q=$pdo->prepare("SELECT wc.id,wc.user_id,wc.game_id,wc.title,wc.description,wc.cover_filename,wc.created_at,g.title AS game,u.username AS creator,
+        (SELECT COUNT(*) FROM workshop_subscriptions ws WHERE ws.creation_id=wc.id) AS subscribers,
+        EXISTS(SELECT 1 FROM workshop_subscriptions ws WHERE ws.creation_id=wc.id AND ws.user_id=:uid) AS subscribed
+        FROM workshop_creations wc JOIN users u ON u.id=wc.user_id JOIN games g ON g.id=wc.game_id
+        ORDER BY wc.created_at DESC,wc.id DESC");
+    $q->execute([':uid'=>(int)$_SESSION['user_id']]);$workshopCreations=$q->fetchAll(PDO::FETCH_ASSOC);
+}catch(PDOException $e){error_log('Workshop load failed: '.$e->getMessage());if(($_GET['tab']??'')==='workshop')$error=$error?:'Workshop database is not ready. Import database/community_workshop.sql.';}
 $myPosts=array_reverse($_SESSION['loco_discussions'],true);
 ?>
 <!DOCTYPE html>
@@ -336,7 +428,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
     <?php if ($error): ?><div class="loco-notice error" role="alert">! <?=h($error)?></div><?php endif; ?>
 
     <nav class="loco-community-tabs" aria-label="Community sections">
-        <?php foreach (['market'=>'Marketplace','sell'=>'My Listings','saved'=>'Wishlist','trades'=>'Trade Center','inventory'=>'Inventory','discussions'=>'Discussions','profile'=>'My Profile'] as $key=>$label): ?><a class="<?= $tab===$key?'active':'' ?>" href="community.php?tab=<?=h($key)?>"><?=h($label)?></a><?php endforeach; ?>
+        <?php foreach (['market'=>'Marketplace','sell'=>'My Listings','saved'=>'Wishlist','trades'=>'Trade Center','inventory'=>'Inventory','workshop'=>'Workshop','discussions'=>'Discussions','profile'=>'My Profile'] as $key=>$label): ?><a class="<?= $tab===$key?'active':'' ?>" href="community.php?tab=<?=h($key)?>"><?=h($label)?></a><?php endforeach; ?>
     </nav>
 
     <?php if ($tab === 'market'): ?>
@@ -423,7 +515,43 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
     <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Gamer profile</h2><p>Your profile information is saved in the current PHP session.</p></div></div><div class="loco-profile-summary"><span class="loco-avatar large">🎮</span><div><h3><?=h($currentUser)?></h3><p><?=count($myListings)?> listings · <?=count($inventoryItems)?> inventory item instances · <?=count($myTrades)?> trade requests · <?=count($_SESSION['loco_discussions'])?> discussion posts in this session</p></div></div><form method="post" class="loco-form-grid"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="save_profile"><label class="loco-full-width">About me<textarea name="bio" maxlength="300" rows="4" placeholder="Tell the community about yourself…"><?=h($_SESSION['loco_profile']['bio'])?></textarea></label><label class="loco-full-width">Favorite games<input name="favorite_games" maxlength="180" value="<?=h($_SESSION['loco_profile']['favorite_games'])?>" placeholder="e.g. RPGs, strategy, co-op games"></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Save profile</button></div></form><div class="loco-session-note">Session-based demo: data is not shared between separate browsers or devices and may disappear when the session expires.</div></section>
     <?php endif; ?>
 
-    <section class="loco-workshop-keep"><div class="loco-section-heading"><div><h2>Creations Hub</h2><p>Workshop preview retained from the original LOCO page. These buttons are demo interactions and do not download files.</p></div></div><div class="loco-workshop-grid"><article class="loco-workshop-card"><img src="images/game_cover_03.jpg" class="loco-workshop-thumb" alt="Moonroot Hollow original cover art"><h3>Moonroot Hollow: Mooncap Grove Expansion</h3><button type="button" class="loco-workshop-subscribe" data-workshop-id="moonroot-grove">＋ Subscribe</button></article><article class="loco-workshop-card"><img src="images/game_cover_02.jpg" class="loco-workshop-thumb" alt="Crimson Freight original cover art"><h3>Crimson Freight: Midnight Locomotive Skin</h3><button type="button" class="loco-workshop-subscribe" data-workshop-id="crimson-midnight-loco">＋ Subscribe</button></article></div></section>
+    <?php if($tab==='workshop'): ?>
+    <section class="loco-community-panel" id="workshop"><div class="loco-section-heading"><div><h2>LOCO Workshop</h2><p>Publish game creations, subscribe to other creators, and download ZIP archives. Files are community-uploaded; only open files you trust.</p></div></div>
+    <details class="loco-workshop-publish"><summary class="loco-brand-gloss-btn">＋ Publish a creation</summary>
+        <form method="post" enctype="multipart/form-data" class="loco-form-grid" style="margin-top:18px">
+          <input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="publish_workshop">
+          <label>Creation title<input name="workshop_title" required maxlength="150" placeholder="Name your creation"></label>
+          <label>Game<select name="workshop_game_id" required><option value="">Choose game</option><?php foreach($workshopGames as $game): ?><option value="<?=$game['id']?>"><?=h($game['title'])?></option><?php endforeach; ?></select></label>
+          <label class="loco-full-width">Description<textarea name="workshop_description" required maxlength="2000" rows="3" placeholder="Explain what your creation adds and how to use it"></textarea></label>
+          <label>Creation ZIP (up to 10 MB)<input type="file" name="workshop_archive" accept=".zip,application/zip" required></label>
+          <label>Cover image (optional, JPG/PNG/WebP, up to 2 MB)<input type="file" name="workshop_cover" accept="image/jpeg,image/png,image/webp"></label>
+          <div class="loco-form-actions"><button class="loco-brand-gloss-btn" type="submit">Publish to Workshop</button></div>
+        </form>
+    </details>
+    <h3 class="loco-subheading">Browse creations</h3>
+    <div class="loco-workshop-grid">
+    <?php if(!$workshopCreations): ?><p class="loco-empty-state">No creations published yet. Be the first to share one.</p><?php endif; ?>
+    <?php foreach($workshopCreations as $creation): $isOwner=(int)$creation['user_id']===(int)$_SESSION['user_id']; ?>
+      <article class="loco-workshop-card">
+        <?php if($creation['cover_filename']): ?><img class="loco-workshop-thumb" src="workshop_cover.php?id=<?=$creation['id']?>" alt="<?=h($creation['title'])?> cover" loading="lazy"><?php else: ?><div class="loco-workshop-placeholder">✦ LOCO WORKSHOP</div><?php endif; ?>
+        <h3><?=h($creation['title'])?></h3><p><?=h($creation['description'])?></p>
+        <p class="loco-muted"><?=h($creation['game'])?> · By <?=h($creation['creator'])?> · <?=h($creation['created_at'])?></p>
+        <p class="loco-muted"><?=number_format((int)$creation['subscribers'])?> subscriber(s)</p>
+        <div class="loco-workshop-actions">
+        <?php if($isOwner): ?>
+          <a class="loco-button-small" href="workshop_download.php?id=<?=$creation['id']?>">Download your ZIP</a>
+          <form method="post" onsubmit="return confirm('Delete this creation and its subscriptions?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="delete_workshop"><input type="hidden" name="creation_id" value="<?=$creation['id']?>"><button type="submit" class="loco-danger-link">Delete</button></form>
+        <?php else: ?>
+          <form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="toggle_workshop_subscription"><input type="hidden" name="creation_id" value="<?=$creation['id']?>"><button type="submit" class="loco-button-small"><?=$creation['subscribed']?'✓ Unsubscribe':'＋ Subscribe'?></button></form>
+          <?php if($creation['subscribed']): ?><a class="loco-button-small" href="workshop_download.php?id=<?=$creation['id']?>">Download ZIP</a><?php endif; ?>
+        <?php endif; ?>
+        </div>
+      </article>
+    <?php endforeach; ?>
+    </div>
+    </section>
+    <?php endif; ?>
+
 </div>
 <footer class="loco-footer-bar">
         <div class="loco-footer-bar">
