@@ -93,7 +93,7 @@ try{
       <?php foreach($games as $game): ?>
       <article class="loco-wishlist-entry">
         <a href="game_details.php?id=<?=(int)$game['id']?>"><img src="<?=wishlistEsc($game['image_url']?:'images/gameplay_01.jpg')?>" alt="<?=wishlistEsc($game['title'])?>"></a>
-        <div><h3><?=wishlistEsc($game['title'])?></h3><p><?=wishlistEsc(mb_strimwidth((string)($game['description']??''),0,150,'…'))?></p></div>
+        <div><h3><?=wishlistEsc($game['title'])?></h3><p><?=wishlistEsc(substr((string)($game['description']??''),0,150))?></p></div>
         <div class="loco-wishlist-actions">
           <span class="loco-wishlist-price"><?=(float)$game['price']>0?'₱'.number_format((float)$game['price'],2):'FREE'?></span>
           <a class="loco-wishlist-action" href="game_details.php?id=<?=(int)$game['id']?>"><?=$game['owned']?'IN LIBRARY':'VIEW / BUY'?></a>
