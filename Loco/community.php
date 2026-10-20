@@ -13,17 +13,13 @@ if (($_SESSION['loco_catalog_version'] ?? '') !== 'original-games-v2') {
     $_SESSION['loco_catalog_version'] = 'original-games-v2';
 }
 if (!isset($_SESSION['loco_profile'])) $_SESSION['loco_profile'] = ['bio' => '', 'favorite_games' => ''];
-// Inventory and marketplace ownership are stored in MySQL. Trade requests, discussions,
-// and reports remain demo-only until their dedicated implementation steps.
+// Inventory, marketplace listings, trades, Workshop, profiles, discussions and reports use MySQL.
 if (!isset($_SESSION['loco_trades']) || !is_array($_SESSION['loco_trades'])) $_SESSION['loco_trades'] = [];
 if (!isset($_SESSION['loco_trade_history']) || !is_array($_SESSION['loco_trade_history'])) $_SESSION['loco_trade_history'] = [];
-if (!isset($_SESSION['loco_discussions']) || !is_array($_SESSION['loco_discussions'])) $_SESSION['loco_discussions'] = [];
-if (!isset($_SESSION['loco_reports']) || !is_array($_SESSION['loco_reports'])) $_SESSION['loco_reports'] = [];
-foreach (['loco_wishlist','loco_trades','loco_trade_history','loco_discussions','loco_reports'] as $key) {
+foreach (['loco_wishlist','loco_trades','loco_trade_history'] as $key) {
     if (!isset($_SESSION[$key]) || !is_array($_SESSION[$key])) $_SESSION[$key] = [];
 }
 if (!isset($_SESSION['loco_next_trade_id'])) $_SESSION['loco_next_trade_id'] = 1;
-if (!isset($_SESSION['loco_next_post_id'])) $_SESSION['loco_next_post_id'] = 1;
 if (empty($_SESSION['loco_csrf'])) $_SESSION['loco_csrf'] = bin2hex(random_bytes(24));
 $csrf = $_SESSION['loco_csrf'];
 $notice = '';
