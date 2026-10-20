@@ -61,14 +61,14 @@ try {
             <div>
                 <p class="loco-eyebrow">LOCO GAMER NETWORK</p>
                 <h1 class="loco-logo-text"><?=h($user_profile['display_name'] ?: $currentUser)?></h1>
-                <p>Manage your account records and browse your personal purchased game updates platform dashboard library.</p>
+                <p>Your LOCO player profile, activity, and owned games.</p>
             </div>
             <div class="loco-community-user">
                 <!-- Displays the user profile's database PFP string directly inside your visual element -->
                 <img src="profile_avatar.php?id=<?=(int)$current_user_id?>" class="loco-avatar" alt="Avatar" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;">
                 <div>
                     <strong><?=h($currentUser)?></strong>
-                    <small>Wallet Balance: <span style="color: #2e7d32; font-weight: bold;">鱗<?=number_format((float)$user_profile['wallet_balance'], 2)?></span></small>
+                    <small>Wallet Balance: <span style="color: #72d57a; font-weight: bold;">₱<?=number_format((float)$user_profile['wallet_balance'], 2)?></span></small>
                     <a href="transaction_history.php" style="display:inline-block;margin-top:8px;color:#d8d8d8;font-size:12px">View transaction history →</a>
                 </div>
             </div>
@@ -99,7 +99,7 @@ try {
             <div class="loco-section-heading">
                 <div>
                     <h2>Games Library (<?=count($purchased_games)?>)</h2>
-                    <p>Your officially purchased games are delivered straight to your desktop layout pipeline with automatic updates.</p>
+                    <p>Games purchased through the LOCO Store appear here in your library.</p>
                 </div>
             </div>
 
