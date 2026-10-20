@@ -5,7 +5,7 @@ if (!isset($_SESSION['user_id'])) { http_response_code(403); exit('Please log in
 $id=filter_input(INPUT_GET,'id',FILTER_VALIDATE_INT);
 if (!$id || $id<1) { http_response_code(400); exit('Invalid workshop creation.'); }
 try {
-    $q=$pdo->prepare("SELECT wc.archive_filename,wc.original_filename,wc.user_id,
+    $q=$pdo->prepare("SELECT wc.archive_filename,wc.original_filename,wc.creator_id AS user_id,
         EXISTS(SELECT 1 FROM workshop_subscriptions ws WHERE ws.creation_id=wc.id AND ws.user_id=:subscriber) AS subscribed
         FROM workshop_creations wc WHERE wc.id=:id LIMIT 1");
     $q->execute([':subscriber'=>(int)$_SESSION['user_id'],':id'=>$id]);
