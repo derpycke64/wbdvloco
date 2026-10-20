@@ -29,7 +29,7 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
         <!-- Main Column Area Layout -->
         <div class="loco-store-main-col">
             <div class="loco-install-banner">
-                <a href="#" class="loco-install-btn">Get Loco Now !</a>
+                <a href="<?=!empty($_SESSION['user_id'])?'about.php':'Register.php'?>" class="loco-install-btn">Get Loco Now !</a>
                 <p class="loco-install-text">Join LOCO for Free and get games delivered straight to your desktop with automatic updates and a massive gaming community pipeline platform environment.</p>
             </div>
 
