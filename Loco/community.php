@@ -90,6 +90,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $del->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
                 if($del->rowCount())$notice='Listing removed from the marketplace.';else $error='You can only remove your own active listing.';
                 break;
+            case 'buy_listing':
+                $listingId=(int)($_POST['listing_id']??0);
+                $buyerId=(int)($_SESSION['user_id']??0);
+                try {
+                    $pdo->beginTransaction();
+                    $q=$pdo->prepare("SELECT id,seller_id,item_id,inventory_id,price FROM marketplace_listings WHERE id=:id AND status='active' FOR UPDATE");
+                    $q->execute([':id'=>$listingId]); $listing=$q->fetch(PDO::FETCH_ASSOC);
+                    if(!$listing || !$listing['inventory_id'] || (float)$listing['price']<=0) throw new RuntimeException('This item is not available for purchase.');
+                    if((int)$listing['seller_id']===$buyerId) throw new RuntimeException('You cannot buy your own listing.');
+                    $q=$pdo->prepare('SELECT id,user_id,item_id FROM inventories WHERE id=:id FOR UPDATE');
+                    $q->execute([':id'=>(int)$listing['inventory_id']]); $owned=$q->fetch(PDO::FETCH_ASSOC);
+                    if(!$owned || (int)$owned['user_id']!==(int)$listing['seller_id'] || (int)$owned['item_id']!==(int)$listing['item_id']) throw new RuntimeException('Seller no longer owns this item.');
+                    $q=$pdo->prepare('SELECT id,wallet_balance FROM users WHERE id=:id FOR UPDATE');
+                    $q->execute([':id'=>$buyerId]); $buyer=$q->fetch(PDO::FETCH_ASSOC);
+                    $price=(float)$listing['price'];
+                    if(!$buyer || (float)$buyer['wallet_balance']<$price) throw new RuntimeException('Insufficient LOCO wallet balance.');
+                    $q=$pdo->prepare('SELECT id FROM users WHERE id=:id FOR UPDATE');
+                    $q->execute([':id'=>(int)$listing['seller_id']]);
+                    if(!$q->fetch()) throw new RuntimeException('Seller account not found.');
+                    $q=$pdo->prepare('UPDATE users SET wallet_balance=wallet_balance-:price WHERE id=:id AND wallet_balance>=:minimum');
+                    $q->execute([':price'=>$price,':id'=>$buyerId,':minimum'=>$price]);
+                    if($q->rowCount()!==1) throw new RuntimeException('Insufficient LOCO wallet balance.');
+                    $q=$pdo->prepare('UPDATE users SET wallet_balance=wallet_balance+:price WHERE id=:id');
+                    $q->execute([':price'=>$price,':id'=>(int)$listing['seller_id']]);
+                    $q=$pdo->prepare('UPDATE inventories SET user_id=:buyer WHERE id=:id AND user_id=:seller');
+                    $q->execute([':buyer'=>$buyerId,':id'=>(int)$listing['inventory_id'],':seller'=>(int)$listing['seller_id']]);
+                    if($q->rowCount()!==1) throw new RuntimeException('Item ownership changed. Please try again.');
+                    $q=$pdo->prepare("UPDATE marketplace_listings SET status='sold' WHERE id=:id AND status='active'");
+                    $q->execute([':id'=>$listingId]);
+                    if($q->rowCount()!==1) throw new RuntimeException('Listing is no longer available.');
+                    $pdo->commit();
+                    $notice='Purchase complete. Item added to your inventory and payment sent to the seller.';
+                } catch (Throwable $e) {
+                    if($pdo->inTransaction()) $pdo->rollBack();
+                    if($e instanceof PDOException){error_log('LOCO marketplace purchase failed: '.$e->getMessage());$error='Purchase could not be completed. Check the database setup.';}
+                    else $error=$e->getMessage();
+                }
+                break;
             case 'toggle_wishlist':
                 $id=(int)($_POST['listing_id']??0);
                 try{
@@ -263,7 +301,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
                     <span><?=h($item['condition'])?></span>
                 </div>
                 <div class="loco-listing-seller"><span class="loco-avatar small">👤</span><div><strong><?=h($item['seller'])?></strong><small><?=$item['rating']==='New seller'?'New seller':'★ '.h($item['rating']).' seller rating'?></small></div></div>
-                <div class="loco-listing-bottom"><strong class="loco-listing-price">₱<?=number_format((float)$item['price'],2)?></strong><?php if ($item['seller'] === $currentUser): ?><a class="loco-small-link" href="community.php?tab=sell&edit=<?=$item['id']?>">Edit listing</a><?php else: ?><button class="loco-button-small" type="button" onclick="openTrade(<?=$item['id']?>, <?=json_encode($item['title'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP)?>)">Request trade</button><?php endif; ?></div>
+                <div class="loco-listing-bottom"><strong class="loco-listing-price">₱<?=number_format((float)$item['price'],2)?></strong><?php if ((int)$item['seller_id'] === (int)$_SESSION['user_id']): ?><a class="loco-small-link" href="community.php?tab=sell&edit=<?=$item['id']?>">Edit listing</a><?php else: ?><div><form method="post" class="loco-inline-form" onsubmit="return confirm('Buy this item for ₱<?=number_format((float)$item['price'],2)?> using your LOCO wallet?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="buy_listing"><input type="hidden" name="listing_id" value="<?=$item['id']?>"><button class="loco-button-small" type="submit">Buy Now</button></form> <button class="loco-button-small" type="button" onclick="openTrade(<?=$item['id']?>, <?=json_encode($item['title'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP)?>)">Request trade</button></div><?php endif; ?></div>
                 <details class="loco-report-details"><summary>Report listing</summary><form method="post" class="loco-report-form"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="report_listing"><input type="hidden" name="listing_id" value="<?=$item['id']?>"><input name="reason" maxlength="250" placeholder="Why are you reporting this?" required><button class="loco-small-link" type="submit">Submit report</button></form></details>
             </article>
         <?php endforeach; ?>
