@@ -98,16 +98,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }catch(PDOException $e){$error='Import database/marketplace_database.sql to enable wishlist storage.';}
                 break;
             case 'request_trade':
-                $id = (int)($_POST['listing_id'] ?? 0); $listing = $_SESSION['loco_listings'][$id] ?? null; $offerId = (int)($_POST['offer_inventory_id'] ?? 0);
-                if (!$listing) $error = 'That listing is no longer available.';
-                elseif ($listing['seller'] === $currentUser) $error = 'You cannot send a trade request for your own listing.';
-                else {
-                    $offer = null;
-                    if ($offerId > 0) foreach ($_SESSION['loco_inventory'] as $inv) if ((int)$inv['id'] === $offerId) { $offer = $inv; break; }
-                    $tradeId = $_SESSION['loco_next_trade_id']++;
-                    $_SESSION['loco_trades'][$tradeId] = ['id'=>$tradeId,'listing_id'=>$id,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offer ? $offer['name'] : 'No item selected (purchase inquiry)','status'=>'Pending','created'=>time()];
-                    $_SESSION['loco_trade_history'][] = ['id'=>$tradeId,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offer ? $offer['name'] : 'No item selected (purchase inquiry)','status'=>'Pending','updated'=>time()];
-                    $notice = 'Trade request created. In this session-based demo, the request is visible only in this browser session.';
+                $id=(int)($_POST['listing_id']??0); $offerId=(int)($_POST['offer_inventory_id']??0);
+                $q=$pdo->prepare("SELECT ml.id,ml.seller_id,gi.item_name AS title,u.username AS seller FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN users u ON u.id=ml.seller_id WHERE ml.id=:id AND ml.status='active' LIMIT 1");
+                $q->execute([':id'=>$id]); $listing=$q->fetch();
+                if(!$listing)$error='That listing is no longer available.';
+                elseif((int)$listing['seller_id']===(int)$_SESSION['user_id'])$error='You cannot send a trade request for your own listing.';
+                else{
+                    $offer=null;
+                    if($offerId>0)foreach($_SESSION['loco_inventory'] as $inv)if((int)$inv['id']===$offerId){$offer=$inv;break;}
+                    $tradeId=$_SESSION['loco_next_trade_id']++;
+                    $_SESSION['loco_trades'][$tradeId]=['id'=>$tradeId,'listing_id'=>$id,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offer?$offer['name']:'No item selected (purchase inquiry)','status'=>'Pending','created'=>time()];
+                    $_SESSION['loco_trade_history'][]=['id'=>$tradeId,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offer?$offer['name']:'No item selected (purchase inquiry)','status'=>'Pending','updated'=>time()];
+                    $notice='Trade request created. Listing details came from the database; request history is still session-based.';
                 }
                 break;
             case 'update_trade':
@@ -138,9 +140,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 else { $_SESSION['loco_discussions'][$id]['replies'][] = ['author'=>$currentUser,'body'=>$reply,'created'=>time()]; $notice = 'Reply added.'; }
                 break;
             case 'report_listing':
-                $id = (int)($_POST['listing_id'] ?? 0); $reason = postText('reason', 250); $listing = $_SESSION['loco_listings'][$id] ?? null;
-                if (!$listing || $reason === '') $error = 'Choose a listing and provide a reason for the report.';
-                else { $_SESSION['loco_reports'][] = ['listing_id'=>$id,'title'=>$listing['title'],'reporter'=>$currentUser,'reason'=>$reason,'created'=>time()]; $notice = 'Report recorded for this session. No moderator notification is connected.'; }
+                $id=(int)($_POST['listing_id']??0); $reason=postText('reason',250);
+                $q=$pdo->prepare("SELECT gi.item_name AS title FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id WHERE ml.id=:id AND ml.status='active' LIMIT 1");
+                $q->execute([':id'=>$id]); $listing=$q->fetch();
+                if(!$listing||$reason==='')$error='Choose an active listing and provide a reason.';
+                else{$notice='Report recorded for this session. Database-backed moderator reports are not implemented yet.';}
                 break;
             default: $error = 'Unknown action.';
         }
