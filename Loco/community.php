@@ -39,8 +39,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = (string)($_POST['action'] ?? '');
         switch ($action) {
             case 'save_profile':
-                $_SESSION['loco_profile'] = ['bio' => postText('bio', 300), 'favorite_games' => postText('favorite_games', 180)];
-                $notice = 'Profile saved for this session.';
+                $bio=postText('bio',300);$favorites=postText('favorite_games',180);$displayName=postText('display_name',100);
+                try{
+                    $q=$pdo->prepare('INSERT INTO user_profiles (user_id,display_name,bio,favorite_games) VALUES (:uid,:name,:bio,:games) ON DUPLICATE KEY UPDATE display_name=VALUES(display_name),bio=VALUES(bio),favorite_games=VALUES(favorite_games)');
+                    $q->execute([':uid'=>(int)$_SESSION['user_id'],':name'=>$displayName?:$currentUser,':bio'=>$bio,':games'=>$favorites]);
+                    $notice='Profile saved to your account.';
+                }catch(PDOException $e){error_log('LOCO profile save failed: '.$e->getMessage());$error='Unable to save profile. Check user_profiles table.';}
+                break;
+            case 'upload_avatar':
+                $file=$_FILES['avatar']??null;
+                if(!$file || (int)$file['error']!==UPLOAD_ERR_OK){$error='Choose a JPG, PNG, or WebP photo (up to 2 MB).';break;}
+                if((int)$file['size']<1 || (int)$file['size']>2*1024*1024){$error='Profile images must be 2 MB or smaller.';break;}
+                $image=@getimagesize($file['tmp_name']);
+                $allowed=[IMAGETYPE_JPEG=>'jpg',IMAGETYPE_PNG=>'png',IMAGETYPE_WEBP=>'webp'];
+                if(!$image || !isset($allowed[$image[2]]) || $image[0]>4000 || $image[1]>4000){$error='Choose a valid JPG, PNG, or WebP image up to 4000 pixels.';break;}
+                $dir=__DIR__.'/uploads/avatars';$target=null;
+                try{
+                    if(!is_dir($dir) && !mkdir($dir,0750,true) && !is_dir($dir))throw new RuntimeException('Cannot create avatar folder.');
+                    $name=bin2hex(random_bytes(16)).'.'.$allowed[$image[2]];
+                    $target=$dir.'/'.$name;
+                    if(!move_uploaded_file($file['tmp_name'],$target))throw new RuntimeException('Unable to save profile photo.');
+                    $path='uploads/avatars/'.$name;
+                    $q=$pdo->prepare('SELECT avatar_url FROM user_profiles WHERE user_id=:uid LIMIT 1');
+                    $q->execute([':uid'=>(int)$_SESSION['user_id']]);$previous=$q->fetchColumn();
+                    $q=$pdo->prepare('INSERT INTO user_profiles (user_id,display_name,avatar_url) VALUES (:uid,:name,:avatar) ON DUPLICATE KEY UPDATE avatar_url=VALUES(avatar_url)');
+                    $q->execute([':uid'=>(int)$_SESSION['user_id'],':name'=>$currentUser,':avatar'=>$path]);
+                    if(is_string($previous) && preg_match('~^uploads/avatars/[a-f0-9]{32}\\.(?:jpg|png|webp)$~D',$previous))@unlink(__DIR__.'/'.$previous);
+                    $notice='Profile picture updated.';
+                }catch(Throwable $e){
+                    if($target && is_file($target))@unlink($target);
+                    error_log('LOCO avatar update failed: '.$e->getMessage());
+                    $error='Unable to save avatar. Check the upload folder and database.';
+                }
                 break;
             case 'create_listing':
                 $title=postText('title',150); $game=postText('game',150); $type=postText('type',50);
@@ -398,6 +428,17 @@ try{
         ORDER BY wc.created_at DESC,wc.id DESC");
     $q->execute([':uid'=>(int)$_SESSION['user_id']]);$workshopCreations=$q->fetchAll(PDO::FETCH_ASSOC);
 }catch(PDOException $e){error_log('Workshop load failed: '.$e->getMessage());if(($_GET['tab']??'')==='workshop')$error=$error?:'Workshop database is not ready. Import database/community_workshop.sql.';}
+$profileData=['display_name'=>$currentUser,'bio'=>'','favorite_games'=>''];
+$profileInventoryShowcase=[];$profileGameShowcase=[];
+try{
+    $q=$pdo->prepare('SELECT display_name,bio,favorite_games FROM user_profiles WHERE user_id=:uid LIMIT 1');
+    $q->execute([':uid'=>(int)$_SESSION['user_id']]);$found=$q->fetch(PDO::FETCH_ASSOC);
+    if($found)$profileData=array_merge($profileData,$found);
+    $q=$pdo->prepare('SELECT gi.item_name,g.title AS game FROM inventories i JOIN game_items gi ON gi.id=i.item_id JOIN games g ON g.id=gi.game_id WHERE i.user_id=:uid ORDER BY i.acquired_at DESC,i.id DESC LIMIT 6');
+    $q->execute([':uid'=>(int)$_SESSION['user_id']]);$profileInventoryShowcase=$q->fetchAll(PDO::FETCH_ASSOC);
+    $q=$pdo->prepare('SELECT g.title FROM library l JOIN games g ON g.id=l.game_id WHERE l.user_id=:uid ORDER BY l.purchase_date DESC LIMIT 6');
+    $q->execute([':uid'=>(int)$_SESSION['user_id']]);$profileGameShowcase=$q->fetchAll(PDO::FETCH_COLUMN);
+}catch(PDOException $e){error_log('LOCO profile read failed: '.$e->getMessage());if(($_GET['tab']??'')==='profile')$error=$error?:'Profile database could not be loaded.';}
 $myPosts=array_reverse($_SESSION['loco_discussions'],true);
 ?>
 <!DOCTYPE html>
@@ -417,8 +458,8 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
             <p>Trade inventory items, manage listings, save finds, and talk with other players.</p>
         </div>
         <div class="loco-community-user">
-            <span class="loco-avatar">🎮</span>
-            <div><strong><?=h($currentUser)?></strong>
+            <img src="profile_avatar.php?id=<?=(int)$_SESSION['user_id']?>" class="loco-profile-avatar" alt="Your profile picture">
+            <div><strong><?=h($profileData['display_name']?:$currentUser)?></strong>
                 <small><?=count($myListings)?> listing(s) · <?=count($inventoryItems)?> inventory item(s)</small>
             </div>
         </div>
@@ -512,7 +553,27 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
     <?php elseif ($tab === 'discussions'): ?>
     <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Community discussions</h2><p>Ask questions, share tips, or start a topic with other players using this session.</p></div></div><form method="post" class="loco-form-grid"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="create_post"><label>Discussion title<input name="post_title" maxlength="100" required placeholder="What do you want to discuss?"></label><label>Category<select name="post_tag"><option>General</option><option>Trading</option><option>Game help</option><option>Showcase</option><option>Feedback</option></select></label><label class="loco-full-width">Message<textarea name="post_body" maxlength="1200" rows="4" required></textarea></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Post discussion</button></div></form><div class="loco-discussion-list"><?php if(!$myPosts): ?><p class="loco-empty-state">No discussions yet. Start the first conversation above.</p><?php endif; ?><?php foreach($myPosts as $post): ?><article class="loco-discussion-card"><div class="loco-discussion-meta"><span class="loco-market-tag"><?=h($post['tag'])?></span><small>By <?=h($post['author'])?> · <?=date('M j, Y g:i A',$post['created'])?></small></div><h3><?=h($post['title'])?></h3><p><?=nl2br(h($post['body']))?></p><details><summary>Replies (<?=count($post['replies'])?>)</summary><?php foreach($post['replies'] as $reply): ?><div class="loco-reply"><strong><?=h($reply['author'])?></strong><p><?=nl2br(h($reply['body']))?></p></div><?php endforeach; ?><form method="post" class="loco-reply-form"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="reply_post"><input type="hidden" name="post_id" value="<?=$post['id']?>"><input name="reply" maxlength="500" placeholder="Write a reply…" required><button class="loco-button-small">Reply</button></form></details></article><?php endforeach; ?></div></section>
     <?php elseif ($tab === 'profile'): ?>
-    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Gamer profile</h2><p>Your profile information is saved in the current PHP session.</p></div></div><div class="loco-profile-summary"><span class="loco-avatar large">🎮</span><div><h3><?=h($currentUser)?></h3><p><?=count($myListings)?> listings · <?=count($inventoryItems)?> inventory item instances · <?=count($myTrades)?> trade requests · <?=count($_SESSION['loco_discussions'])?> discussion posts in this session</p></div></div><form method="post" class="loco-form-grid"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="save_profile"><label class="loco-full-width">About me<textarea name="bio" maxlength="300" rows="4" placeholder="Tell the community about yourself…"><?=h($_SESSION['loco_profile']['bio'])?></textarea></label><label class="loco-full-width">Favorite games<input name="favorite_games" maxlength="180" value="<?=h($_SESSION['loco_profile']['favorite_games'])?>" placeholder="e.g. RPGs, strategy, co-op games"></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Save profile</button></div></form><div class="loco-session-note">Session-based demo: data is not shared between separate browsers or devices and may disappear when the session expires.</div></section>
+    <section class="loco-community-panel">
+        <div class="loco-section-heading"><div><h2>Gamer profile</h2><p>Customize your public profile. Your changes are stored in MySQL and remain after logging out.</p></div></div>
+        <div class="loco-profile-summary"><img class="loco-profile-avatar large" src="profile_avatar.php?id=<?=(int)$_SESSION['user_id']?>" alt="Your profile picture"><div><h3><?=h($profileData['display_name']?:$currentUser)?></h3><p>@<?=h($currentUser)?> · <?=count($inventoryItems)?> inventory items · <?=count($myListings)?> active listings · <?=count($myTrades)?> trades</p></div></div>
+        <form method="post" enctype="multipart/form-data" class="loco-profile-photo-form">
+            <input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="upload_avatar">
+            <label>Profile picture (JPG, PNG, WebP; up to 2 MB)<input type="file" name="avatar" accept="image/jpeg,image/png,image/webp" required></label>
+            <button type="submit" class="loco-button-small">Upload profile picture</button>
+        </form>
+        <form method="post" class="loco-form-grid">
+            <input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="save_profile">
+            <label class="loco-full-width">Display name<input name="display_name" maxlength="100" value="<?=h($profileData['display_name']?:$currentUser)?>" required></label>
+            <label class="loco-full-width">About me<textarea name="bio" maxlength="300" rows="4" placeholder="Tell the community about yourself…"><?=h($profileData['bio']??'')?></textarea></label>
+            <label class="loco-full-width">Favorite games<input name="favorite_games" maxlength="180" value="<?=h($profileData['favorite_games']??'')?>" placeholder="e.g. Wild Circuit, Riftbound Arena"></label>
+            <div class="loco-form-actions"><button class="loco-brand-gloss-btn">Save profile</button></div>
+        </form>
+        <div class="loco-profile-showcases">
+            <div><h3>Inventory showcase</h3><?php if(!$profileInventoryShowcase): ?><p>No items yet.</p><?php endif; ?><?php foreach($profileInventoryShowcase as $showcase): ?><div class="loco-profile-showcase-item"><strong><?=h($showcase['item_name'])?></strong><small><?=h($showcase['game'])?></small></div><?php endforeach; ?></div>
+            <div><h3>Owned games</h3><?php if(!$profileGameShowcase): ?><p>No purchased games yet.</p><?php endif; ?><?php foreach($profileGameShowcase as $gameTitle): ?><div class="loco-profile-showcase-item"><?=h($gameTitle)?></div><?php endforeach; ?></div>
+        </div>
+        <p class="loco-muted">Your main <a href="profile.php">profile and library page</a> also displays your saved account details.</p>
+    </section>
     <?php endif; ?>
 
     <?php if($tab==='workshop'): ?>
