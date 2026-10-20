@@ -8,7 +8,8 @@ Use the database name `loco_db`. These steps are intended for the local WAMP/php
 2. Import the root-level `loco_db.sql` once.
 3. Import `database/transaction_history.sql`.
 4. Import `database/marketplace_database.sql`.
-5. Import `database/loco_db_upgrade.sql`.
+5. Import `database/community_inventory.sql`.
+6. Import `database/loco_db_upgrade.sql`.
 
 `community_inventory.sql` adds the inventory link to marketplace listings and backfills ownership for existing listings. The upgrade migration adds discussion replies, trade requests/history, reports, orders and order items, and the discussion tag column. The scripts use `CREATE TABLE IF NOT EXISTS` or conditional schema changes where applicable.
 
