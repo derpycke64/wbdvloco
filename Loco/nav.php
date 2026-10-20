@@ -13,7 +13,11 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
             <nav class="loco-nav-links">
                 <a href="products.php" class="loco-nav-link <?php echo ($current_page == 'products.php' || $current_page == 'game_details.php') ? 'active' : ''; ?>">STORE</a>
                 <a href="community.php" class="loco-nav-link <?php echo ($current_page == 'community.php') ? 'active' : ''; ?>">COMMUNITY</a>
-                <a href="about.php" class="loco-nav-link <?php echo ($current_page == 'about.php') ? 'active' : ''; ?>">ABOUT</a>
+                <?php if ($isLoggedIn): ?>
+                    <a href="profile.php#library" class="loco-nav-link <?php echo ($current_page == 'profile.php') ? 'active' : ''; ?>">LIBRARY</a>
+                <?php else: ?>
+                    <a href="about.php" class="loco-nav-link <?php echo ($current_page == 'about.php') ? 'active' : ''; ?>">ABOUT</a>
+                <?php endif; ?>
                 
                 <?php if ($isLoggedIn): ?>
                     <a href="profile.php" class="loco-nav-link <?php echo ($current_page == 'profile.php') ? 'active' : ''; ?>" style="text-transform: uppercase;">
