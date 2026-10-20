@@ -28,6 +28,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
         if(!$owned || (int)$owned['user_id']!==$userId)throw new RuntimeException('This game is not in your Library.');
         $q=$pdo->prepare("SELECT id FROM game_resale_listings WHERE library_id=:lid AND status='active' LIMIT 1 FOR UPDATE");
         $q->execute([':lid'=>$id]);if($q->fetch())throw new RuntimeException('That game is already listed for sale.');
+        $q=$pdo->prepare("SELECT id FROM game_resale_listings WHERE library_id=:lid AND seller_id=:uid AND status='removed' LIMIT 1 FOR UPDATE");
+        $q->execute([':lid'=>$id,':uid'=>$userId]);
+        if($q->fetch())throw new RuntimeException('This game was removed by moderation and cannot be relisted by the same seller.');
         // An owned license must exist before it can be resold; never ask users for real game keys.
         if(!locoEnsureGameLicense($pdo,$id,$userId))throw new RuntimeException('Unable to create your LOCO demo license key.');
         $q=$pdo->prepare("INSERT INTO game_resale_listings(library_id,seller_id,game_id,price,status) VALUES(:lid,:uid,:gid,:price,'active')");
@@ -41,7 +44,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       }elseif($action==='change_price'){
         $q=$pdo->prepare("UPDATE game_resale_listings SET price=:price WHERE id=:id AND seller_id=:uid AND status='active'");
         $q->execute([':price'=>number_format((float)$price,2,'.',''),':id'=>$id,':uid'=>$userId]);
-        if($q->rowCount()!==1)throw new RuntimeException('The listing is unavailable, unchanged, or not yours.');
+        if($q->rowCount()!==1){
+          $check=$pdo->prepare("SELECT id FROM game_resale_listings WHERE id=:id AND seller_id=:uid AND status='active' LIMIT 1");
+          $check->execute([':id'=>$id,':uid'=>$userId]);
+          if(!$check->fetch())throw new RuntimeException('The listing is unavailable or not yours.');
+        }
         $message='Asking price updated.';
       }elseif($action==='buy'){
         $q=$pdo->prepare("SELECT r.id,r.library_id,r.seller_id,r.game_id,r.price,r.status,g.title
