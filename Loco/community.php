@@ -447,6 +447,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $tab=(string)($_GET['tab']??'market');
 $allowedTabs=['market','sell','saved','trades','inventory','discussions','profile','workshop','reports'];
+if($tab==='saved'){header('Location: wishlist.php?tab=market');exit;}
 if(!in_array($tab,$allowedTabs,true))$tab='market';
 $editId=(int)($_GET['edit']??0);$editListing=null;
 $inventoryItems=[];$tradeInventoryItems=[];
@@ -533,12 +534,11 @@ try {
             </div>
         </div>
     </div>
-</div>
     <?php if ($notice): ?><div class="loco-notice success" role="status">✓ <?=h($notice)?></div><?php endif; ?>
     <?php if ($error): ?><div class="loco-notice error" role="alert">! <?=h($error)?></div><?php endif; ?>
 
     <nav class="loco-community-tabs" aria-label="Community sections">
-        <?php foreach (['market'=>'Marketplace','sell'=>'My Listings','saved'=>'Wishlist','trades'=>'Trade Center','inventory'=>'Inventory','workshop'=>'Workshop','discussions'=>'Discussions','reports'=>'My Reports','profile'=>'My Profile'] as $key=>$label): ?><a class="<?= $tab===$key?'active':'' ?>" href="community.php?tab=<?=h($key)?>"><?=h($label)?></a><?php endforeach; ?>
+        <?php foreach (['market'=>'Marketplace','sell'=>'My Listings','saved'=>'Saved Items','trades'=>'Trade Center','inventory'=>'Inventory','workshop'=>'Workshop','discussions'=>'Discussions','reports'=>'My Reports','profile'=>'My Profile'] as $key=>$label): ?><a class="<?= $tab===$key?'active':'' ?>" href="community.php?tab=<?=h($key)?>"><?=h($label)?></a><?php endforeach; ?>
     </nav>
 
     <?php if ($tab === 'market'): ?>
