@@ -137,6 +137,7 @@ try {
               <img src="profile_avatar.php?id=<?=$userId?>" alt="Player avatar" style="width:42px;height:42px;object-fit:cover">
               <div><strong><?=h($_SESSION['username'])?></strong><p style="font-size:.72rem;margin:3px 0">Demo LOCO account</p></div>
             </div>
+            <div class="loco-receipt-row"><span>Amount due</span><strong id="topup-demo-amount">Select an amount</strong></div>
             <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
             <div class="loco-receipt-row"><span>Payment</span><strong>Sandbox wallet top-up</strong></div>
             <div class="loco-receipt-row"><span>Status</span><strong>Awaiting demo confirmation</strong></div>
@@ -171,6 +172,9 @@ try {
   card.querySelectorAll('input').forEach(f=>f.required=cardMode);
   check.required=!cardMode;
  }
+ const amountSelect=document.getElementById('amount'),demoAmount=document.getElementById('topup-demo-amount');
+ function updateAmount(){if(demoAmount)demoAmount.textContent=amountSelect.value?'PHP '+Number(amountSelect.value).toLocaleString('en-PH',{minimumFractionDigits:2}):'Select an amount';}
+ amountSelect.addEventListener('change',updateAmount);updateAmount();
  sel.addEventListener('change',update);update();
 })();
 </script>
