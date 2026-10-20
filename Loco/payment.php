@@ -196,6 +196,14 @@ try {
             <label class="loco-sandbox-label" for="card_cvv">Security code</label>
             <input class="loco-sandbox-field" id="card_cvv" name="card_cvv" autocomplete="off" inputmode="numeric" maxlength="4" placeholder="123">
           </div>
+          <h3 class="loco-sandbox-heading" style="margin-top:17px">BILLING INFORMATION (DEMO)</h3>
+          <p class="loco-sandbox-label">Optional placeholder details only. Use fictional information; nothing below is stored.</p>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+            <label class="loco-sandbox-label">First name <input class="loco-sandbox-field" name="demo_first_name" autocomplete="off" placeholder="Demo"></label>
+            <label class="loco-sandbox-label">Last name <input class="loco-sandbox-field" name="demo_last_name" autocomplete="off" placeholder="Player"></label>
+            <label class="loco-sandbox-label">City <input class="loco-sandbox-field" name="demo_city" autocomplete="off" placeholder="Quezon City"></label>
+            <label class="loco-sandbox-label">Country <select class="loco-sandbox-field" name="demo_country"><option value="Philippines">Philippines</option></select></label>
+          </div>
         </section>
         <section id="provider-panel" class="loco-checkout-receipt" style="display:none">
           <div class="receipt-brand" id="provider-brand">GCash · DEMO</div>
