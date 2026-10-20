@@ -14,7 +14,7 @@ function h($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'
 
 try {
     // 1. Fetch user data and personal profile information (including avatar PFP)
-    $profile_sql = "SELECT u.username, u.email, u.wallet_balance, p.display_name, p.avatar_url, p.bio 
+    $profile_sql = "SELECT u.username, u.email, u.wallet_balance, p.display_name, p.avatar_url, p.bio, p.favorite_games 
                     FROM users u 
                     LEFT JOIN user_profiles p ON u.id = p.user_id 
                     WHERE u.id = :user_id LIMIT 1";
@@ -60,12 +60,12 @@ try {
         <div class="loco-community-heading">
             <div>
                 <p class="loco-eyebrow">LOCO GAMER NETWORK</p>
-                <h1 class="loco-logo-text"><?=h($user_profile['display_name'] ?? $currentUser)?></h1>
+                <h1 class="loco-logo-text"><?=h($user_profile['display_name'] ?: $currentUser)?></h1>
                 <p>Manage your account records and browse your personal purchased game updates platform dashboard library.</p>
             </div>
             <div class="loco-community-user">
                 <!-- Displays the user profile's database PFP string directly inside your visual element -->
-                <img src="<?=h($user_profile['avatar_url'] ?? 'images/default_avatar.png')?>" class="loco-avatar" alt="Avatar" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;">
+                <img src="profile_avatar.php?id=<?=(int)$current_user_id?>" class="loco-avatar" alt="Avatar" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;">
                 <div>
                     <strong><?=h($currentUser)?></strong>
                     <small>Wallet Balance: <span style="color: #2e7d32; font-weight: bold;">鱗<?=number_format((float)$user_profile['wallet_balance'], 2)?></span></small>
@@ -79,16 +79,21 @@ try {
             <div class="loco-section-heading">
                 <div>
                     <h2>About Player</h2>
-                    <p>Personal profile biography info data details.</p>
+                    <p>Your public biography and favorite games, saved to your account.</p>
                 </div>
             </div>
             <div class="loco-form-grid">
                 <div class="loco-full-width" style="color: #ccc; line-height: 1.6; background: #121212; padding: 15px; border-radius: 4px; border: 1px solid #2a2a2a;">
-                    <?= !empty($user_profile['bio']) ? nl2br(h($user_profile['bio'])) : "No biography bio details specified yet." ?>
+                    <?= !empty($user_profile['bio']) ? nl2br(h($user_profile['bio'])) : "No biography yet." ?>
                 </div>
             </div>
         </section>
 
+        <section class="loco-community-panel" style="margin-bottom:24px">
+            <div class="loco-section-heading"><div><h2>Favorite games</h2><p><?=h($user_profile['favorite_games'] ?: 'None selected yet.')?></p></div>
+                <a class="loco-button-small" href="community.php?tab=profile">Edit profile / photo</a>
+            </div>
+        </section>
         <!-- Games Catalog Grid Section using standard game-grid structure -->
         <section id="library" class="loco-community-panel">
             <div class="loco-section-heading">
