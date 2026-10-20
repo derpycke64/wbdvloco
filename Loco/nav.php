@@ -19,7 +19,7 @@ if ($isLoggedIn && isset($pdo) && $pdo instanceof PDO) {
 }
 function locoNavEsc($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 $storeActive = in_array($current_page, ['products.php','game_details.php','buy_game.php','wishlist.php','wallet.php'], true);
-$communityActive = $current_page === 'community.php';
+$communityActive = in_array($current_page, ['community.php','game_marketplace.php'], true);
 $libraryActive = $current_page === 'profile.php';
 ?>
 <header class="loco-global-nav">
@@ -52,6 +52,7 @@ $libraryActive = $current_page === 'profile.php';
         <div class="loco-nav-menu">
           <?php if($isLoggedIn): ?>
             <a href="community.php?tab=market">Marketplace</a>
+            <a href="game_marketplace.php">Games for Resale</a>
             <a href="community.php?tab=sell">My Listings</a>
             <a href="community.php?tab=trades">Trade Center</a>
             <a href="community.php?tab=workshop">Workshop</a>
