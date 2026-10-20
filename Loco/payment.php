@@ -71,8 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['last_checkout_receipt'] = $receipt;
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
-            if ($e instanceof RuntimeException) $error = $e->getMessage();
-            else { error_log('LOCO checkout failed: ' . $e->getMessage()); $error = 'Checkout could not be completed. Ensure all database migrations are imported, then try again.'; }
+            if ($e instanceof PDOException) {
+                error_log('LOCO checkout database error: ' . $e->getMessage());
+                $error = 'Checkout could not be completed. Ensure all database migrations are imported, then try again.';
+            } elseif ($e instanceof RuntimeException) {
+                $error = $e->getMessage();
+            } else {
+                error_log('LOCO checkout failed: ' . $e->getMessage());
+                $error = 'Checkout could not be completed. Please try again.';
+            }
         }
     }
 }
