@@ -140,9 +140,9 @@ try {
  <?php if($receipt!==null): ?>
   <section style="padding:22px">
    <h1 class="loco-sandbox-heading">Purchase Complete</h1>
-   <div class="loco-checkout-receipt <?=h($receipt['method']==='sandbox_paypal'?'paypal':'')?>">
-    <div class="receipt-brand"><?=h($receipt['method']==='sandbox_gcash'?'GCash · DEMO':($receipt['method']==='sandbox_paypal'?'PayPal · DEMO':'LOCO PAYMENT RECEIPT'))?></div>
-    <div class="loco-payment-warning">SIMULATED PAYMENT / CLASS PROJECT — NO REAL MONEY WAS CHARGED</div>
+   <div class="loco-checkout-receipt loco-provider-card <?=h($receipt['method']==='sandbox_paypal'?'paypal':'')?>">
+    <div class="receipt-brand"><span><?=h($receipt['method']==='sandbox_gcash'?'GCash':($receipt['method']==='sandbox_paypal'?'PayPal':'LOCO'))?></span><small>LOCO payment receipt</small></div>
+    <div class="loco-payment-warning"><strong>Payment simulation</strong><span>No real account or funds were used. This receipt confirms a local LOCO test.</span></div>
     <div class="receipt-content">
       <div style="display:flex;align-items:center;gap:12px;margin:0 0 14px">
         <img src="profile_avatar.php?id=<?=$userId?>" alt="LOCO player avatar" style="width:44px;height:44px;object-fit:cover;border:1px solid #b6bec8">
@@ -153,7 +153,7 @@ try {
       <div class="loco-receipt-row"><span>Player</span><strong><?=h($_SESSION['username'])?></strong></div>
       <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Demo Card','sandbox_gcash'=>'GCash Simulation','sandbox_paypal'=>'PayPal Simulation'][$receipt['method']]??$receipt['method'])?></strong></div>
       <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
-      <div class="loco-receipt-row"><span>Status</span><strong>Completed (Demo)</strong></div>
+      <div class="loco-receipt-row"><span>Status</span><strong>Completed (Simulation)</strong></div>
       <?php foreach($receipt['items'] as $item): ?><div class="loco-receipt-row"><span><?=h($item['title'])?></span><strong>₱<?=number_format((float)$item['price'],2)?></strong></div><?php endforeach; ?>
       <p style="font-size:.8rem">Your games have been added to your LOCO Library.</p>
     </div>
@@ -183,10 +183,10 @@ try {
         <input type="hidden" name="action" value="checkout">
         <label class="loco-sandbox-label" for="payment-method">Please select a payment method</label>
         <select id="payment-method" name="payment_method" class="loco-sandbox-choice" required>
-          <option value="wallet">LOCO Wallet</option>
-          <option value="sandbox_card">Visa / Mastercard (Demo Card)</option>
-          <option value="sandbox_gcash">GCash (Payment Simulation)</option>
-          <option value="sandbox_paypal">PayPal (Payment Simulation)</option>
+          <option value="wallet" <?=($_POST['payment_method']??'wallet')==='wallet'?'selected':''?>>LOCO Wallet</option>
+          <option value="sandbox_card" <?=($_POST['payment_method']??'wallet')==='sandbox_card'?'selected':''?>>Visa / Mastercard (Demo Card)</option>
+          <option value="sandbox_gcash" <?=($_POST['payment_method']??'wallet')==='sandbox_gcash'?'selected':''?>>GCash (Payment Simulation)</option>
+          <option value="sandbox_paypal" <?=($_POST['payment_method']??'wallet')==='sandbox_paypal'?'selected':''?>>PayPal (Payment Simulation)</option>
         </select>
         <p id="wallet-summary" style="font-size:.8rem;color:#c5cdd8">Wallet balance: <strong><?=$walletBalance===false||$walletBalance===null?'Unavailable':'₱'.number_format((float)$walletBalance,2)?></strong>　<a href="wallet.php">Add Funds</a></p>
         <section id="card-panel" class="loco-sandbox-well" style="margin-top:14px" hidden>
@@ -209,20 +209,34 @@ try {
             <label class="loco-sandbox-label">Country <select class="loco-sandbox-field" name="demo_country"><option value="Philippines">Philippines</option></select></label>
           </div>
         </section>
-        <section id="provider-panel" class="loco-checkout-receipt" style="display:none">
-          <div class="receipt-brand" id="provider-brand">GCash · DEMO</div>
-          <div class="loco-payment-warning">Payment simulation — never enter real credentials, OTPs or account details</div>
-          <div class="receipt-content">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-             <img src="profile_avatar.php?id=<?=$userId?>" alt="LOCO player" style="width:44px;height:44px;object-fit:cover;border:1px solid #ccd0d8">
-             <div><strong style="display:block"><?=h($_SESSION['username'])?></strong><small>Demo payer · LOCO account</small></div>
+        <section id="provider-panel" class="loco-provider-stage" style="display:none" aria-label="Simulated payment provider">
+          <div class="loco-checkout-receipt loco-provider-card" id="provider-card">
+            <div class="receipt-brand">
+              <span id="provider-brand" class="loco-provider-wordmark">GCash</span>
+              <small>LOCO checkout</small>
             </div>
-            <p style="font-size:.75rem;margin:0">AMOUNT DUE</p><h2 style="font-size:1.7rem;margin:4px 0 14px">PHP <?=number_format($total,2)?></h2>
-            <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
-            <div class="loco-receipt-row"><span>Account</span><strong><?=h($_SESSION['username'])?></strong></div>
-            <div class="loco-receipt-row"><span>Reference</span><strong>LOCO-DEMO-CHECKOUT</strong></div>
-            <div class="loco-receipt-row"><span>Status</span><strong>Pending confirmation</strong></div>
-            <label style="display:block;color:#182333;font-size:.78rem;margin-top:15px"><input type="checkbox" id="demo-confirm" name="demo_confirm" value="yes"> I understand this is a simulated payment with no real funds.</label>
+            <div class="loco-payment-warning"><strong>Payment simulation</strong><span>No real PayPal or GCash account, OTP, wallet, or funds are used.</span></div>
+            <div class="receipt-content">
+              <div class="loco-provider-amount">
+                <span>Amount due</span>
+                <strong>PHP <?=number_format($total,2)?></strong>
+              </div>
+              <div class="loco-provider-details">
+                <div class="loco-provider-payer">
+                  <img src="profile_avatar.php?id=<?=$userId?>" alt="Your LOCO profile picture">
+                  <div><strong><?=h($_SESSION['username'])?></strong><span>Demo player account</span></div>
+                </div>
+                <div class="loco-provider-detail-row"><span>Merchant</span><strong>LOCO / STOKER STUDIOS</strong></div>
+                <div class="loco-provider-detail-row"><span>Demo account</span><strong><?=h($_SESSION['username'])?></strong></div>
+                <div class="loco-provider-detail-row"><span>Reference</span><strong>LOCO-SIM-<?=str_pad((string)$userId,4,'0',STR_PAD_LEFT)?></strong></div>
+                <div class="loco-provider-detail-row"><span>Status</span><strong>Pending</strong></div>
+              </div>
+              <p class="loco-provider-explanation">Your demo account details were filled automatically. Confirming this payment completes only the local LOCO simulation. No real money is sent.</p>
+              <input type="hidden" name="demo_confirm" value="yes">
+              <button type="submit" class="loco-provider-confirm">Confirm simulated payment</button>
+              <button type="button" class="loco-provider-cancel" id="provider-cancel">Cancel and return to merchant</button>
+              <p class="loco-provider-footer-note">Local payment sandbox hosted by LOCO / Stoker Studios</p>
+            </div>
           </div>
         </section>
         <p class="loco-sandbox-label" style="margin:18px 0">You can review your order above. No real payment information is stored.</p>
@@ -248,17 +262,21 @@ try {
 (function(){
  const method=document.getElementById('payment-method');
  if(!method)return;
- const card=document.getElementById('card-panel'),provider=document.getElementById('provider-panel'),wallet=document.getElementById('wallet-summary'),check=document.getElementById('demo-confirm');
+ const card=document.getElementById('card-panel'),provider=document.getElementById('provider-panel'),wallet=document.getElementById('wallet-summary');
  function update(){
   const m=method.value,isCard=m==='sandbox_card',isProvider=(m==='sandbox_gcash'||m==='sandbox_paypal');
   card.hidden=!isCard;
   provider.style.display=isProvider?'block':'none';
   provider.classList.toggle('paypal',m==='sandbox_paypal');
-  document.getElementById('provider-brand').textContent=m==='sandbox_paypal'?'PayPal · DEMO':'GCash · DEMO';
+  document.getElementById('provider-brand').textContent=m==='sandbox_paypal'?'PayPal':'GCash';
+  document.getElementById('provider-card').classList.toggle('paypal',m==='sandbox_paypal');
+  document.querySelector('.loco-sandbox-page').classList.toggle('loco-provider-mode',isProvider);
   if(wallet)wallet.hidden=m!=='wallet';
   card.querySelectorAll('input').forEach(function(f){f.required=isCard;});
-  check.required=isProvider;
+
  }
+ const cancel=document.getElementById('provider-cancel');
+ cancel.addEventListener('click',function(){method.value='wallet';update();method.focus();});
  method.addEventListener('change',update);update();
 })();
 </script>
