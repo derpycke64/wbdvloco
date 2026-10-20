@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
+require_once 'game_license.php';
 
 if (!isset($_SESSION['username'])) {
     header('Location: Login.php');
@@ -27,14 +28,30 @@ try {
     }
 
     // 2. Fetch all games this user has purchased from the database library
-    $library_sql = "SELECT g.title, g.image_url, g.price, l.purchase_date 
+    $library_sql = "SELECT l.id AS library_id, g.title, g.image_url, g.price, l.purchase_date 
                     FROM library l
                     INNER JOIN games g ON l.game_id = g.id 
                     WHERE l.user_id = :user_id 
                     ORDER BY l.purchase_date DESC";
     $library_stmt = $pdo->prepare($library_sql);
     $library_stmt->execute([':user_id' => $current_user_id]);
-    $purchased_games = $library_stmt->fetchAll();
+    $purchased_games = $library_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $libraryLicenseNotice = '';
+    foreach($purchased_games as &$ownedGame){
+        $ownedGame['license_display'] = null;
+        $ownedGame['listed_for_resale'] = false;
+        try{
+            $license=locoEnsureGameLicense($pdo,(int)$ownedGame['library_id'],(int)$current_user_id);
+            if($license!==null)$ownedGame['license_display']=locoFormatGameLicense($license);
+            $check=$pdo->prepare("SELECT 1 FROM game_resale_listings WHERE library_id=:lid AND status='active' LIMIT 1");
+            $check->execute([':lid'=>(int)$ownedGame['library_id']]);
+            $ownedGame['listed_for_resale']=(bool)$check->fetchColumn();
+        }catch(PDOException $e){
+            $libraryLicenseNotice = 'To reveal LOCO game keys and sell games, import database/game_resale.sql into loco_db.';
+            error_log('LOCO library game license read: '.$e->getMessage());
+        }
+    }
+    unset($ownedGame);
 
 } catch (\PDOException $e) {
     die("Database error loading profile: " . $e->getMessage());
@@ -96,10 +113,12 @@ try {
             <div class="loco-section-heading">
                 <div>
                     <h2>Games Library (<?=count($purchased_games)?>)</h2>
-                    <p>Games purchased through the LOCO Store appear here in your library.</p>
+                    <p>Owned games and their LOCO demo license keys. Click Reveal Key to view your copy; the key transfers on resale.</p>
                 </div>
             </div>
 
+            <?php if(!empty($libraryLicenseNotice)): ?><p class="loco-notice error"><?=h($libraryLicenseNotice)?></p><?php endif; ?>
+            <div class="loco-library-helper-links"><a class="loco-button-small" href="game_marketplace.php?filter=mine">Sell a game</a> <a class="loco-small-link" href="game_marketplace.php">Browse used games</a></div>
             <?php if(empty($purchased_games)): ?>
                 <div class="loco-empty-state">
                     You haven't bought any games yet. Visit the <a href="Products.php">LOCO Store</a> to purchase your first catalog item.
@@ -113,8 +132,24 @@ try {
                                 <h4 class="game-title" style="margin-bottom: 5px;"><?=h($game['title'])?></h4>
                                 <p class="game-desc" style="font-size: 11px; color: #888;">Acquired on <?=date('M d, Y', strtotime($game['purchase_date']))?></p>
                             </div>
-                            <div class="game-purchase-bar">
-                                <span class="game-buy-btn" style="text-align:center;background:#343a42;border-color:#49535d;width:100%">IN LIBRARY</span>
+                            <div class="game-purchase-bar loco-library-license-actions">
+                                <?php if(!empty($game['listed_for_resale'])): ?>
+                                  <span class="loco-status-pill pending">LISTED FOR SALE</span>
+                                <?php else: ?>
+                                  <span class="loco-status-pill accepted">IN LIBRARY</span>
+                                <?php endif; ?>
+                                <?php if(!empty($game['license_display'])): ?>
+                                  <details class="loco-library-key">
+                                    <summary title="Click to reveal your LOCO demo key">🔑 Reveal Key</summary>
+                                    <code><?=h($game['license_display'])?></code>
+                                    <small>LOCO demo only · not redeemable elsewhere</small>
+                                  </details>
+                                <?php else: ?>
+                                  <small class="loco-muted">Key pending setup</small>
+                                <?php endif; ?>
+                                <a class="loco-small-link" href="game_marketplace.php?filter=mine<?=!empty($game['listed_for_resale'])?'':'&amp;sell='.(int)$game['library_id']?>#sell-owned-game">
+                                  <?=!empty($game['listed_for_resale'])?'Manage sale':'Sell Game'?>
+                                </a>
                             </div>
                         </div>
                     <?php endforeach; ?>
