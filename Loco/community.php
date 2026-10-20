@@ -287,7 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mime=(new finfo(FILEINFO_MIME_TYPE))->file($archive['tmp_name']);
                     if(!in_array($mime,['application/zip','application/x-zip-compressed','application/octet-stream'],true))throw new RuntimeException('The uploaded file is not a valid ZIP archive.');
                     $header=file_get_contents($archive['tmp_name'],false,null,0,4);
-                    if(!in_array($header,["PK\\x03\\x04","PK\\x05\\x06","PK\\x07\\x08"],true))throw new RuntimeException('The uploaded file is not a ZIP archive.');
+                    if(substr((string)$header,0,2)!=='PK')throw new RuntimeException('The uploaded file is not a ZIP archive.');
                     if(!is_dir($uploadDir) && !mkdir($uploadDir,0750,true) && !is_dir($uploadDir))throw new RuntimeException('Unable to create the Workshop upload folder.');
                     $archiveName=bin2hex(random_bytes(16)).'.zip';
                     if(!move_uploaded_file($archive['tmp_name'],$uploadDir.'/'.$archiveName))throw new RuntimeException('Unable to save the ZIP archive.');
