@@ -105,7 +105,7 @@ try {
 
             <?php if(empty($purchased_games)): ?>
                 <div class="loco-empty-state">
-                    You haven't bought any games yet. Visit the <a href="products.php">LOCO Store</a> to purchase your first catalog item.
+                    You haven't bought any games yet. Visit the <a href="Products.php">LOCO Store</a> to purchase your first catalog item.
                 </div>
             <?php else: ?>
                 <div class="game-grid">
