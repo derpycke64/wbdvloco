@@ -186,6 +186,7 @@ try {
   document.getElementById('topup-provider-brand').textContent=m==='sandbox_paypal'?'PayPal':'GCash';
   document.getElementById('topup-provider-card').classList.toggle('paypal',m==='sandbox_paypal');
   document.querySelector('.loco-sandbox-page').classList.toggle('loco-provider-mode',!cardMode);
+  document.body.classList.toggle('loco-provider-screen',!cardMode);
   card.querySelectorAll('input').forEach(f=>f.required=cardMode);
 
  }
