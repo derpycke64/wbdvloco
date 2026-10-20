@@ -109,11 +109,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $q=$pdo->prepare('SELECT id FROM users WHERE id=:id FOR UPDATE');
                     $q->execute([':id'=>(int)$listing['seller_id']]);
                     if(!$q->fetch()) throw new RuntimeException('Seller account not found.');
-                    $q=$pdo->prepare('UPDATE users SET wallet_balance=wallet_balance-:price WHERE id=:id AND wallet_balance>=:minimum');
-                    $q->execute([':price'=>$price,':id'=>$buyerId,':minimum'=>$price]);
-                    if($q->rowCount()!==1) throw new RuntimeException('Insufficient LOCO wallet balance.');
-                    $q=$pdo->prepare('UPDATE users SET wallet_balance=wallet_balance+:price WHERE id=:id');
-                    $q->execute([':price'=>$price,':id'=>(int)$listing['seller_id']]);
+                    if($price>0){
+                        $q=$pdo->prepare('UPDATE users SET wallet_balance=wallet_balance-:price WHERE id=:id AND wallet_balance>=:minimum');
+                        $q->execute([':price'=>$price,':id'=>$buyerId,':minimum'=>$price]);
+                        if($q->rowCount()!==1) throw new RuntimeException('Insufficient LOCO wallet balance.');
+                        $q=$pdo->prepare('UPDATE users SET wallet_balance=wallet_balance+:price WHERE id=:id');
+                        $q->execute([':price'=>$price,':id'=>(int)$listing['seller_id']]);
+                    }
                     $q=$pdo->prepare('UPDATE inventories SET user_id=:buyer WHERE id=:id AND user_id=:seller');
                     $q->execute([':buyer'=>$buyerId,':id'=>(int)$listing['inventory_id'],':seller'=>(int)$listing['seller_id']]);
                     if($q->rowCount()!==1) throw new RuntimeException('Item ownership changed. Please try again.');
