@@ -141,32 +141,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }catch(PDOException $e){$error='Import database/marketplace_database.sql to enable wishlist storage.';}
                 break;
             case 'request_trade':
-                $id=(int)($_POST['listing_id']??0); $offerId=(int)($_POST['offer_inventory_id']??0);
-                $q=$pdo->prepare("SELECT ml.id,ml.seller_id,gi.item_name AS title,u.username AS seller FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN users u ON u.id=ml.seller_id WHERE ml.id=:id AND ml.status='active' LIMIT 1");
-                $q->execute([':id'=>$id]); $listing=$q->fetch();
-                if(!$listing)$error='That listing is no longer available.';
-                elseif((int)$listing['seller_id']===(int)$_SESSION['user_id'])$error='You cannot send a trade request for your own listing.';
-                else{
-                    $offer=null;
-                    if($offerId>0){
-                        $owned=$pdo->prepare("SELECT gi.item_name AS name,g.title AS game FROM inventories i JOIN game_items gi ON gi.id=i.item_id JOIN games g ON g.id=gi.game_id WHERE i.id=:id AND i.user_id=:uid AND NOT EXISTS (SELECT 1 FROM marketplace_listings ml WHERE ml.inventory_id=i.id AND ml.status='active') LIMIT 1");
-                        $owned->execute([':id'=>$offerId,':uid'=>(int)$_SESSION['user_id']]);
-                        $offer=$owned->fetch()?:null;
-                        if(!$offer){$error='That offer item is not in your available inventory.';break;}
-                    }
-                    $tradeId=$_SESSION['loco_next_trade_id']++;
-                    $offerName=$offer?$offer['name'].' ('.$offer['game'].')':'No item selected (purchase inquiry)';
-                    $_SESSION['loco_trades'][$tradeId]=['id'=>$tradeId,'listing_id'=>$id,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offerName,'offer_inventory_id'=>$offerId ?: null,'status'=>'Pending','created'=>time()];
-                    $_SESSION['loco_trade_history'][]=['id'=>$tradeId,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offerName,'status'=>'Pending','updated'=>time()];
-                    $notice='Demo trade request created using your database-owned inventory. Requests and transfers are still session-based.';
+                $listingId=(int)($_POST['listing_id']??0);
+                $offerId=(int)($_POST['offer_inventory_id']??0);
+                if($offerId<=0){$error='Select an inventory item to offer for this trade.';break;}
+                try {
+                    $pdo->beginTransaction();
+                    $q=$pdo->prepare("SELECT id,seller_id,inventory_id,item_id FROM marketplace_listings WHERE id=:id AND status='active' FOR UPDATE");
+                    $q->execute([':id'=>$listingId]);$listing=$q->fetch(PDO::FETCH_ASSOC);
+                    if(!$listing || !$listing['inventory_id'])throw new RuntimeException('This listing is no longer available for trading.');
+                    $uid=(int)$_SESSION['user_id'];
+                    if((int)$listing['seller_id']===$uid)throw new RuntimeException('You cannot trade with yourself.');
+                    $q=$pdo->prepare('SELECT id,user_id,item_id FROM inventories WHERE id=:id FOR UPDATE');
+                    $q->execute([':id'=>(int)$listing['inventory_id']]);$sellerItem=$q->fetch(PDO::FETCH_ASSOC);
+                    if(!$sellerItem || (int)$sellerItem['user_id']!==(int)$listing['seller_id'] || (int)$sellerItem['item_id']!==(int)$listing['item_id'])throw new RuntimeException('Seller no longer owns the listed item.');
+                    $q=$pdo->prepare('SELECT id,user_id FROM inventories WHERE id=:id FOR UPDATE');
+                    $q->execute([':id'=>$offerId]);$offer=$q->fetch(PDO::FETCH_ASSOC);
+                    if(!$offer || (int)$offer['user_id']!==$uid)throw new RuntimeException('That item is no longer in your inventory.');
+                    $q=$pdo->prepare("SELECT id FROM marketplace_listings WHERE inventory_id=:iid AND status='active' LIMIT 1");
+                    $q->execute([':iid'=>$offerId]);
+                    if($q->fetch())throw new RuntimeException('Remove your item from the marketplace before offering it.');
+                    $q=$pdo->prepare("SELECT id FROM trade_requests WHERE offered_inventory_id=:iid AND status='pending' LIMIT 1");
+                    $q->execute([':iid'=>$offerId]);
+                    if($q->fetch())throw new RuntimeException('That item is already offered in a pending trade.');
+                    $q=$pdo->prepare("INSERT INTO trade_requests (listing_id,requester_id,seller_id,offered_inventory_id,message,status) VALUES (:lid,:requester,:seller,:offer,NULL,'pending')");
+                    $q->execute([':lid'=>$listingId,':requester'=>$uid,':seller'=>(int)$listing['seller_id'],':offer'=>$offerId]);
+                    $tradeId=(int)$pdo->lastInsertId();
+                    $q=$pdo->prepare("INSERT INTO trade_request_history (trade_request_id,changed_by,old_status,new_status,note) VALUES (:trade,:actor,NULL,'pending','Trade offer submitted')");
+                    $q->execute([':trade'=>$tradeId,':actor'=>$uid]);
+                    $pdo->commit();$notice='Trade request sent. The seller can accept or reject it in Trade Center.';
+                }catch(Throwable $e){
+                    if($pdo->inTransaction())$pdo->rollBack();
+                    if($e instanceof PDOException){error_log('LOCO trade request failed: '.$e->getMessage());$error='Unable to save trade request. Import database/loco_db_upgrade.sql if needed.';}
+                    else $error=$e->getMessage();
                 }
                 break;
             case 'update_trade':
-                $id = (int)($_POST['trade_id'] ?? 0); $status = (string)($_POST['status'] ?? ''); $trade = $_SESSION['loco_trades'][$id] ?? null;
-                if (!$trade || !in_array($status, ['Accepted','Rejected','Cancelled'], true)) $error = 'Trade request could not be updated.';
-                elseif (($status === 'Cancelled' && $trade['requester'] !== $currentUser) || (in_array($status, ['Accepted','Rejected'], true) && $trade['seller'] !== $currentUser)) $error = 'You are not allowed to update this request.';
-                elseif ($trade['status'] !== 'Pending') $error = 'This trade request has already been resolved.';
-                else { $_SESSION['loco_trades'][$id]['status'] = $status; foreach ($_SESSION['loco_trade_history'] as &$hist) if ((int)$hist['id'] === $id) { $hist['status'] = $status; $hist['updated'] = time(); } unset($hist); $notice = 'Trade request marked '.$status.'. No real item or money was transferred.'; }
+                $tradeId=(int)($_POST['trade_id']??0);
+                $decision=(string)($_POST['status']??'');
+                $uid=(int)$_SESSION['user_id'];
+                if(!in_array($decision,['accepted','rejected','cancelled'],true)){$error='Invalid trade action.';break;}
+                try{
+                    $pdo->beginTransaction();
+                    $q=$pdo->prepare("SELECT * FROM trade_requests WHERE id=:id FOR UPDATE");
+                    $q->execute([':id'=>$tradeId]);$trade=$q->fetch(PDO::FETCH_ASSOC);
+                    if(!$trade || $trade['status']!=='pending')throw new RuntimeException('This trade request is no longer pending.');
+                    if($decision==='cancelled' ? (int)$trade['requester_id']!==$uid : (int)$trade['seller_id']!==$uid)throw new RuntimeException('You cannot update this request.');
+                    $newStatus=$decision;
+                    if($decision==='accepted'){
+                        $q=$pdo->prepare("SELECT id,seller_id,item_id,inventory_id FROM marketplace_listings WHERE id=:id AND status='active' FOR UPDATE");
+                        $q->execute([':id'=>(int)$trade['listing_id']]);$listing=$q->fetch(PDO::FETCH_ASSOC);
+                        if(!$listing || !$listing['inventory_id'] || (int)$listing['seller_id']!==(int)$trade['seller_id'])throw new RuntimeException('Listed item is no longer available.');
+                        $sellerInventory=(int)$listing['inventory_id'];
+                        $offeredInventory=(int)$trade['offered_inventory_id'];
+                        if($sellerInventory<1 || $offeredInventory<1 || $sellerInventory===$offeredInventory)throw new RuntimeException('The trade items are invalid.');
+                        $ids=[$sellerInventory,$offeredInventory];sort($ids,SORT_NUMERIC);
+                        $q=$pdo->prepare('SELECT id,user_id,item_id FROM inventories WHERE id IN (:first,:second) ORDER BY id FOR UPDATE');
+                        $q->execute([':first'=>$ids[0],':second'=>$ids[1]]);
+                        $owned=[];foreach($q->fetchAll(PDO::FETCH_ASSOC) as $row)$owned[(int)$row['id']]=$row;
+                        if(!isset($owned[$sellerInventory],$owned[$offeredInventory])
+                            || (int)$owned[$sellerInventory]['user_id']!==(int)$trade['seller_id']
+                            || (int)$owned[$sellerInventory]['item_id']!==(int)$listing['item_id']
+                            || (int)$owned[$offeredInventory]['user_id']!==(int)$trade['requester_id'])
+                            throw new RuntimeException('An offered item changed owners. The trade cannot proceed.');
+                        $q=$pdo->prepare("SELECT id FROM marketplace_listings WHERE inventory_id=:id AND status='active' LIMIT 1");
+                        $q->execute([':id'=>$offeredInventory]);
+                        if($q->fetch())throw new RuntimeException('The offered item is now listed for sale.');
+                        $q=$pdo->prepare("UPDATE inventories SET user_id=:uid WHERE id=:id AND user_id=:previous");
+                        $q->execute([':uid'=>(int)$trade['requester_id'],':id'=>$sellerInventory,':previous'=>(int)$trade['seller_id']]);
+                        if($q->rowCount()!==1)throw new RuntimeException('Listed item ownership could not be transferred.');
+                        $q->execute([':uid'=>(int)$trade['seller_id'],':id'=>$offeredInventory,':previous'=>(int)$trade['requester_id']]);
+                        if($q->rowCount()!==1)throw new RuntimeException('Offered item ownership could not be transferred.');
+                        $q=$pdo->prepare("UPDATE marketplace_listings SET status='traded' WHERE id=:id AND status='active'");
+                        $q->execute([':id'=>(int)$trade['listing_id']]);
+                        if($q->rowCount()!==1)throw new RuntimeException('Listing is no longer active.');
+                        $newStatus='completed';
+                    }
+                    $q=$pdo->prepare('UPDATE trade_requests SET status=:status WHERE id=:id AND status=\'pending\'');
+                    $q->execute([':status'=>$newStatus,':id'=>$tradeId]);
+                    if($q->rowCount()!==1)throw new RuntimeException('Trade status was already updated.');
+                    $q=$pdo->prepare("INSERT INTO trade_request_history (trade_request_id,changed_by,old_status,new_status,note) VALUES (:id,:actor,'pending',:status,:note)");
+                    $q->execute([':id'=>$tradeId,':actor'=>$uid,':status'=>$newStatus,':note'=>$newStatus==='completed'?'Both inventory items exchanged':'Trade request '.$newStatus]);
+                    $pdo->commit();
+                    $notice=$newStatus==='completed'?'Trade completed! Both items have been exchanged.':'Trade request '.$newStatus.'.';
+                }catch(Throwable $e){
+                    if($pdo->inTransaction())$pdo->rollBack();
+                    if($e instanceof PDOException){error_log('LOCO trade update failed: '.$e->getMessage());$error='Unable to update the trade. Check the trade database tables.';}
+                    else $error=$e->getMessage();
+                }
                 break;
             case 'add_inventory':
                 $name=postText('item_name',150); $game=postText('item_game',150); $type=postText('item_type',50); $quantity=filter_var($_POST['quantity']??1,FILTER_VALIDATE_INT);
@@ -237,8 +298,14 @@ try{
     $tradeInventoryItems=array_values(array_filter($inventoryItems,fn($item)=>empty($item['active_listing_id'])));
     if($editId>0){$q=$pdo->prepare("SELECT ml.id,ml.seller_id,ml.item_id,ml.inventory_id,ml.price,gi.item_name AS title,gi.description,gi.rarity,g.title AS game FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN games g ON g.id=gi.game_id WHERE ml.id=:id AND ml.seller_id=:uid AND ml.status='active' LIMIT 1");$q->execute([':id'=>$editId,':uid'=>(int)$_SESSION['user_id']]);$editListing=$q->fetch()?:null;}
 }catch(PDOException $e){$listings=$myListings=$savedListingIds=$gameOptions=$inventoryItems=$tradeInventoryItems=[];$error=$error?:'Marketplace database is not ready. Import the marketplace and community inventory migrations.';}
-$myTrades=array_filter($_SESSION['loco_trades'],fn($trade)=>$trade['requester']===$currentUser||$trade['seller']===$currentUser);
-$myHistory=array_reverse($_SESSION['loco_trade_history']);
+$myTrades=[];$myHistory=[];
+try{
+    $q=$pdo->prepare("SELECT tr.id,tr.listing_id,tr.requester_id,tr.seller_id,tr.offered_inventory_id,tr.status,tr.created_at,gi.item_name AS listing_title,offer_item.item_name AS offer_item,requester.username AS requester,seller.username AS seller FROM trade_requests tr JOIN marketplace_listings ml ON ml.id=tr.listing_id JOIN game_items gi ON gi.id=ml.item_id LEFT JOIN inventories offer_inv ON offer_inv.id=tr.offered_inventory_id LEFT JOIN game_items offer_item ON offer_item.id=offer_inv.item_id JOIN users requester ON requester.id=tr.requester_id JOIN users seller ON seller.id=tr.seller_id WHERE tr.requester_id=:requester OR tr.seller_id=:seller ORDER BY tr.created_at DESC,tr.id DESC");
+    $q->execute([':requester'=>(int)$_SESSION['user_id'],':seller'=>(int)$_SESSION['user_id']]);
+    $myTrades=$q->fetchAll(PDO::FETCH_ASSOC);
+    $q=$pdo->prepare("SELECT th.id,th.trade_request_id,th.old_status,th.new_status,th.note,th.changed_at,gi.item_name AS listing_title FROM trade_request_history th JOIN trade_requests tr ON tr.id=th.trade_request_id JOIN marketplace_listings ml ON ml.id=tr.listing_id JOIN game_items gi ON gi.id=ml.item_id WHERE tr.requester_id=:requester OR tr.seller_id=:seller ORDER BY th.changed_at DESC,th.id DESC LIMIT 100");
+    $q->execute([':requester'=>(int)$_SESSION['user_id'],':seller'=>(int)$_SESSION['user_id']]);$myHistory=$q->fetchAll(PDO::FETCH_ASSOC);
+}catch(PDOException $e){error_log('LOCO trade data unavailable: '.$e->getMessage());if(($_GET['tab']??'')==='trades')$error=$error?:'Trade database is not ready. Import database/loco_db_upgrade.sql.';}
 $myPosts=array_reverse($_SESSION['loco_discussions'],true);
 ?>
 <!DOCTYPE html>
@@ -255,7 +322,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
         <div>
             <p class="loco-eyebrow">LOCO PLAYER NETWORK</p>
             <h1 class="loco-logo-text">Community & Trading Hub</h1>
-            <p>Trade demo items, manage listings, save finds, and talk with other players.</p>
+            <p>Trade inventory items, manage listings, save finds, and talk with other players.</p>
         </div>
         <div class="loco-community-user">
             <span class="loco-avatar">🎮</span>
@@ -273,7 +340,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
     </nav>
 
     <?php if ($tab === 'market'): ?>
-    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Marketplace</h2><p>Compare item details, asking prices, and sellers before sending a demo request.</p></div><a class="loco-brand-gloss-btn" href="community.php?tab=sell">＋ Create listing</a></div>
+    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Marketplace</h2><p>Browse items, buy with your LOCO wallet, or offer an item in trade.</p></div><a class="loco-brand-gloss-btn" href="community.php?tab=sell">＋ Create listing</a></div>
         <div class="loco-market-tools">
             <label class="loco-market-search-wrap">
                 <span class="sr-only">Search listings</span>
@@ -328,8 +395,25 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
     <?php if(!$savedItems): ?><p class="loco-empty-state">Your wishlist is empty. Save a listing from the Marketplace using the heart icon.</p><?php endif; ?>
     <?php foreach($savedItems as $item): ?><div class="loco-owned-row"><div><strong><?=h($item['title'])?></strong><small><?=h($item['game'])?> · <?=h($item['seller'])?> · ₱<?=number_format((float)$item['price'],2)?></small></div><form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="toggle_wishlist"><input type="hidden" name="listing_id" value="<?=$item['id']?>"><button class="loco-danger-link">Remove saved</button></form></div><?php endforeach; ?></div></section>
     <?php elseif ($tab === 'trades'): ?>
-    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Trade center & history</h2><p>Review requests sent by you or addressed to your username. Actions are simulated; no items or money move.</p></div></div><div class="loco-trade-list"><?php if(!$myTrades): ?><p class="loco-empty-state">No trade requests yet. Visit the Marketplace to request a trade.</p><?php endif; ?><?php foreach(array_reverse($myTrades, true) as $trade): ?><article class="loco-trade-card"><div><span class="loco-status-pill <?=strtolower($trade['status'])?>"><?=h($trade['status'])?></span><h3><?=h($trade['listing_title'])?></h3><p>From <?=h($trade['requester'])?> to <?=h($trade['seller'])?></p><small>Offer: <?=h($trade['offer_item'])?> · <?=date('M j, Y g:i A',$trade['created'])?></small></div><div class="loco-row-actions"><?php if($trade['status']==='Pending' && $trade['seller']===$currentUser): ?><form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="update_trade"><input type="hidden" name="trade_id" value="<?=$trade['id']?>"><input type="hidden" name="status" value="Accepted"><button class="loco-button-small">Accept</button></form><form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="update_trade"><input type="hidden" name="trade_id" value="<?=$trade['id']?>"><input type="hidden" name="status" value="Rejected"><button class="loco-danger-link">Reject</button></form><?php elseif($trade['status']==='Pending' && $trade['requester']===$currentUser): ?><form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="update_trade"><input type="hidden" name="trade_id" value="<?=$trade['id']?>"><input type="hidden" name="status" value="Cancelled"><button class="loco-danger-link">Cancel request</button></form><?php endif; ?></div></article><?php endforeach; ?></div>
-        <h3 class="loco-subheading">Trade history</h3><div class="loco-owned-listings"><?php if(!$myHistory): ?><p class="loco-muted">Resolved and pending trade activity will appear here.</p><?php endif; ?><?php foreach($myHistory as $history): if($history['requester']!==$currentUser && $history['seller']!==$currentUser) continue; ?><div class="loco-owned-row"><div><strong><?=h($history['listing_title'])?></strong><small><?=h($history['requester'])?> → <?=h($history['seller'])?> · <?=h($history['offer_item'])?></small></div><span class="loco-status-pill <?=strtolower($history['status'])?>"><?=h($history['status'])?></span></div><?php endforeach; ?></div>
+    <section class="loco-community-panel">
+        <div class="loco-section-heading"><div><h2>Trade center & history</h2><p>Send real inventory-for-inventory offers. Accepted trades exchange items permanently in the database; no wallet funds move.</p></div></div>
+        <div class="loco-trade-list">
+        <?php if(!$myTrades): ?><p class="loco-empty-state">No trade requests yet. Visit the Marketplace and offer an inventory item.</p><?php endif; ?>
+        <?php foreach($myTrades as $trade): ?>
+        <article class="loco-trade-card"><div><span class="loco-status-pill <?=h($trade['status'])?>"><?=h(ucfirst($trade['status']))?></span>
+        <h3><?=h($trade['listing_title'])?></h3><p>From <?=h($trade['requester'])?> to <?=h($trade['seller'])?></p>
+        <small>Offered: <?=h($trade['offer_item']??'Item removed')?> · <?=h($trade['created_at'])?></small></div>
+        <div class="loco-row-actions">
+        <?php if($trade['status']==='pending' && (int)$trade['seller_id']===(int)$_SESSION['user_id']): ?>
+          <form method="post" onsubmit="return confirm('Accept and permanently swap both inventory items?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="update_trade"><input type="hidden" name="trade_id" value="<?=$trade['id']?>"><input type="hidden" name="status" value="accepted"><button class="loco-button-small">Accept & swap</button></form>
+          <form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="update_trade"><input type="hidden" name="trade_id" value="<?=$trade['id']?>"><input type="hidden" name="status" value="rejected"><button class="loco-danger-link">Reject</button></form>
+        <?php elseif($trade['status']==='pending' && (int)$trade['requester_id']===(int)$_SESSION['user_id']): ?>
+          <form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="update_trade"><input type="hidden" name="trade_id" value="<?=$trade['id']?>"><input type="hidden" name="status" value="cancelled"><button class="loco-danger-link">Cancel request</button></form>
+        <?php endif; ?></div></article>
+        <?php endforeach; ?></div>
+        <h3 class="loco-subheading">Trade history</h3>
+        <div class="loco-owned-listings"><?php if(!$myHistory): ?><p class="loco-muted">Trade activity will appear here.</p><?php endif; ?>
+        <?php foreach($myHistory as $history): ?><div class="loco-owned-row"><div><strong><?=h($history['listing_title'])?></strong><small><?=h($history['note']??'')?> · <?=h($history['changed_at'])?></small></div><span class="loco-status-pill <?=h($history['new_status'])?>"><?=h(ucfirst($history['new_status']))?></span></div><?php endforeach; ?></div>
     </section>
     <?php elseif ($tab === 'inventory'): ?>
     <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>My inventory</h2><p>Items here are saved to your account in the database. Items with an active listing stay in your inventory but cannot be removed until the listing is removed.</p></div></div><form method="post" class="loco-form-grid compact"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="add_inventory"><label>Item name<input name="item_name" maxlength="150" required></label><label>Game<select name="item_game" required><option value="">Choose a game</option><?php foreach($gameOptions as $gameOption): ?><option value="<?=h($gameOption)?>"><?=h($gameOption)?></option><?php endforeach; ?></select></label><label>Type<input name="item_type" maxlength="50" required placeholder="Skin, collectible…"></label><label>Quantity<input name="quantity" type="number" min="1" max="999" value="1" required></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Add to inventory</button></div></form><div class="loco-inventory-grid"><?php if(!$inventoryItems): ?><p class="loco-empty-state">Your inventory is empty. Add an item above or publish a listing to create an owned item.</p><?php endif; ?><?php foreach($inventoryItems as $item): ?><article class="loco-inventory-card"><span class="loco-listing-symbol">✦</span><h3><?=h($item['title'])?></h3><p><?=h($item['game'])?></p><span class="loco-market-tag"><?=h($item['rarity']??'Item')?></span><?php if(!empty($item['active_listing_id'])): ?><p class="loco-session-note">Listed on marketplace</p><a class="loco-small-link" href="community.php?tab=sell">Manage listing</a><?php else: ?><form method="post" onsubmit="return confirm('Remove this inventory item?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="remove_inventory"><input type="hidden" name="inventory_id" value="<?=$item['inventory_id']?>"><button class="loco-danger-link">Remove item</button></form><?php endif; ?></article><?php endforeach; ?></div></section>
@@ -391,7 +475,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
     </div>
     </footer>
 
-<div class="loco-modal" id="trade-modal" aria-hidden="true"><div class="loco-modal-card" role="dialog" aria-modal="true" aria-labelledby="trade-modal-title"><button type="button" class="loco-modal-close" onclick="closeTrade()" aria-label="Close">×</button><p class="loco-eyebrow">TRADE REQUEST</p><h2 id="trade-modal-title">Request a trade</h2><p id="trade-listing-name"></p><form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="request_trade"><input type="hidden" name="listing_id" id="trade-listing-id"><label>Offer an inventory item (optional)<select name="offer_inventory_id"><option value="0">No item — purchase inquiry only</option><?php foreach($tradeInventoryItems as $item): ?><option value="<?=$item['inventory_id']?>"><?=h($item['title'])?> (<?=h($item['game'])?>)</option><?php endforeach; ?></select></label><p class="loco-session-note">Trade requests are still a demo. This offer is checked against your database-owned inventory, but no item or money is transferred yet.</p><button class="loco-brand-gloss-btn" type="submit">Send request</button></form></div></div>
+<div class="loco-modal" id="trade-modal" aria-hidden="true"><div class="loco-modal-card" role="dialog" aria-modal="true" aria-labelledby="trade-modal-title"><button type="button" class="loco-modal-close" onclick="closeTrade()" aria-label="Close">×</button><p class="loco-eyebrow">TRADE REQUEST</p><h2 id="trade-modal-title">Request a trade</h2><p id="trade-listing-name"></p><form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="request_trade"><input type="hidden" name="listing_id" id="trade-listing-id"><label>Offer an inventory item<select name="offer_inventory_id" required><option value="">Choose an item to exchange</option><?php foreach($tradeInventoryItems as $item): ?><option value="<?=$item['inventory_id']?>"><?=h($item['title'])?> (<?=h($item['game'])?>)</option><?php endforeach; ?></select></label><p class="loco-session-note">The seller can accept your offer to exchange both inventory items. No wallet funds are involved.</p><button class="loco-brand-gloss-btn" type="submit">Send request</button></form></div></div>
 <script>
     (function(){
     const search=document.getElementById('market-search'), 
