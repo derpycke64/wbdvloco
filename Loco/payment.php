@@ -144,6 +144,10 @@ try {
     <div class="receipt-brand"><?=h($receipt['method']==='sandbox_gcash'?'GCash · DEMO':($receipt['method']==='sandbox_paypal'?'PayPal · DEMO':'LOCO PAYMENT RECEIPT'))?></div>
     <div class="loco-payment-warning">SIMULATED PAYMENT / CLASS PROJECT — NO REAL MONEY WAS CHARGED</div>
     <div class="receipt-content">
+      <div style="display:flex;align-items:center;gap:12px;margin:0 0 14px">
+        <img src="profile_avatar.php?id=<?=$userId?>" alt="LOCO player avatar" style="width:44px;height:44px;object-fit:cover;border:1px solid #b6bec8">
+        <div><strong style="display:block"><?=h($_SESSION['username'])?></strong><small>LOCO demo payer</small></div>
+      </div>
       <p style="font-weight:800;font-size:1.2rem;margin:3px 0">₱<?=number_format((float)$receipt['total'],2)?></p>
       <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
       <div class="loco-receipt-row"><span>Player</span><strong><?=h($_SESSION['username'])?></strong></div>
