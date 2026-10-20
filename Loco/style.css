@@ -1273,3 +1273,17 @@ h3.loco-label-thingy {
 .loco-trade-inline-form{position:absolute;right:0;top:calc(100% + 8px);z-index:40;min-width:min(290px,80vw);padding:16px;flex-direction:column;gap:12px;background:#171a21;border:1px solid #5f626b;box-shadow:0 12px 30px #0009;border-radius:5px}
 .loco-trade-inline-form label{display:flex;flex-direction:column;gap:7px;color:#eee;font-size:.8rem}
 .loco-trade-inline-form select{width:100%;box-sizing:border-box;background:#101116;color:#fff;border:1px solid #444956;padding:9px}
+
+/* Database-backed Workshop */
+.loco-workshop-publish{margin:14px 0 24px}
+.loco-workshop-publish>summary{display:inline-block;cursor:pointer;list-style:none}
+.loco-workshop-publish>summary::-webkit-details-marker{display:none}
+.loco-workshop-grid{align-items:stretch}
+.loco-workshop-card{min-width:0;overflow:hidden}
+.loco-workshop-card h3,.loco-workshop-card p{overflow-wrap:anywhere}
+.loco-workshop-card>p{color:#d4d8e0;line-height:1.5}
+.loco-workshop-card .loco-muted{color:#b9c1ce}
+.loco-workshop-placeholder{display:flex;align-items:center;justify-content:center;min-height:155px;background:linear-gradient(130deg,#181a26,#32202b);border:1px solid #3c3f52;color:#f3c5dc;letter-spacing:.12em;font-weight:800}
+.loco-workshop-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
+.loco-workshop-actions form{margin:0}
+.loco-workshop-actions .loco-button-small{display:inline-flex;align-items:center;text-decoration:none;cursor:pointer}
