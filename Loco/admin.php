@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         }
     }
 }
-$users=[];$reports=[];$listings=[];$discussions=[];$audit=[];$stats=[];
+$users=[];$reports=[];$reportHistory=[];$listings=[];$discussions=[];$audit=[];$stats=[];
 try{
     $stats=[
       'users'=>(int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn(),
@@ -84,9 +84,13 @@ try{
       'discussions'=>(int)$pdo->query('SELECT COUNT(*) FROM discussions')->fetchColumn()
     ];
     $users=$pdo->query('SELECT id,username,email,role,created_at FROM users ORDER BY id DESC LIMIT 100')->fetchAll(PDO::FETCH_ASSOC);
-    $reports=$pdo->query("SELECT mr.id,mr.listing_id,mr.reason,mr.status,mr.moderator_notes,mr.admin_response,mr.created_at,u.username AS reporter,gi.item_name
+    $allReports=$pdo->query("SELECT mr.id,mr.listing_id,mr.reason,mr.status,mr.moderator_notes,mr.admin_response,mr.created_at,mr.resolved_at,u.username AS reporter,gi.item_name
        FROM marketplace_reports mr JOIN users u ON u.id=mr.reporter_id JOIN marketplace_listings ml ON ml.id=mr.listing_id
-       JOIN game_items gi ON gi.id=ml.item_id ORDER BY FIELD(mr.status,'open','reviewing','resolved','dismissed'),mr.created_at DESC,mr.id DESC LIMIT 100")->fetchAll(PDO::FETCH_ASSOC);
+       JOIN game_items gi ON gi.id=ml.item_id ORDER BY mr.created_at DESC,mr.id DESC LIMIT 200")->fetchAll(PDO::FETCH_ASSOC);
+    foreach($allReports as $reportRow){
+        if(in_array($reportRow['status'],['open','reviewing'],true))$reports[]=$reportRow;
+        elseif(in_array($reportRow['status'],['resolved','dismissed'],true))$reportHistory[]=$reportRow;
+    }
     $listings=$pdo->query("SELECT ml.id,gi.item_name,ml.price,u.username AS seller FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN users u ON u.id=ml.seller_id WHERE ml.status='active' ORDER BY ml.created_at DESC LIMIT 100")->fetchAll(PDO::FETCH_ASSOC);
     $discussions=$pdo->query('SELECT d.id,d.title,d.created_at,u.username AS author FROM discussions d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 100')->fetchAll(PDO::FETCH_ASSOC);
     $audit=$pdo->query('SELECT al.*,u.username AS administrator FROM admin_audit_log al JOIN users u ON u.id=al.admin_user_id ORDER BY al.created_at DESC,al.id DESC LIMIT 40')->fetchAll(PDO::FETCH_ASSOC);
@@ -106,9 +110,10 @@ try{
       <div><strong><?=number_format($stats[$name]??0)?></strong><span><?=adminEsc($label)?></span></div>
     <?php endforeach; ?>
   </div>
-  <nav class="loco-admin-jumps"><a href="#admin-reports">Reports</a><a href="#admin-listings">Listings</a><a href="#admin-discussions">Discussions</a><a href="#admin-users">Accounts</a><a href="#admin-audit">Audit log</a></nav>
-  <section id="admin-reports" class="loco-admin-panel"><h2>Marketplace reports</h2>
-    <?php if(!$reports): ?><p>No reports yet.</p><?php endif; ?>
+  <nav class="loco-admin-jumps"><a href="#admin-reports">Active reports</a><a href="#admin-report-history">Report history</a><a href="#admin-listings">Listings</a><a href="#admin-discussions">Discussions</a><a href="#admin-users">Accounts</a><a href="#admin-audit">Audit log</a></nav>
+  <section id="admin-reports" class="loco-admin-panel"><h2>Active report queue (<?=count($reports)?>)</h2>
+    <p>Only Open and Reviewing reports appear here. Resolving or dismissing a report moves it into Report History automatically.</p>
+    <?php if(!$reports): ?><p>All caught up — no open or reviewing reports.</p><?php endif; ?>
     <?php foreach($reports as $report): ?><article class="loco-admin-entry">
       <div><h3>#<?=$report['id']?> · <?=adminEsc($report['item_name'])?></h3><p>Reported by <?=adminEsc($report['reporter'])?> · <?=adminEsc($report['created_at'])?></p><p><?=adminEsc($report['reason'])?></p><small>Status: <?=adminEsc($report['status'])?> · Listing #<?=$report['listing_id']?></small></div>
       <form method="post" class="loco-admin-form">
@@ -118,6 +123,27 @@ try{
         <label>Response to reporter (visible to user)<textarea name="admin_response" maxlength="2000" rows="4" placeholder="Explain the decision to the reporting player"><?=adminEsc($report['admin_response']??'')?></textarea></label>
         <button type="submit">Update report</button>
       </form></article><?php endforeach; ?>
+  </section>
+  <section id="admin-report-history" class="loco-admin-panel">
+    <h2>Report history (<?=count($reportHistory)?>)</h2><p>Resolved and dismissed reports are archived here. Their records and responses stay available to administrators and the original reporter.</p>
+    <?php if(!$reportHistory): ?><p>No closed reports yet.</p><?php endif; ?>
+    <?php foreach($reportHistory as $report): ?><details class="loco-admin-history-entry">
+      <summary><strong>#<?=$report['id']?> · <?=adminEsc($report['item_name'])?></strong><span><?=adminEsc(ucfirst($report['status']))?> · <?=adminEsc($report['resolved_at']??$report['created_at'])?></span></summary>
+      <div class="loco-admin-entry">
+        <div><p>Reported by <?=adminEsc($report['reporter'])?> · <?=adminEsc($report['created_at'])?></p><p>Original reason: <?=adminEsc($report['reason'])?></p>
+          <p><strong>Response sent to reporter:</strong> <?=adminEsc($report['admin_response']?:'No public response')?></p>
+          <p><strong>Private moderator note:</strong> <?=adminEsc($report['moderator_notes']?:'None')?></p>
+          <small>Listing #<?=$report['listing_id']?></small>
+        </div>
+        <form method="post" class="loco-admin-form">
+          <input type="hidden" name="csrf" value="<?=adminEsc($csrf)?>"><input type="hidden" name="action" value="resolve_report"><input type="hidden" name="target_id" value="<?=$report['id']?>">
+          <label>Status<select name="status"><?php foreach(['resolved','dismissed','reviewing','open'] as $status): ?><option value="<?=$status?>" <?=$status===$report['status']?'selected':''?>><?=ucfirst($status)?></option><?php endforeach; ?></select></label>
+          <label>Private note<textarea name="note" maxlength="500" rows="3"><?=adminEsc($report['moderator_notes']??'')?></textarea></label>
+          <label>Response to reporter<textarea name="admin_response" maxlength="2000" rows="4"><?=adminEsc($report['admin_response']??'')?></textarea></label>
+          <button type="submit">Save / Reopen report</button>
+        </form>
+      </div>
+    </details><?php endforeach; ?>
   </section>
   <section id="admin-listings" class="loco-admin-panel"><h2>Active marketplace listings</h2><p>Removing a listing does not confiscate the owner's inventory item.</p>
     <?php if(!$listings): ?><p>No active listings.</p><?php endif; ?>
