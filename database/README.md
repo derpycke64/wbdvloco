@@ -67,3 +67,16 @@ Checkout expects all migrations above to have been applied. It has not been test
 `Loco/community.php` stores discussion posts in `discussions`, replies in `discussion_replies`, and marketplace reports in `marketplace_reports`. All are provided by the existing base/upgrade migrations; on an older database, make sure `database/loco_db_upgrade.sql` has been imported. Players may edit/delete only their own posts and replies. Reporting a listing creates a private, open report and the reporter can view their own report statuses under **My Reports**. There is no moderator interface yet; report review/resolution remains a future feature.
 
 Test with two LOCO accounts: create a post as one, reply as the other, sign out and verify persistence. Verify users cannot edit each other's content, and that a report appears only to the reporting user.
+
+## Administrator setup and moderation
+
+1. Back up `loco_db`.
+2. Import `database/community_admin.sql` in phpMyAdmin (after the base and upgrade migrations).
+3. Confirm `SHOW COLUMNS FROM users LIKE 'role';` and `SHOW TABLES LIKE 'admin_audit_log';` return results.
+4. Run `SELECT id,username,role FROM users;` and verify the correct account's numeric ID.
+5. Promote only that trusted account with `UPDATE users SET role='admin' WHERE id=THE_VERIFIED_ID;`. Replace `THE_VERIFIED_ID` with the numeric ID; do **not** grant all users admin.
+6. Log in as that account and visit `Loco/admin.php`, or use the **ADMIN** link in the navbar.
+
+Every request to `admin.php` re-checks the role against the database; hiding the link is not the security boundary. Standard accounts receive HTTP 403. The admin can review report statuses and notes, remove listings, delete discussions, inspect a read-only user directory and see an audit log. The first version does **not** support account suspension, deleting users, or managing roles through the UI; report submissions do not automatically ban sellers. All moderation actions require a CSRF token. Test with two accounts and ensure a standard user cannot open the admin URL.
+
+Do not re-import root `loco_db.sql` into an existing database; it drops tables.
