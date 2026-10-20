@@ -752,40 +752,40 @@ try {
                 </div>
                 <p class="loco-copyright-text">© 2026 Stoker Studios. All rights reserved. All trademarks are property of their respective owners in the PH and other countries.</p>
                 <div class="loco-social-row">
-                    <a href="#youtube" class="loco-social-link">YT</a>
-                    <a href="#twitch" class="loco-social-link">TW</a>
-                    <a href="#facebook" class="loco-social-link">FB</a>
-                    <a href="#x" class="loco-social-link">X</a>
+                    <a href="work_in_progress.php?feature=YouTube" class="loco-social-link">YT</a>
+                    <a href="work_in_progress.php?feature=Twitch" class="loco-social-link">TW</a>
+                    <a href="work_in_progress.php?feature=Facebook" class="loco-social-link">FB</a>
+                    <a href="work_in_progress.php?feature=X%20Social" class="loco-social-link">X</a>
                 </div>
             </div>
             <div class="loco-footer-links-grid">
                 <div class="loco-links-col">
                     <h4>LOCO</h4>
-                    <a href="#">About Loco</a>
-                    <a href="#">System Status</a>
-                    <a href="#">Track Routes</a>
-                    <a href="#">Dev Blog</a>
+                    <a href="work_in_progress.php?feature=About%20Loco">About Loco</a>
+                    <a href="work_in_progress.php?feature=System%20Status">System Status</a>
+                    <a href="work_in_progress.php?feature=Track%20Routes">Track Routes</a>
+                    <a href="work_in_progress.php?feature=Dev%20Blog">Dev Blog</a>
                 </div>
                 <div class="loco-links-col">
                     <h4>SERVICES</h4>
-                    <a href="#">API Portal</a>
-                    <a href="#">Careers</a>
-                    <a href="#">Hardware Specs</a>
-                    <a href="#">Enterprise</a>
+                    <a href="work_in_progress.php?feature=API%20Portal">API Portal</a>
+                    <a href="work_in_progress.php?feature=Careers">Careers</a>
+                    <a href="work_in_progress.php?feature=Hardware%20Specs">Hardware Specs</a>
+                    <a href="work_in_progress.php?feature=Enterprise">Enterprise</a>
                 </div>
                 <div class="loco-links-col">
                     <h4>LEGAL</h4>
-                    <a href="#">Privacy</a>
-                    <a href="#">Accessibility</a>
-                    <a href="#">Notices & Policies</a>
-                    <a href="#">Cookies</a>
+                    <a href="work_in_progress.php?feature=Privacy">Privacy</a>
+                    <a href="work_in_progress.php?feature=Accessibility">Accessibility</a>
+                    <a href="work_in_progress.php?feature=Notices%20%26%20Policies">Notices & Policies</a>
+                    <a href="work_in_progress.php?feature=Cookies">Cookies</a>
                 </div>
                 <div class="loco-links-col">
                     <h4>SUPPORT</h4>
-                    <a href="#">Get Support</a>
-                    <a href="#">My Account</a>
-                    <a href="#">Documentation</a>
-                    <a href="#">Contact Us</a>
+                    <a href="work_in_progress.php?feature=Get%20Support">Get Support</a>
+                    <a href="work_in_progress.php?feature=My%20Account">My Account</a>
+                    <a href="work_in_progress.php?feature=Documentation">Documentation</a>
+                    <a href="work_in_progress.php?feature=Contact%20Us">Contact Us</a>
                 </div>
             </div>
         </div>
