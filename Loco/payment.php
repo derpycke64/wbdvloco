@@ -33,10 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: payment.php'); exit();
     } elseif (($_POST['action'] ?? '') === 'checkout') {
         $method = (string)($_POST['payment_method'] ?? 'wallet');
-        if (!in_array($method, ['wallet', 'sandbox_card'], true)) {
+        if (!in_array($method, ['wallet', 'sandbox_card', 'sandbox_gcash', 'sandbox_paypal'], true)) {
             $error = 'Choose a supported payment method.';
         } elseif ($method === 'sandbox_card') {
             $error = sandboxCardResult((string)($_POST['card_number'] ?? ''), (string)($_POST['card_expiry'] ?? ''), (string)($_POST['card_cvv'] ?? '')) ?? '';
+        } elseif (in_array($method, ['sandbox_gcash','sandbox_paypal'], true) && (string)($_POST['demo_confirm'] ?? '') !== 'yes') {
+            $error = 'Confirm that you are completing a simulated payment. No real account or funds are used.';
         }
         if ($error === '') {
             try {
@@ -85,13 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $deductStmt->execute([$total, $userId, $total]);
                     if ($deductStmt->rowCount() !== 1) throw new RuntimeException('Your wallet balance changed. Please try again.');
                 }
-                $txMethod = $method === 'wallet' ? 'wallet' : 'sandbox_card';
+                $txMethod = $method === 'wallet' ? 'wallet' : 'sandbox_card'; // Existing transaction schema records mock providers as sandbox_card.
                 $historyStmt = $pdo->prepare("INSERT INTO transaction_history (user_id, transaction_type, payment_method, amount, status, reference_code, items_json, notes) VALUES (?, 'purchase', ?, ?, 'completed', ?, ?, ?)");
-                $historyStmt->execute([$userId, $txMethod, $total, $reference, json_encode(array_column($items, 'title'), JSON_UNESCAPED_UNICODE), $method === 'wallet' ? 'Paid using LOCO wallet' : 'Simulated sandbox card payment; no real payment was processed']);
+                $historyStmt->execute([$userId, $txMethod, $total, $reference, json_encode(array_column($items, 'title'), JSON_UNESCAPED_UNICODE), $method === 'wallet' ? 'Paid using LOCO wallet' : 'Simulated '.str_replace('sandbox_','',$method).' payment; no real payment was processed']);
                 $pdo->commit();
                 $_SESSION['cart'] = [];
                 $_SESSION['wallet_balance'] = number_format($method === 'wallet' ? $balance - $total : $balance, 2, '.', '');
-                $receipt = ['reference' => $reference, 'total' => $total, 'items' => $items, 'method' => $txMethod];
+                $receipt = ['reference' => $reference, 'total' => $total, 'items' => $items, 'method' => $method];
                 $_SESSION['last_checkout_receipt'] = $receipt;
             } catch (Throwable $e) {
                 if ($pdo->inTransaction()) $pdo->rollBack();
@@ -129,35 +131,123 @@ try {
     $walletBalance = $balanceStmt->fetchColumn();
 } catch (Throwable $e) { error_log('LOCO checkout wallet balance read failed: ' . $e->getMessage()); }
 ?>
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>LOCO - Checkout</title><link rel="stylesheet" href="style.css">
-<style>.sandbox-card-fields{display:grid;gap:12px;padding:16px;margin:16px 0;border:1px solid #555;border-radius:8px}.sandbox-card-fields[hidden]{display:none}.sandbox-card-fields input{padding:11px;border-radius:5px;border:1px solid #777;background:#111;color:#fff;width:100%;box-sizing:border-box}.sandbox-note{font-size:.9rem;color:#aaa}.payment-choice{display:flex;gap:10px;align-items:center;margin:12px 0}</style></head>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LOCO | Secure Demo Checkout</title><link rel="stylesheet" href="style.css"></head>
 <body class="loco-store-body">
 <?php include_once 'nav.php'; ?>
-<div class="store-wrapper">
-<?php if ($receipt !== null): ?>
- <main class="loco-store-main-col"><div class="loco-receipt-card"><h2>Purchase Complete!</h2><p>Your payment was recorded and the games were added to your library.</p><p><strong>Payment method:</strong> <?=h($receipt['method'] === 'wallet' ? 'LOCO Wallet' : 'LOCO Payment Sandbox (test card)')?></p><p><strong>Reference:</strong> <?=h($receipt['reference'])?></p><p><strong>Total paid:</strong> ₱<?=number_format((float)$receipt['total'],2)?></p><ul><?php foreach ($receipt['items'] as $i): ?><li><?=h($i['title'])?> — ₱<?=number_format((float)$i['price'],2)?></li><?php endforeach; ?></ul><a href="profile.php#library" class="loco-success-btn-override">View My Library</a> <a href="transaction_history.php" class="loco-cart-secondary-btn">Transaction History</a></div></main>
-<?php else: ?>
- <main class="loco-store-main-col"><h1 class="loco-logo-text" style="font-size:1.6rem">Your Shopping Cart (<?=count($_SESSION['cart'])?>)</h1>
- <?php if ($error): ?><p class="loco-alert-error" role="alert"><?=h($error)?></p><?php endif; ?>
- <?php if (!$cartGames): ?><div class="loco-cart-item-box" style="padding:30px;justify-content:center"><p>Your shopping cart is empty.</p></div><a href="products.php" class="loco-cart-secondary-btn">Continue Shopping</a>
+<main class="store-wrapper loco-sandbox-page" style="display:block">
+ <div class="loco-sandbox-step">LOCO STORE CHECKOUT <span style="float:right">PAYMENT METHOD › REVIEW › RECEIPT</span></div>
+ <?php if($receipt!==null): ?>
+  <section style="padding:22px">
+   <h1 class="loco-sandbox-heading">Purchase Complete</h1>
+   <div class="loco-checkout-receipt <?=h($receipt['method']==='sandbox_paypal'?'paypal':'')?>">
+    <div class="receipt-brand"><?=h($receipt['method']==='sandbox_gcash'?'GCash · DEMO':($receipt['method']==='sandbox_paypal'?'PayPal · DEMO':'LOCO PAYMENT RECEIPT'))?></div>
+    <div class="loco-payment-warning">SIMULATED PAYMENT / CLASS PROJECT — NO REAL MONEY WAS CHARGED</div>
+    <div class="receipt-content">
+      <p style="font-weight:800;font-size:1.2rem;margin:3px 0">₱<?=number_format((float)$receipt['total'],2)?></p>
+      <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
+      <div class="loco-receipt-row"><span>Player</span><strong><?=h($_SESSION['username'])?></strong></div>
+      <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Demo Card','sandbox_gcash'=>'GCash Simulation','sandbox_paypal'=>'PayPal Simulation'][$receipt['method']]??$receipt['method'])?></strong></div>
+      <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
+      <div class="loco-receipt-row"><span>Status</span><strong>Completed (Demo)</strong></div>
+      <?php foreach($receipt['items'] as $item): ?><div class="loco-receipt-row"><span><?=h($item['title'])?></span><strong>₱<?=number_format((float)$item['price'],2)?></strong></div><?php endforeach; ?>
+      <p style="font-size:.8rem">Your games have been added to your LOCO Library.</p>
+    </div>
+   </div>
+   <p><a class="loco-wishlist-action" href="profile.php#library">VIEW LIBRARY</a>　<a class="loco-wishlist-remove" href="transaction_history.php">Transaction History</a>　<a href="Products.php">Back to Store</a></p>
+  </section>
  <?php else: ?>
- <div style="display:flex;flex-direction:column;gap:10px"><?php foreach ($_SESSION['cart'] as $i): $id=(int)$i['game_id']; if (!isset($cartGames[$id])) continue; $g=$cartGames[$id]; ?>
- <div class="loco-cart-item-box"><div class="loco-cart-item-details"><img src="<?=h($g['image_url'] ?: 'images/gameplay_01.jpg')?>" class="loco-cart-thumb" alt="<?=h($g['title'])?>"><div class="loco-cart-text-meta"><h4><?=h($g['title'])?></h4><span class="loco-cart-device-tag">For my account</span></div></div><div class="loco-cart-price-side"><span class="loco-cart-item-cost"><?=$g['price'] <= 0 ? 'Free' : '₱'.number_format((float)$g['price'],2)?></span><form method="post"><input type="hidden" name="csrf_token" value="<?=h($_SESSION['checkout_csrf'])?>"><input type="hidden" name="action" value="remove"><input type="hidden" name="game_id" value="<?=$id?>"><button class="loco-cart-remove-link" type="submit">Remove</button></form></div></div>
- <?php endforeach; ?></div>
- <p>Wallet balance: <strong><?=$walletBalance === false || $walletBalance === null ? 'Unavailable' : '₱'.number_format((float)$walletBalance,2)?></strong></p>
- <form method="post" id="checkout-form"><input type="hidden" name="csrf_token" value="<?=h($_SESSION['checkout_csrf'])?>"><input type="hidden" name="action" value="checkout">
- <label class="payment-choice"><input type="radio" name="payment_method" value="wallet" checked> Pay with LOCO wallet</label>
- <label class="payment-choice"><input type="radio" name="payment_method" value="sandbox_card"> Pay with Payment Sandbox (test card)</label>
- <section class="sandbox-card-fields" id="sandbox-card-fields" hidden><h3>LOCO Payment Sandbox</h3><p class="sandbox-note">Test simulation only. Do not enter real card details. Approved test card: <strong>4242 4242 4242 4242</strong>. Declined test card: <strong>4000 0000 0000 0002</strong>.</p>
- <label for="card_number">Test card number</label><input id="card_number" name="card_number" inputmode="numeric" autocomplete="off" placeholder="4242 4242 4242 4242" maxlength="23">
- <label for="card_expiry">Expiry month</label><input id="card_expiry" name="card_expiry" type="month">
- <label for="card_cvv">Test CVV</label><input id="card_cvv" name="card_cvv" inputmode="numeric" autocomplete="off" placeholder="123" maxlength="4">
- </section>
- <p class="sandbox-note">The sandbox simulates card approval or decline. It does not contact PayPal or any real payment provider, and card details are not stored.</p>
- <button type="submit" class="loco-brand-gloss-btn" onclick="return confirm('Continue with the selected payment method for ₱<?=number_format($total,2,'.','')?>?')">Pay ₱<?=number_format($total,2)?></button></form>
- <a href="wallet.php" class="loco-cart-secondary-btn">Add funds to wallet</a> <a href="products.php" class="loco-cart-secondary-btn">Continue Shopping</a>
- <?php endif; ?></main>
- <aside class="loco-store-sidebar-col"><div class="sidebar-panel" style="padding:15px"><div style="display:flex;justify-content:space-between"><span>Estimated total</span><strong>₱<?=number_format($total,2)?></strong></div><p>Prices are retrieved from the database.</p></div></aside>
-<?php endif; ?>
-</div><footer class="loco-footer-bar"><div class="loco-sub-footer-inner"><div class="loco-footer-brand-col"><span class="loco-footer-logo-text">LOCO</span><span class="loco-footer-logo-sub">Stoker Studios</span><p class="loco-copyright-text">© 2026 Stoker Studios. All rights reserved.</p></div></div></footer>
-<script>const radios=document.querySelectorAll('input[name="payment_method"]');const fields=document.getElementById('sandbox-card-fields');function toggleCardFields(){if(!fields)return;const card=document.querySelector('input[name="payment_method"]:checked')?.value==='sandbox_card';fields.hidden=!card;fields.querySelectorAll('input').forEach(input=>input.required=card);}radios.forEach(r=>r.addEventListener('change',toggleCardFields));toggleCardFields();</script></body></html>
+  <div class="loco-sandbox-layout" style="padding:20px">
+   <section class="loco-sandbox-well">
+    <h1 class="loco-sandbox-heading">PAYMENT METHOD</h1>
+    <?php if($error): ?><p class="loco-notice error" role="alert"><?=h($error)?></p><?php endif; ?>
+    <?php if(!$cartGames): ?>
+      <p>Your cart is empty. <a href="Products.php">Browse the Store</a>.</p>
+    <?php else: ?>
+      <div class="loco-cart-summary" style="margin-bottom:18px">
+       <?php foreach($_SESSION['cart'] as $entry): $id=(int)$entry['game_id'];if(!isset($cartGames[$id]))continue;$g=$cartGames[$id]; ?>
+       <div class="loco-cart-item-box" style="border-radius:0">
+        <div class="loco-cart-item-details"><img class="loco-cart-thumb" src="<?=h($g['image_url']?:'images/gameplay_01.jpg')?>" alt="<?=h($g['title'])?>"><div class="loco-cart-text-meta"><h4><?=h($g['title'])?></h4><span class="loco-cart-device-tag">For my LOCO account</span></div></div>
+        <div class="loco-cart-price-side"><span class="loco-cart-item-cost"><?=(float)$g['price']>0?'₱'.number_format((float)$g['price'],2):'Free'?></span>
+         <form method="post" action="payment.php"><input type="hidden" name="csrf_token" value="<?=h($_SESSION['checkout_csrf'])?>"><input type="hidden" name="action" value="remove"><input type="hidden" name="game_id" value="<?=$id?>"><button class="loco-cart-remove-link" type="submit">Remove</button></form>
+        </div>
+       </div>
+       <?php endforeach; ?>
+      </div>
+      <form method="post" id="checkout-form">
+        <input type="hidden" name="csrf_token" value="<?=h($_SESSION['checkout_csrf'])?>">
+        <input type="hidden" name="action" value="checkout">
+        <label class="loco-sandbox-label" for="payment-method">Please select a payment method</label>
+        <select id="payment-method" name="payment_method" class="loco-sandbox-choice" required>
+          <option value="wallet">LOCO Wallet</option>
+          <option value="sandbox_card">Visa / Mastercard (Demo Card)</option>
+          <option value="sandbox_gcash">GCash (Payment Simulation)</option>
+          <option value="sandbox_paypal">PayPal (Payment Simulation)</option>
+        </select>
+        <p id="wallet-summary" style="font-size:.8rem;color:#c5cdd8">Wallet balance: <strong><?=$walletBalance===false||$walletBalance===null?'Unavailable':'₱'.number_format((float)$walletBalance,2)?></strong>　<a href="wallet.php">Add Funds</a></p>
+        <section id="card-panel" class="loco-sandbox-well" style="margin-top:14px" hidden>
+          <h2 class="loco-sandbox-heading">CARD INFORMATION</h2>
+          <p class="loco-sandbox-label">Use test cards only. Approved: 4242 4242 4242 4242 · Declined: 4000 0000 0000 0002.</p>
+          <div class="sandbox-card-fields" style="display:grid;gap:10px">
+            <label class="loco-sandbox-label" for="card_number">Test card number</label>
+            <input class="loco-sandbox-field" id="card_number" name="card_number" inputmode="numeric" autocomplete="off" placeholder="4242 4242 4242 4242" maxlength="23">
+            <label class="loco-sandbox-label" for="card_expiry">Expiry date</label>
+            <input class="loco-sandbox-field" id="card_expiry" name="card_expiry" type="month">
+            <label class="loco-sandbox-label" for="card_cvv">Security code</label>
+            <input class="loco-sandbox-field" id="card_cvv" name="card_cvv" autocomplete="off" inputmode="numeric" maxlength="4" placeholder="123">
+          </div>
+        </section>
+        <section id="provider-panel" class="loco-checkout-receipt" style="display:none">
+          <div class="receipt-brand" id="provider-brand">GCash · DEMO</div>
+          <div class="loco-payment-warning">Payment simulation — never enter real credentials, OTPs or account details</div>
+          <div class="receipt-content">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+             <img src="profile_avatar.php?id=<?=$userId?>" alt="LOCO player" style="width:44px;height:44px;object-fit:cover;border:1px solid #ccd0d8">
+             <div><strong style="display:block"><?=h($_SESSION['username'])?></strong><small>Demo payer · LOCO account</small></div>
+            </div>
+            <p style="font-size:.75rem;margin:0">AMOUNT DUE</p><h2 style="font-size:1.7rem;margin:4px 0 14px">PHP <?=number_format($total,2)?></h2>
+            <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
+            <div class="loco-receipt-row"><span>Account</span><strong><?=h($_SESSION['username'])?></strong></div>
+            <div class="loco-receipt-row"><span>Reference</span><strong>LOCO-DEMO-CHECKOUT</strong></div>
+            <div class="loco-receipt-row"><span>Status</span><strong>Pending confirmation</strong></div>
+            <label style="display:block;color:#182333;font-size:.78rem;margin-top:15px"><input type="checkbox" id="demo-confirm" name="demo_confirm" value="yes"> I understand this is a simulated payment with no real funds.</label>
+          </div>
+        </section>
+        <p class="loco-sandbox-label" style="margin:18px 0">You can review your order above. No real payment information is stored.</p>
+        <button type="submit" class="loco-brand-gloss-btn" style="min-width:200px;border-radius:0">CONFIRM ₱<?=number_format($total,2)?></button>
+        <a href="Products.php" class="loco-cart-secondary-btn" style="margin-left:12px">Continue Shopping</a>
+      </form>
+    <?php endif; ?>
+   </section>
+   <aside class="loco-sandbox-sidebar">
+    <h3>PAYMENT METHODS</h3>
+    <p>This classroom sandbox supports simulated card, GCash, and PayPal confirmation.</p>
+    <p><span class="loco-pay-demo-badge">VISA</span> <span class="loco-pay-demo-badge">Mastercard</span></p>
+    <p><span class="loco-pay-demo-badge">GCash Demo</span> <span class="loco-pay-demo-badge">PayPal Demo</span></p>
+    <h3 style="margin-top:26px">ORDER TOTAL</h3>
+    <p style="font-size:1.4rem;color:#84e28c;font-weight:800">₱<?=number_format($total,2)?></p>
+    <p>All game prices come from the LOCO database. Completed demo purchases are recorded in your account's library.</p>
+    <a href="wallet.php" class="loco-wishlist-action" style="display:inline-block">ADD WALLET FUNDS</a>
+   </aside>
+  </div>
+ <?php endif; ?>
+</main>
+<script>
+(function(){
+ const method=document.getElementById('payment-method');
+ if(!method)return;
+ const card=document.getElementById('card-panel'),provider=document.getElementById('provider-panel'),wallet=document.getElementById('wallet-summary'),check=document.getElementById('demo-confirm');
+ function update(){
+  const m=method.value,isCard=m==='sandbox_card',isProvider=(m==='sandbox_gcash'||m==='sandbox_paypal');
+  card.hidden=!isCard;
+  provider.style.display=isProvider?'block':'none';
+  provider.classList.toggle('paypal',m==='sandbox_paypal');
+  document.getElementById('provider-brand').textContent=m==='sandbox_paypal'?'PayPal · DEMO':'GCash · DEMO';
+  if(wallet)wallet.hidden=m!=='wallet';
+  card.querySelectorAll('input').forEach(function(f){f.required=isCard;});
+  check.required=isProvider;
+ }
+ method.addEventListener('change',update);update();
+})();
+</script>
+</body></html>
