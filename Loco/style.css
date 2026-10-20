@@ -1621,3 +1621,97 @@ body.loco-store-body.loco-provider-screen{background:#edf4fb!important;padding-t
  .loco-profile-main .game-purchase-bar{flex-basis:100%;width:100%;border-left:0;border-top:1px solid #383438;display:flex;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap}
  .loco-profile-main .loco-library-key{width:auto;min-width:150px}
 }
+
+
+/* Library: old Steam-style, full-height game artwork instead of tiny 122x69 thumbnails */
+.loco-profile-main .game-card.loco-library-game-card{
+ display:grid;
+ grid-template-columns:190px minmax(0,1fr) 175px;
+ align-items:stretch;
+ min-height:128px;
+ height:auto;
+ padding:0;
+ border:1px solid #3e343a;
+ background:#121419;
+ overflow:visible;
+}
+.loco-profile-main .game-card.loco-library-game-card:hover{
+ border-color:#a91a22;
+ background:#1c1b20;
+}
+.loco-profile-main .loco-library-game-card .loco-library-artwork{
+ position:relative;
+ display:block;
+ width:auto;
+ min-width:0;
+ min-height:128px;
+ height:auto;
+ flex:none;
+ align-self:stretch;
+ border-right:1px solid #493138;
+ background:#090c13;
+ overflow:hidden;
+}
+.loco-profile-main .loco-library-game-card .loco-library-artwork img{
+ position:absolute;
+ display:block;
+ inset:0;
+ width:100%;
+ height:100%;
+ min-height:0;
+ object-fit:cover;
+ object-position:center;
+ transition:filter .15s ease;
+}
+.loco-profile-main .loco-library-game-card .loco-library-artwork:hover img{filter:brightness(1.16)}
+.loco-profile-main .loco-library-game-card .game-details{
+ box-sizing:border-box;
+ display:flex;
+ flex-direction:column;
+ align-items:flex-start;
+ justify-content:center;
+ padding:15px 18px;
+ min-width:0;
+}
+.loco-profile-main .loco-library-game-card .game-title{
+ font-size:1.01rem;
+ line-height:1.25;
+ margin:0 0 7px!important;
+}
+.loco-profile-main .loco-library-game-card .game-desc{
+ font-size:.73rem!important;
+ line-height:1.45;
+ color:#b9bdc5!important;
+}
+.loco-profile-main .loco-library-game-card .loco-library-license-actions{
+ width:auto;
+ min-width:0;
+ flex:none;
+ padding:11px 10px;
+ border-left:1px solid #3d343a;
+ justify-content:center;
+}
+@media(max-width:640px){
+ .loco-profile-main .game-card.loco-library-game-card{
+  grid-template-columns:140px minmax(0,1fr);
+  min-height:118px;
+ }
+ .loco-profile-main .loco-library-game-card .loco-library-artwork{min-height:118px}
+ .loco-profile-main .loco-library-game-card .game-details{padding:12px}
+ .loco-profile-main .loco-library-game-card .loco-library-license-actions{
+  grid-column:1/-1;
+  width:auto;
+  border-left:0;
+  border-top:1px solid #3d343a;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  gap:10px;
+ }
+}
+@media(max-width:385px){
+ .loco-profile-main .game-card.loco-library-game-card{grid-template-columns:110px minmax(0,1fr)}
+ .loco-profile-main .loco-library-game-card .loco-library-artwork{min-height:112px}
+}
