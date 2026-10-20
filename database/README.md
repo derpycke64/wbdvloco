@@ -61,3 +61,9 @@ Make sure the selected database is `loco_db` and each expected table/column is r
 Use any current/future expiry month and a 3- or 4-digit test CVV. The declined test card should not create an order or add wallet balance.
 
 Checkout expects all migrations above to have been applied. It has not been tested against your local WAMP/MySQL instance from this repository environment, so run the verification queries and test with a test account before relying on it.
+
+## Community discussions and reports
+
+`Loco/community.php` stores discussion posts in `discussions`, replies in `discussion_replies`, and marketplace reports in `marketplace_reports`. All are provided by the existing base/upgrade migrations; on an older database, make sure `database/loco_db_upgrade.sql` has been imported. Players may edit/delete only their own posts and replies. Reporting a listing creates a private, open report and the reporter can view their own report statuses under **My Reports**. There is no moderator interface yet; report review/resolution remains a future feature.
+
+Test with two LOCO accounts: create a post as one, reply as the other, sign out and verify persistence. Verify users cannot edit each other's content, and that a report appears only to the reporting user.
