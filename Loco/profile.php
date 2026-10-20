@@ -69,6 +69,7 @@ try {
                 <div>
                     <strong><?=h($currentUser)?></strong>
                     <small>Wallet Balance: <span style="color: #2e7d32; font-weight: bold;">鱗<?=number_format((float)$user_profile['wallet_balance'], 2)?></span></small>
+                    <a href="transaction_history.php" style="display:inline-block;margin-top:8px;color:#d8d8d8;font-size:12px">View transaction history →</a>
                 </div>
             </div>
         </div>
@@ -89,7 +90,7 @@ try {
         </section>
 
         <!-- Games Catalog Grid Section using standard game-grid structure -->
-        <section class="loco-community-panel">
+        <section id="library" class="loco-community-panel">
             <div class="loco-section-heading">
                 <div>
                     <h2>Games Library (<?=count($purchased_games)?>)</h2>
