@@ -1490,3 +1490,18 @@ body.loco-store-body{background:#300000!important;color:var(--loco-text);padding
  .loco-wishlist-actions{grid-column:1/-1;flex-direction:row;justify-content:flex-end;align-items:center;flex-wrap:wrap}
  .loco-sandbox-layout{grid-template-columns:1fr}
 }
+
+
+/* Old Steam-inspired player profile showcase */
+.loco-profile-classic-layout{display:grid;grid-template-columns:minmax(0,1fr) 242px;gap:16px;align-items:start}
+.loco-profile-main,.loco-profile-side{min-width:0}
+.loco-profile-side .loco-community-panel{padding:12px}
+.loco-profile-side-avatar{background:#0d1014;border:1px solid #584247;padding:7px}
+.loco-profile-side-avatar img{width:100%;max-height:160px;object-fit:cover;display:block}
+.loco-profile-statline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:11px;padding:7px 0;border-top:1px solid #49353c;font-size:.78rem;color:#c8c5c9}
+.loco-profile-statline strong{color:#fff}
+.loco-profile-side-links{display:flex;flex-direction:column;gap:0}
+.loco-profile-side-links a{padding:9px 5px;border-bottom:1px solid #3b3035;color:#e2e0e2;text-decoration:none;font-size:.8rem}
+.loco-profile-side-links a:hover{background:#77151e;color:#fff}
+@media(max-width:740px){.loco-profile-classic-layout{grid-template-columns:minmax(0,1fr)}.loco-profile-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.loco-profile-side .loco-community-panel{margin:0}}
+@media(max-width:460px){.loco-profile-side{display:block}.loco-profile-side .loco-community-panel{margin-bottom:12px}}
