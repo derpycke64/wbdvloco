@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $action=(string)($_POST['action']??'');
         $target=filter_var($_POST['target_id']??null,FILTER_VALIDATE_INT);
         $note=trim((string)($_POST['note']??''));
+        $publicResponse=trim((string)($_POST['admin_response']??''));
         if(!$target || $target<1) $error='Invalid moderation target.';
         else {
             try {
@@ -38,12 +39,13 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
                 if($action==='resolve_report') {
                     $status=(string)($_POST['status']??'');
                     if(!in_array($status,['open','reviewing','resolved','dismissed'],true)) throw new RuntimeException('Invalid report status.');
+                    if(strlen($publicResponse)>2000)throw new RuntimeException('Public response must be 2,000 bytes or less.');
                     $q=$pdo->prepare('SELECT id FROM marketplace_reports WHERE id=:id FOR UPDATE');
                     $q->execute([':id'=>$target]);
                     if(!$q->fetch()) throw new RuntimeException('Report not found.');
-                    $q=$pdo->prepare("UPDATE marketplace_reports SET status=:status,moderator_notes=:note,resolved_at=CASE WHEN :is_closed=1 THEN CURRENT_TIMESTAMP ELSE NULL END WHERE id=:id");
-                    $q->execute([':status'=>$status,':note'=>substr($note,0,500),':is_closed'=>in_array($status,['resolved','dismissed'],true)?1:0,':id'=>$target]);
-                    $auditAction='report_'.$status;$type='report';$details=substr($note,0,500);
+                    $q=$pdo->prepare("UPDATE marketplace_reports SET status=:status,moderator_notes=:note,admin_response=:response,resolved_at=CASE WHEN :is_closed=1 THEN CURRENT_TIMESTAMP ELSE NULL END WHERE id=:id");
+                    $q->execute([':status'=>$status,':note'=>substr($note,0,500),':response'=>$publicResponse===''?null:$publicResponse,':is_closed'=>in_array($status,['resolved','dismissed'],true)?1:0,':id'=>$target]);
+                    $auditAction='report_'.$status;$type='report';$details='Report status updated; private note '.($note!==''?'provided':'empty').'; public response '.($publicResponse!==''?'provided':'empty').'.';
                     $notice='Report status updated.';
                 } elseif($action==='remove_listing') {
                     $q=$pdo->prepare("SELECT id FROM marketplace_listings WHERE id=:id AND status='active' FOR UPDATE");
@@ -82,7 +84,7 @@ try{
       'discussions'=>(int)$pdo->query('SELECT COUNT(*) FROM discussions')->fetchColumn()
     ];
     $users=$pdo->query('SELECT id,username,email,role,created_at FROM users ORDER BY id DESC LIMIT 100')->fetchAll(PDO::FETCH_ASSOC);
-    $reports=$pdo->query("SELECT mr.id,mr.listing_id,mr.reason,mr.status,mr.moderator_notes,mr.created_at,u.username AS reporter,gi.item_name
+    $reports=$pdo->query("SELECT mr.id,mr.listing_id,mr.reason,mr.status,mr.moderator_notes,mr.admin_response,mr.created_at,u.username AS reporter,gi.item_name
        FROM marketplace_reports mr JOIN users u ON u.id=mr.reporter_id JOIN marketplace_listings ml ON ml.id=mr.listing_id
        JOIN game_items gi ON gi.id=ml.item_id ORDER BY FIELD(mr.status,'open','reviewing','resolved','dismissed'),mr.created_at DESC,mr.id DESC LIMIT 100")->fetchAll(PDO::FETCH_ASSOC);
     $listings=$pdo->query("SELECT ml.id,gi.item_name,ml.price,u.username AS seller FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN users u ON u.id=ml.seller_id WHERE ml.status='active' ORDER BY ml.created_at DESC LIMIT 100")->fetchAll(PDO::FETCH_ASSOC);
@@ -112,7 +114,8 @@ try{
       <form method="post" class="loco-admin-form">
         <input type="hidden" name="csrf" value="<?=adminEsc($csrf)?>"><input type="hidden" name="action" value="resolve_report"><input type="hidden" name="target_id" value="<?=$report['id']?>">
         <label>Review status<select name="status"><?php foreach(['open','reviewing','resolved','dismissed'] as $status): ?><option value="<?=$status?>" <?=$status===$report['status']?'selected':''?>><?=ucfirst($status)?></option><?php endforeach; ?></select></label>
-        <label>Moderator note<input name="note" maxlength="500" value="<?=adminEsc($report['moderator_notes']??'')?>" placeholder="Optional review notes"></label>
+        <label>Private moderator note (admins only)<textarea name="note" maxlength="500" rows="3" placeholder="Internal notes"><?=adminEsc($report['moderator_notes']??'')?></textarea></label>
+        <label>Response to reporter (visible to user)<textarea name="admin_response" maxlength="2000" rows="4" placeholder="Explain the decision to the reporting player"><?=adminEsc($report['admin_response']??'')?></textarea></label>
         <button type="submit">Update report</button>
       </form></article><?php endforeach; ?>
   </section>
