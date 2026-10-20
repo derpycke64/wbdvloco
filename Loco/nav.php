@@ -2,6 +2,18 @@
 $isLoggedIn = isset($_SESSION['username']) && isset($_SESSION['user_id']);
 $currentUser = $isLoggedIn ? (string)$_SESSION['username'] : '';
 $current_page = basename($_SERVER['SCRIPT_NAME']);
+$isAdmin=false;
+if($isLoggedIn && isset($pdo) && $pdo instanceof PDO){
+    try{
+        $locoRole=$pdo->prepare('SELECT role FROM users WHERE id=:uid LIMIT 1');
+        $locoRole->execute([':uid'=>(int)$_SESSION['user_id']]);
+        $isAdmin=$locoRole->fetchColumn()==='admin';
+    }catch(PDOException $e){
+        // Until the admin migration is installed the nav remains usable.
+        $isAdmin=false;
+    }
+}
+
 ?>
 <header class="loco-global-nav">
     <div class="loco-nav-inner">
@@ -21,6 +33,7 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
                 
                 <?php if ($isLoggedIn): ?>
                         <a href="wallet.php" class="loco-nav-link <?php echo ($current_page == 'wallet.php') ? 'active' : ''; ?>">WALLET</a>
+                    <?php if ($isAdmin): ?><a href="admin.php" class="loco-nav-link <?=($current_page==='admin.php')?'active':''?>">ADMIN</a><?php endif; ?>
                     <a href="profile.php" class="loco-nav-link <?php echo ($current_page == 'profile.php') ? 'active' : ''; ?>" style="text-transform: uppercase;">
                         <?php echo htmlspecialchars($currentUser); ?>
                     </a>
