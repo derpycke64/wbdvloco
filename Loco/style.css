@@ -1561,3 +1561,11 @@ body.loco-store-body{background:#300000!important;color:var(--loco-text);padding
 .loco-wip-links{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:24px}
 .loco-wip-links .loco-wishlist-remove{padding:9px 13px}
 @media(max-width:480px){.loco-provider-card{width:100%;border-radius:6px!important}.loco-provider-card .receipt-brand{min-height:100px}.loco-provider-card .receipt-content{padding:15px!important}}
+
+/* A provider confirmation is a separate, centered payment screen, not the merchant dashboard. */
+body.loco-store-body.loco-provider-screen{background:#edf4fb!important;padding-top:0!important;color:#18283b;min-height:100vh}
+.loco-provider-screen .loco-global-nav{display:none!important}
+.loco-provider-screen .store-wrapper.loco-sandbox-page{width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;min-height:100vh;box-shadow:none!important;background:transparent!important;border:0!important}
+.loco-provider-screen .loco-sandbox-layout{width:100%;max-width:100%!important;margin:0 auto!important;padding:36px 16px!important;box-sizing:border-box}
+.loco-provider-screen .loco-provider-card{margin:0 auto 25px;box-shadow:0 16px 30px #9db0c330}
+.loco-provider-screen .loco-notice.error{max-width:410px;margin:12px auto!important}
