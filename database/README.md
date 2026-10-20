@@ -99,3 +99,13 @@ Administrators see a **Private moderator note** field and a separate **Response 
 4. `wishlist.php` has **Games** (default) and **Community Marketplace** tabs. Game favorites persist in `game_wishlists`, while marketplace saved listings remain in `marketplace_wishlists`.
 5. `payment.php` and `wallet.php` support simulated card, GCash and PayPal checkout displays. All GCash/PayPal actions are *local demonstrations*, not real integrations. The existing transaction history schema stores simulated provider purchases using `sandbox_card` for compatibility and records the chosen provider in `notes`.
 6. Confirm game checkout, wallet top-up, wishlist save/remove, and marketplace/community actions locally. No live payment credentials or real OTPs should ever be used.
+
+## Game Library demo keys and Community used-game resale
+
+On `development`, import `database/game_resale.sql` into an **existing, backed-up** `loco_db` before trying this feature. Do **not** reimport the root `loco_db.sql`; that dump drops tables.
+
+- Opening `profile.php#library` generates a unique 24-character random LOCO-only demo license key for each owned library row. Click **Reveal Key** to view it. The current owner alone can access the Library page displaying that key; it is not a real game publisher's key.
+- `game_marketplace.php`, linked from Community and the Library, lets users list games they already own, set/update a price, cancel listings, buy games with LOCO wallet funds, and see history. Existing item marketplace and trades remain separate.
+- On sale, a transaction updates balances, moves the existing library record and its demo key to the buyer, closes the resale listing, and writes buyer/seller entries to `transaction_history`. The seller loses library access. Purchases by players who already own the game are rejected.
+- Existing purchases are not removed by the migration. The key is not exposed publicly on listing cards. Never claim demo keys can activate actual Steam/third-party games.
+- Test with two accounts and a disposable owned game: reveal key, list, buy, verify new owner sees the same key and old owner cannot see the game; ensure both wallet balances changed and transaction history contains purchase/sale entries.
