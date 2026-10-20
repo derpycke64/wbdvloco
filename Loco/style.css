@@ -1319,3 +1319,31 @@ h3.loco-label-thingy {
 .loco-reply-form input{min-width:190px;flex:1;background:#101116;color:#fff;border:1px solid #454a55;padding:10px}
 .loco-owned-row,.loco-owned-row strong{color:#e5e9f1}
 .loco-owned-row p{color:#dce2eb}
+
+/* Administrator dashboard */
+.loco-admin-page{width:min(1180px,calc(100% - 32px));margin:34px auto 75px;color:#e8ebf2}
+.loco-admin-header h1{font-size:2rem;margin:8px 0;color:#fff}
+.loco-admin-header p{color:#c5cbd5}
+.loco-admin-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.loco-admin-stats>div{padding:18px;background:#171a21;border:1px solid #373d48;border-radius:6px;display:flex;flex-direction:column;gap:4px}
+.loco-admin-stats strong{font-size:1.65rem;color:#fff}
+.loco-admin-stats span{color:#b7c3d2}
+.loco-admin-jumps{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
+.loco-admin-jumps a{color:#fff;background:#9f0000;padding:9px 13px;border-radius:4px;text-decoration:none}
+.loco-admin-panel{background:#171a21;border:1px solid #343b47;border-radius:6px;padding:20px;margin:24px 0;scroll-margin-top:20px}
+.loco-admin-panel h2{color:#fff;margin:0 0 14px}
+.loco-admin-panel h3{color:#f1f4fa;margin:0 0 7px;font-size:1rem}
+.loco-admin-panel p,.loco-admin-panel small{color:#ccd4e1}
+.loco-admin-entry{display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;padding:17px 0;border-top:1px solid #373d47}
+.loco-admin-entry>div{flex:1;min-width:220px}
+.loco-admin-entry p{margin:6px 0;overflow-wrap:anywhere}
+.loco-admin-form{display:flex;gap:10px;flex-direction:column;min-width:min(100%,290px);flex:0 1 330px}
+.loco-admin-form label{display:flex;flex-direction:column;gap:6px;color:#dbe2ee;font-size:.85rem}
+.loco-admin-form select,.loco-admin-form input{color:#fff;background:#10131b;border:1px solid #555f6f;padding:9px;border-radius:3px}
+.loco-admin-form button{cursor:pointer;color:#fff;border:0;background:#af0909;padding:10px;border-radius:3px;font-weight:700}
+.loco-admin-form .loco-admin-danger{background:#852027}
+.loco-admin-table-wrap{overflow-x:auto}
+.loco-admin-panel table{width:100%;border-collapse:collapse;text-align:left}
+.loco-admin-panel th,.loco-admin-panel td{padding:9px;border-bottom:1px solid #3a404c;color:#e4e8f2}
+.loco-admin-audit{border-top:1px solid #353a46;padding-top:10px;overflow-wrap:anywhere}
+@media(max-width:670px){.loco-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
