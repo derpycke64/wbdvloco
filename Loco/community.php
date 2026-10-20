@@ -290,14 +290,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
             case 'create_post':
-                $title = postText('post_title', 100); $body = postText('post_body', 1200); $tag = postText('post_tag', 40);
-                if ($title === '' || $body === '') $error = 'Enter a discussion title and message.';
-                else { $id = $_SESSION['loco_next_post_id']++; $_SESSION['loco_discussions'][$id] = ['id'=>$id,'title'=>$title,'body'=>$body,'tag'=>$tag ?: 'General','author'=>$currentUser,'created'=>time(),'replies'=>[]]; $notice = 'Discussion posted.'; }
+                $title=postText('post_title',100);$body=postText('post_body',1200);$tag=postText('post_tag',40);
+                $allowedTags=['General','Trading','Game help','Showcase','Feedback'];
+                if($title==='' || $body==='' || !in_array($tag,$allowedTags,true)){$error='Enter a title, message and valid category.';break;}
+                try{
+                    $q=$pdo->prepare('INSERT INTO discussions (user_id,title,content,tag) VALUES (:uid,:title,:body,:tag)');
+                    $q->execute([':uid'=>(int)$_SESSION['user_id'],':title'=>$title,':body'=>$body,':tag'=>$tag]);
+                    $notice='Discussion published to the community.';
+                }catch(PDOException $e){error_log('Discussion creation: '.$e->getMessage());$error='Unable to publish discussion. Check database/loco_db_upgrade.sql.';}
                 break;
             case 'reply_post':
-                $id = (int)($_POST['post_id'] ?? 0); $reply = postText('reply', 500);
-                if (!isset($_SESSION['loco_discussions'][$id]) || $reply === '') $error = 'Enter a reply to an existing discussion.';
-                else { $_SESSION['loco_discussions'][$id]['replies'][] = ['author'=>$currentUser,'body'=>$reply,'created'=>time()]; $notice = 'Reply added.'; }
+                $id=(int)($_POST['post_id']??0);$reply=postText('reply',500);
+                if($id<1 || $reply===''){$error='Enter a reply to an existing discussion.';break;}
+                try{
+                    $q=$pdo->prepare('INSERT INTO discussion_replies (discussion_id,user_id,content) SELECT id,:uid,:body FROM discussions WHERE id=:post');
+                    $q->execute([':uid'=>(int)$_SESSION['user_id'],':body'=>$reply,':post'=>$id]);
+                    if($q->rowCount()===1)$notice='Reply published.';
+                    else $error='That discussion no longer exists.';
+                }catch(PDOException $e){error_log('Discussion reply: '.$e->getMessage());$error='Unable to post reply. Check the discussion_replies table.';}
+                break;
+            case 'edit_post':
+                $id=(int)($_POST['post_id']??0);
+                $title=postText('post_title',100);$body=postText('post_body',1200);$tag=postText('post_tag',40);
+                if($id<1 || $title==='' || $body==='' || !in_array($tag,['General','Trading','Game help','Showcase','Feedback'],true)){$error='Enter valid discussion details.';break;}
+                try{
+                    $q=$pdo->prepare('UPDATE discussions SET title=:title,content=:body,tag=:tag WHERE id=:id AND user_id=:uid');
+                    $q->execute([':title'=>$title,':body'=>$body,':tag'=>$tag,':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
+                    $notice='Your discussion was saved.';
+                }catch(PDOException $e){error_log('Discussion update: '.$e->getMessage());$error='Unable to update discussion.';}
+                break;
+            case 'delete_post':
+                $id=(int)($_POST['post_id']??0);
+                try{
+                    $q=$pdo->prepare('DELETE FROM discussions WHERE id=:id AND user_id=:uid');
+                    $q->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
+                    if($q->rowCount()===1)$notice='Your discussion and its replies were deleted.';
+                    else $error='You can only delete your own discussion.';
+                }catch(PDOException $e){error_log('Discussion delete: '.$e->getMessage());$error='Unable to delete discussion.';}
+                break;
+            case 'edit_reply':
+                $id=(int)($_POST['reply_id']??0);$reply=postText('reply',500);
+                if($id<1 || $reply===''){$error='Enter reply text.';break;}
+                try{
+                    $q=$pdo->prepare('UPDATE discussion_replies SET content=:body WHERE id=:id AND user_id=:uid');
+                    $q->execute([':body'=>$reply,':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
+                    $notice='Your reply was updated.';
+                }catch(PDOException $e){error_log('Reply update: '.$e->getMessage());$error='Unable to update reply.';}
+                break;
+            case 'delete_reply':
+                $id=(int)($_POST['reply_id']??0);
+                try{
+                    $q=$pdo->prepare('DELETE FROM discussion_replies WHERE id=:id AND user_id=:uid');
+                    $q->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
+                    if($q->rowCount()===1)$notice='Your reply was deleted.';
+                    else $error='You can only delete your own reply.';
+                }catch(PDOException $e){error_log('Reply delete: '.$e->getMessage());$error='Unable to delete reply.';}
                 break;
             case 'publish_workshop':
                 $title=postText('workshop_title',150);
@@ -382,11 +429,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }catch(PDOException $e){error_log('Workshop delete failed: '.$e->getMessage());$error='Unable to delete creation.';}
                 break;
             case 'report_listing':
-                $id=(int)($_POST['listing_id']??0); $reason=postText('reason',250);
-                $q=$pdo->prepare("SELECT gi.item_name AS title FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id WHERE ml.id=:id AND ml.status='active' LIMIT 1");
-                $q->execute([':id'=>$id]); $listing=$q->fetch();
-                if(!$listing||$reason==='')$error='Choose an active listing and provide a reason.';
-                else{$notice='Report recorded for this session. Database-backed moderator reports are not implemented yet.';}
+                $id=(int)($_POST['listing_id']??0);$reason=postText('reason',250);
+                if($id<1 || $reason===''){$error='Select a listing and provide a reason.';break;}
+                try{
+                    $q=$pdo->prepare("SELECT seller_id FROM marketplace_listings WHERE id=:id AND status='active' LIMIT 1");
+                    $q->execute([':id'=>$id]);$seller=$q->fetchColumn();
+                    if($seller===false){$error='This listing is no longer active.';break;}
+                    if((int)$seller===(int)$_SESSION['user_id']){$error='You cannot report your own listing.';break;}
+                    $q=$pdo->prepare("SELECT id FROM marketplace_reports WHERE listing_id=:id AND reporter_id=:uid AND status IN ('open','reviewing') LIMIT 1");
+                    $q->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
+                    if($q->fetch()){$error='You already have an open report for this listing.';break;}
+                    $q=$pdo->prepare("INSERT INTO marketplace_reports (listing_id,reporter_id,reason,status) VALUES (:id,:uid,:reason,'open')");
+                    $q->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id'],':reason'=>$reason]);
+                    $notice='Report submitted privately for moderator review.';
+                }catch(PDOException $e){error_log('Marketplace report: '.$e->getMessage());$error='Unable to save report. Check marketplace_reports table.';}
                 break;
             default: $error = 'Unknown action.';
         }
@@ -394,7 +450,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $tab=(string)($_GET['tab']??'market');
-$allowedTabs=['market','sell','saved','trades','inventory','discussions','profile','workshop'];
+$allowedTabs=['market','sell','saved','trades','inventory','discussions','profile','workshop','reports'];
 if(!in_array($tab,$allowedTabs,true))$tab='market';
 $editId=(int)($_GET['edit']??0);$editListing=null;
 $inventoryItems=[];$tradeInventoryItems=[];
@@ -439,7 +495,24 @@ try{
     $q=$pdo->prepare('SELECT g.title FROM library l JOIN games g ON g.id=l.game_id WHERE l.user_id=:uid ORDER BY l.purchase_date DESC LIMIT 6');
     $q->execute([':uid'=>(int)$_SESSION['user_id']]);$profileGameShowcase=$q->fetchAll(PDO::FETCH_COLUMN);
 }catch(PDOException $e){error_log('LOCO profile read failed: '.$e->getMessage());if(($_GET['tab']??'')==='profile')$error=$error?:'Profile database could not be loaded.';}
-$myPosts=array_reverse($_SESSION['loco_discussions'],true);
+$myPosts=[];$myReports=[];
+try {
+    $q=$pdo->query("SELECT d.id,d.user_id,d.title,d.content,d.tag,d.created_at,u.username AS author FROM discussions d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC,d.id DESC LIMIT 100");
+    $myPosts=$q->fetchAll(PDO::FETCH_ASSOC);
+    $postIds=array_map('intval',array_column($myPosts,'id'));
+    $repliesByPost=[];
+    if($postIds){
+        $marks=implode(',',array_fill(0,count($postIds),'?'));
+        $q=$pdo->prepare("SELECT r.id,r.discussion_id,r.user_id,r.content,r.created_at,u.username AS author FROM discussion_replies r JOIN users u ON u.id=r.user_id WHERE r.discussion_id IN ($marks) ORDER BY r.created_at ASC,r.id ASC");
+        $q->execute($postIds);
+        foreach($q->fetchAll(PDO::FETCH_ASSOC) as $reply)$repliesByPost[(int)$reply['discussion_id']][]=$reply;
+    }
+    foreach($myPosts as &$post)$post['replies']=$repliesByPost[(int)$post['id']]??[];
+    unset($post);
+    $q=$pdo->prepare("SELECT mr.id,mr.status,mr.reason,mr.created_at,gi.item_name AS item_name FROM marketplace_reports mr JOIN marketplace_listings ml ON ml.id=mr.listing_id JOIN game_items gi ON gi.id=ml.item_id WHERE mr.reporter_id=:uid ORDER BY mr.created_at DESC,mr.id DESC LIMIT 50");
+    $q->execute([':uid'=>(int)$_SESSION['user_id']]);$myReports=$q->fetchAll(PDO::FETCH_ASSOC);
+}catch(PDOException $e){error_log('LOCO community discussions/reports load: '.$e->getMessage());if(in_array(($_GET['tab']??''),['discussions','reports'],true))$error=$error?:'Discussions and reports require database/loco_db_upgrade.sql.';}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -469,7 +542,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
     <?php if ($error): ?><div class="loco-notice error" role="alert">! <?=h($error)?></div><?php endif; ?>
 
     <nav class="loco-community-tabs" aria-label="Community sections">
-        <?php foreach (['market'=>'Marketplace','sell'=>'My Listings','saved'=>'Wishlist','trades'=>'Trade Center','inventory'=>'Inventory','workshop'=>'Workshop','discussions'=>'Discussions','profile'=>'My Profile'] as $key=>$label): ?><a class="<?= $tab===$key?'active':'' ?>" href="community.php?tab=<?=h($key)?>"><?=h($label)?></a><?php endforeach; ?>
+        <?php foreach (['market'=>'Marketplace','sell'=>'My Listings','saved'=>'Wishlist','trades'=>'Trade Center','inventory'=>'Inventory','workshop'=>'Workshop','discussions'=>'Discussions','reports'=>'My Reports','profile'=>'My Profile'] as $key=>$label): ?><a class="<?= $tab===$key?'active':'' ?>" href="community.php?tab=<?=h($key)?>"><?=h($label)?></a><?php endforeach; ?>
     </nav>
 
     <?php if ($tab === 'market'): ?>
