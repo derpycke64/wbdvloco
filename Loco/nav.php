@@ -33,7 +33,7 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
         <div class="loco-profile-badge">
             <?php if ($isLoggedIn): ?>
                 <a href="profile.php" style="color: #fff; text-decoration: none; font-weight: bold; margin-right: 15px;">
-                    🎮 <?php echo htmlspecialchars($currentUser); ?>
+                    <img class="loco-nav-avatar" src="profile_avatar.php?id=<?=(int)$_SESSION['user_id']?>" alt=""> <?php echo htmlspecialchars($currentUser); ?>
                 </a>
                 <a href="logout.php" class="loco-logout-link">Logout</a>
             <?php else: ?>
