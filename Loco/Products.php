@@ -96,6 +96,7 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
                                     </div>
                                     <div class="game-purchase-bar">
                                         <span class="game-price"><?php echo $display_price; ?></span>
+                                        <a href="game_details.php?id=<?=(int)$game['id']?>" style="color:#d9d4d7;font-size:.7rem;text-decoration:none" title="Save this game to your wishlist">♡ WISHLIST</a>
                                         
                                         <?php 
                                         // 🌟 DYNAMIC BUTTON CHECK: If library_check is not empty, they own it!
@@ -137,6 +138,22 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
         
         <!-- Right Sidebar Filter Panel Columns Column section -->
         <div class="loco-store-sidebar-col">
+            <div class="sidebar-panel">
+                <h3 class="loco-label-retro">LOCO Wallet & Wishlist</h3>
+                <div class="sidebar-content-box">
+                    <?php if($isLoggedIn): ?>
+                        <?php if($navWalletBalance>0): ?>
+                            <span class="sidebar-link" style="color:#7be184;display:block;font-weight:bold">Balance: ₱<?=number_format($navWalletBalance,2)?></span>
+                        <?php endif; ?>
+                        <a href="wallet.php" class="sidebar-link">» Add Wallet Funds</a>
+                        <a href="wishlist.php" class="sidebar-link">» My Wishlist</a>
+                        <a href="transaction_history.php" class="sidebar-link">» Transactions</a>
+                    <?php else: ?>
+                        <a href="Login.php" class="sidebar-link">» Sign in to use Wallet</a>
+                        <a href="Register.php" class="sidebar-link">» Create a LOCO Account</a>
+                    <?php endif; ?>
+                </div>
+            </div>
             <div class="sidebar-panel">
                 <h3 class="loco-label-retro">Find More...</h3>
                 <div class="sidebar-content-box">
