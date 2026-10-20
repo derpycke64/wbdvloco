@@ -624,7 +624,66 @@ try {
     <?php elseif ($tab === 'inventory'): ?>
     <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>My inventory</h2><p>Items here are saved to your account in the database. Items with an active listing stay in your inventory but cannot be removed until the listing is removed.</p></div></div><form method="post" class="loco-form-grid compact"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="add_inventory"><label>Item name<input name="item_name" maxlength="150" required></label><label>Game<select name="item_game" required><option value="">Choose a game</option><?php foreach($gameOptions as $gameOption): ?><option value="<?=h($gameOption)?>"><?=h($gameOption)?></option><?php endforeach; ?></select></label><label>Type<input name="item_type" maxlength="50" required placeholder="Skin, collectible…"></label><label>Quantity<input name="quantity" type="number" min="1" max="999" value="1" required></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Add to inventory</button></div></form><div class="loco-inventory-grid"><?php if(!$inventoryItems): ?><p class="loco-empty-state">Your inventory is empty. Add an item above or publish a listing to create an owned item.</p><?php endif; ?><?php foreach($inventoryItems as $item): ?><article class="loco-inventory-card"><span class="loco-listing-symbol">✦</span><h3><?=h($item['title'])?></h3><p><?=h($item['game'])?></p><span class="loco-market-tag"><?=h($item['rarity']??'Item')?></span><?php if(!empty($item['active_listing_id'])): ?><p class="loco-session-note">Listed on marketplace</p><a class="loco-small-link" href="community.php?tab=sell">Manage listing</a><?php else: ?><form method="post" onsubmit="return confirm('Remove this inventory item?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="remove_inventory"><input type="hidden" name="inventory_id" value="<?=$item['inventory_id']?>"><button class="loco-danger-link">Remove item</button></form><?php endif; ?></article><?php endforeach; ?></div></section>
     <?php elseif ($tab === 'discussions'): ?>
-    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Community discussions</h2><p>Ask questions, share tips, or start a topic with other players using this session.</p></div></div><form method="post" class="loco-form-grid"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="create_post"><label>Discussion title<input name="post_title" maxlength="100" required placeholder="What do you want to discuss?"></label><label>Category<select name="post_tag"><option>General</option><option>Trading</option><option>Game help</option><option>Showcase</option><option>Feedback</option></select></label><label class="loco-full-width">Message<textarea name="post_body" maxlength="1200" rows="4" required></textarea></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Post discussion</button></div></form><div class="loco-discussion-list"><?php if(!$myPosts): ?><p class="loco-empty-state">No discussions yet. Start the first conversation above.</p><?php endif; ?><?php foreach($myPosts as $post): ?><article class="loco-discussion-card"><div class="loco-discussion-meta"><span class="loco-market-tag"><?=h($post['tag'])?></span><small>By <?=h($post['author'])?> · <?=date('M j, Y g:i A',$post['created'])?></small></div><h3><?=h($post['title'])?></h3><p><?=nl2br(h($post['body']))?></p><details><summary>Replies (<?=count($post['replies'])?>)</summary><?php foreach($post['replies'] as $reply): ?><div class="loco-reply"><strong><?=h($reply['author'])?></strong><p><?=nl2br(h($reply['body']))?></p></div><?php endforeach; ?><form method="post" class="loco-reply-form"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="reply_post"><input type="hidden" name="post_id" value="<?=$post['id']?>"><input name="reply" maxlength="500" placeholder="Write a reply…" required><button class="loco-button-small">Reply</button></form></details></article><?php endforeach; ?></div></section>
+    <section class="loco-community-panel">
+        <div class="loco-section-heading"><div><h2>Community discussions</h2><p>Questions, trading tips, and conversations shared across LOCO accounts. Posts and replies are stored in MySQL.</p></div></div>
+        <form method="post" class="loco-form-grid">
+            <input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="create_post">
+            <label>Discussion title<input name="post_title" maxlength="100" required placeholder="What do you want to discuss?"></label>
+            <label>Category<select name="post_tag"><option>General</option><option>Trading</option><option>Game help</option><option>Showcase</option><option>Feedback</option></select></label>
+            <label class="loco-full-width">Message<textarea name="post_body" maxlength="1200" rows="4" required></textarea></label>
+            <div class="loco-form-actions"><button class="loco-brand-gloss-btn">Post discussion</button></div>
+        </form>
+        <div class="loco-discussion-list">
+        <?php if(!$myPosts): ?><p class="loco-empty-state">No discussions yet. Start the first conversation above.</p><?php endif; ?>
+        <?php foreach($myPosts as $post): $postOwned=(int)$post['user_id']===(int)$_SESSION['user_id']; ?>
+        <article class="loco-discussion-card">
+            <div class="loco-discussion-meta"><span class="loco-market-tag"><?=h($post['tag']??'General')?></span><small>By <?=h($post['author'])?> · <?=h($post['created_at'])?></small></div>
+            <h3><?=h($post['title'])?></h3><p><?=nl2br(h($post['content']))?></p>
+            <?php if($postOwned): ?>
+            <details class="loco-discussion-edit"><summary>Edit your discussion</summary>
+                <form method="post" class="loco-discussion-edit-form">
+                    <input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="edit_post"><input type="hidden" name="post_id" value="<?=$post['id']?>">
+                    <label>Title<input name="post_title" maxlength="100" required value="<?=h($post['title'])?>"></label>
+                    <label>Category<select name="post_tag"><?php foreach(['General','Trading','Game help','Showcase','Feedback'] as $category): ?><option value="<?=h($category)?>" <?=($post['tag']??'General')===$category?'selected':''?>><?=h($category)?></option><?php endforeach; ?></select></label>
+                    <label>Message<textarea name="post_body" maxlength="1200" rows="3" required><?=h($post['content'])?></textarea></label>
+                    <button class="loco-button-small">Save changes</button>
+                </form>
+            </details>
+            <form method="post" class="loco-inline-form" onsubmit="return confirm('Delete this discussion and all replies?')">
+                <input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="delete_post"><input type="hidden" name="post_id" value="<?=$post['id']?>"><button class="loco-danger-link">Delete your discussion</button>
+            </form>
+            <?php endif; ?>
+            <details><summary>Replies (<?=count($post['replies'])?>)</summary>
+                <?php foreach($post['replies'] as $reply): $replyOwned=(int)$reply['user_id']===(int)$_SESSION['user_id']; ?>
+                <div class="loco-reply">
+                    <strong><?=h($reply['author'])?></strong><small> · <?=h($reply['created_at'])?></small>
+                    <p><?=nl2br(h($reply['content']))?></p>
+                    <?php if($replyOwned): ?>
+                    <details><summary>Edit your reply</summary>
+                        <form method="post" class="loco-reply-form"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="edit_reply"><input type="hidden" name="reply_id" value="<?=$reply['id']?>"><input name="reply" maxlength="500" required value="<?=h($reply['content'])?>"><button class="loco-button-small">Save reply</button></form>
+                    </details>
+                    <form method="post" class="loco-inline-form" onsubmit="return confirm('Delete your reply?')">
+                        <input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="delete_reply"><input type="hidden" name="reply_id" value="<?=$reply['id']?>"><button class="loco-danger-link">Delete reply</button>
+                    </form>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+                <form method="post" class="loco-reply-form">
+                    <input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="reply_post"><input type="hidden" name="post_id" value="<?=$post['id']?>">
+                    <input name="reply" maxlength="500" placeholder="Write a reply…" required><button class="loco-button-small">Reply</button>
+                </form>
+            </details>
+        </article>
+        <?php endforeach; ?></div>
+    </section>
+    <?php elseif ($tab === 'reports'): ?>
+    <section class="loco-community-panel">
+        <div class="loco-section-heading"><div><h2>My marketplace reports</h2><p>Reports are private. Only reports submitted by your account appear here; moderation actions are not available to players.</p></div></div>
+        <?php if(!$myReports): ?><p class="loco-empty-state">You haven't submitted any marketplace reports. Use “Report listing” on a Marketplace item.</p><?php endif; ?>
+        <div class="loco-owned-listings"><?php foreach($myReports as $report): ?>
+            <article class="loco-owned-row"><div><strong><?=h($report['item_name'])?></strong><p><?=h($report['reason'])?></p><small>Submitted <?=h($report['created_at'])?></small></div><span class="loco-status-pill <?=h($report['status'])?>"><?=h(ucfirst($report['status']))?></span></article>
+        <?php endforeach; ?></div>
+    </section>
     <?php elseif ($tab === 'profile'): ?>
     <section class="loco-community-panel">
         <div class="loco-section-heading"><div><h2>Gamer profile</h2><p>Customize your public profile. Your changes are stored in MySQL and remain after logging out.</p></div></div>
