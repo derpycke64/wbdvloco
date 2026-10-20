@@ -1347,3 +1347,9 @@ h3.loco-label-thingy {
 .loco-admin-panel th,.loco-admin-panel td{padding:9px;border-bottom:1px solid #3a404c;color:#e4e8f2}
 .loco-admin-audit{border-top:1px solid #353a46;padding-top:10px;overflow-wrap:anywhere}
 @media(max-width:670px){.loco-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Report moderation messages */
+.loco-admin-form textarea{color:#fff;background:#10131b;border:1px solid #555f6f;padding:9px;border-radius:3px;resize:vertical;width:100%;box-sizing:border-box;font:inherit}
+.loco-report-response{margin-top:14px;padding:13px 15px;border:1px solid #455163;background:#181f2a;border-radius:5px;max-width:800px}
+.loco-report-response strong{color:#f0f4fd}
+.loco-report-response p{color:#dfe7f2;white-space:normal;line-height:1.5;margin:9px 0 0;overflow-wrap:anywhere}
