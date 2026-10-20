@@ -1,0 +1,2 @@
+# Archives and cover files must be served through the application, not direct URLs.
+Require all denied
