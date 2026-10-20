@@ -1287,3 +1287,17 @@ h3.loco-label-thingy {
 .loco-workshop-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
 .loco-workshop-actions form{margin:0}
 .loco-workshop-actions .loco-button-small{display:inline-flex;align-items:center;text-decoration:none;cursor:pointer}
+
+/* Persistent account profile and safe avatar thumbnails */
+.loco-nav-avatar{width:22px;height:22px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px;background:#282b34}
+.loco-profile-avatar{width:50px;height:50px;object-fit:cover;border-radius:50%;background:#222736;border:1px solid #a93740;flex-shrink:0}
+.loco-profile-avatar.large{width:82px;height:82px}
+.loco-profile-photo-form{display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;margin:18px 0 26px}
+.loco-profile-photo-form label{display:flex;flex-direction:column;gap:8px;color:#e3e6ee}
+.loco-profile-photo-form input{max-width:100%;color:#e3e6ee}
+.loco-profile-showcases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:24px}
+.loco-profile-showcases>div{padding:16px;background:#12151c;border:1px solid #353944;border-radius:5px;color:#e9edf4}
+.loco-profile-showcases h3{margin:0 0 12px;color:#f2f4f7}
+.loco-profile-showcase-item{padding:9px 4px;border-top:1px solid #2c313b;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.loco-profile-showcase-item small{color:#abb6c5}
+@media(max-width:680px){.loco-profile-showcases{grid-template-columns:1fr}}
