@@ -271,6 +271,7 @@ try {
   document.getElementById('provider-brand').textContent=m==='sandbox_paypal'?'PayPal':'GCash';
   document.getElementById('provider-card').classList.toggle('paypal',m==='sandbox_paypal');
   document.querySelector('.loco-sandbox-page').classList.toggle('loco-provider-mode',isProvider);
+  document.body.classList.toggle('loco-provider-screen',isProvider);
   if(wallet)wallet.hidden=m!=='wallet';
   card.querySelectorAll('input').forEach(function(f){f.required=isCard;});
 
