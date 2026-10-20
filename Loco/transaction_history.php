@@ -11,6 +11,15 @@ function h($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'
 $userId = (int) $_SESSION['user_id'];
 $transactions = [];
 $error = '';
+function paymentDisplayName($method,$notes){
+    if($method==='sandbox_card'){
+        $notes=strtolower((string)$notes);
+        if(strpos($notes,'gcash')!==false)return 'GCash (Demo)';
+        if(strpos($notes,'paypal')!==false)return 'PayPal (Demo)';
+        return 'Test Card (Demo)';
+    }
+    return ucwords(str_replace('_',' ',(string)$method));
+}
 
 try {
     $stmt = $pdo->prepare(
@@ -58,7 +67,7 @@ try {
             <td style="padding:12px;border-bottom:1px solid #333"><?php echo h($tx['created_at']); ?></td>
             <td style="padding:12px;border-bottom:1px solid #333"><?php echo h($tx['reference_code']); ?></td>
             <td style="padding:12px;border-bottom:1px solid #333"><?php echo h(ucwords(str_replace('_', ' ', $tx['transaction_type']))); ?></td>
-            <td style="padding:12px;border-bottom:1px solid #333"><?php echo h(ucwords(str_replace('_', ' ', $tx['payment_method']))); ?></td>
+            <td style="padding:12px;border-bottom:1px solid #333"><?php echo h(paymentDisplayName($tx['payment_method'],$tx['notes']??'')); ?></td>
             <td style="padding:12px;border-bottom:1px solid #333">₱<?php echo number_format((float)$tx['amount'], 2); ?></td>
             <td style="padding:12px;border-bottom:1px solid #333"><?php echo h(ucfirst($tx['status'])); ?></td>
           </tr>
