@@ -304,7 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $original=basename((string)$archive['name']);
                     $original=function_exists('mb_substr')?mb_substr($original,0,180,'UTF-8'):substr($original,0,180);
-                    $q=$pdo->prepare('INSERT INTO workshop_creations (user_id,game_id,title,description,archive_filename,original_filename,cover_filename) VALUES (:uid,:gid,:title,:description,:archive,:original,:cover)');
+                    $q=$pdo->prepare('INSERT INTO workshop_creations (creator_id,game_id,title,description,archive_filename,original_filename,cover_filename) VALUES (:uid,:gid,:title,:description,:archive,:original,:cover)');
                     $q->execute([':uid'=>(int)$_SESSION['user_id'],':gid'=>$gameId,':title'=>$title,':description'=>$description,':archive'=>$archiveName,':original'=>$original,':cover'=>$coverName]);
                     $notice='Your Workshop creation has been published.';
                 } catch(Throwable $e){
@@ -316,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'toggle_workshop_subscription':
                 $id=(int)($_POST['creation_id']??0);
                 try{
-                    $q=$pdo->prepare('SELECT user_id FROM workshop_creations WHERE id=:id LIMIT 1');
+                    $q=$pdo->prepare('SELECT creator_id FROM workshop_creations WHERE id=:id LIMIT 1');
                     $q->execute([':id'=>$id]);$owner=$q->fetchColumn();
                     if($owner===false){$error='Creation not found.';break;}
                     if((int)$owner===(int)$_SESSION['user_id']){$error='You already own this creation.';break;}
@@ -336,11 +336,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'delete_workshop':
                 $id=(int)($_POST['creation_id']??0);
                 try{
-                    $q=$pdo->prepare('SELECT archive_filename,cover_filename FROM workshop_creations WHERE id=:id AND user_id=:uid LIMIT 1');
+                    $q=$pdo->prepare('SELECT archive_filename,cover_filename FROM workshop_creations WHERE id=:id AND creator_id=:uid LIMIT 1');
                     $q->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
                     $own=$q->fetch(PDO::FETCH_ASSOC);
                     if(!$own){$error='You can only delete your own creations.';break;}
-                    $q=$pdo->prepare('DELETE FROM workshop_creations WHERE id=:id AND user_id=:uid');
+                    $q=$pdo->prepare('DELETE FROM workshop_creations WHERE id=:id AND creator_id=:uid');
                     $q->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
                     if($q->rowCount()===1){
                         foreach(['archive_filename','cover_filename'] as $field){
@@ -391,10 +391,10 @@ try{
 $workshopCreations=[];$workshopGames=[];$myWorkshopSubscriptions=[];
 try{
     $workshopGames=$pdo->query('SELECT id,title FROM games ORDER BY title')->fetchAll(PDO::FETCH_ASSOC);
-    $q=$pdo->prepare("SELECT wc.id,wc.user_id,wc.game_id,wc.title,wc.description,wc.cover_filename,wc.created_at,g.title AS game,u.username AS creator,
+    $q=$pdo->prepare("SELECT wc.id,wc.creator_id AS user_id,wc.game_id,wc.title,wc.description,wc.cover_filename,wc.archive_filename,wc.created_at,g.title AS game,u.username AS creator,
         (SELECT COUNT(*) FROM workshop_subscriptions ws WHERE ws.creation_id=wc.id) AS subscribers,
         EXISTS(SELECT 1 FROM workshop_subscriptions ws WHERE ws.creation_id=wc.id AND ws.user_id=:uid) AS subscribed
-        FROM workshop_creations wc JOIN users u ON u.id=wc.user_id JOIN games g ON g.id=wc.game_id
+        FROM workshop_creations wc JOIN users u ON u.id=wc.creator_id JOIN games g ON g.id=wc.game_id
         ORDER BY wc.created_at DESC,wc.id DESC");
     $q->execute([':uid'=>(int)$_SESSION['user_id']]);$workshopCreations=$q->fetchAll(PDO::FETCH_ASSOC);
 }catch(PDOException $e){error_log('Workshop load failed: '.$e->getMessage());if(($_GET['tab']??'')==='workshop')$error=$error?:'Workshop database is not ready. Import database/community_workshop.sql.';}
@@ -539,11 +539,11 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
         <p class="loco-muted"><?=number_format((int)$creation['subscribers'])?> subscriber(s)</p>
         <div class="loco-workshop-actions">
         <?php if($isOwner): ?>
-          <a class="loco-button-small" href="workshop_download.php?id=<?=$creation['id']?>">Download your ZIP</a>
+          <?php if(!empty($creation['archive_filename'])): ?><a class="loco-button-small" href="workshop_download.php?id=<?=$creation['id']?>">Download your ZIP</a><?php endif; ?>
           <form method="post" onsubmit="return confirm('Delete this creation and its subscriptions?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="delete_workshop"><input type="hidden" name="creation_id" value="<?=$creation['id']?>"><button type="submit" class="loco-danger-link">Delete</button></form>
         <?php else: ?>
           <form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="toggle_workshop_subscription"><input type="hidden" name="creation_id" value="<?=$creation['id']?>"><button type="submit" class="loco-button-small"><?=$creation['subscribed']?'✓ Unsubscribe':'＋ Subscribe'?></button></form>
-          <?php if($creation['subscribed']): ?><a class="loco-button-small" href="workshop_download.php?id=<?=$creation['id']?>">Download ZIP</a><?php endif; ?>
+          <?php if($creation['subscribed'] && !empty($creation['archive_filename'])): ?><a class="loco-button-small" href="workshop_download.php?id=<?=$creation['id']?>">Download ZIP</a><?php endif; ?>
         <?php endif; ?>
         </div>
       </article>
