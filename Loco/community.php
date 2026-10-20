@@ -542,7 +542,8 @@ try {
     </nav>
 
     <?php if ($tab === 'market'): ?>
-    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Marketplace</h2><p>Browse items, buy with your LOCO wallet, or offer an item in trade.</p></div><a class="loco-brand-gloss-btn" href="community.php?tab=sell">＋ Create listing</a></div>
+    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Marketplace</h2><p>Browse items, buy with your LOCO wallet, or offer an item in trade.</p></div><div class="loco-market-heading-actions"><a class="loco-secondary-btn" href="game_marketplace.php">🎮 Buy / Sell Games</a><a class="loco-brand-gloss-btn" href="community.php?tab=sell">＋ Create Item Listing</a></div></div>
+        <div class="loco-game-market-promo"><div><strong>LOCO USED-GAME MARKET</strong><p>Buy complete games from other players. The LOCO demo license transfers directly to your Library.</p></div><a class="loco-wishlist-action" href="game_marketplace.php">BROWSE USED GAMES →</a></div>
         <div class="loco-market-tools">
             <label class="loco-market-search-wrap">
                 <span class="sr-only">Search listings</span>
@@ -580,6 +581,7 @@ try {
     </section>
     <?php elseif ($tab === 'sell'): ?>
     <section class="loco-community-panel"><div class="loco-section-heading"><div><h2><?=$editListing?'Edit listing':'Create a listing'?></h2><p>Only listings owned by your account can be edited or removed.</p></div></div>
+        <p class="loco-notice">Selling a <strong>complete game</strong> instead of an inventory item? <a href="game_marketplace.php?filter=mine">Sell one of your Library games here →</a></p>
         <form method="post" class="loco-form-grid"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="<?=$editListing?'edit_listing':'create_listing'?>"><?php if($editListing): ?><input type="hidden" name="listing_id" value="<?=$editListing['id']?>"><?php endif; ?>
             <label>Item title<input name="title" maxlength="90" required value="<?=h($editListing['title']??'')?>" placeholder="e.g. Crimson Blade Skin"></label>
             <label>Game<select name="game" required><option value="">Choose a game</option><?php foreach($gameOptions as $gameOption): ?><option value="<?=h($gameOption)?>" <?=($editListing['game']??'')===$gameOption?'selected':''?>><?=h($gameOption)?></option><?php endforeach; ?></select></label>
