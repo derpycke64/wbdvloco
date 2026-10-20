@@ -12,7 +12,7 @@ Use the database name `loco_db`. These steps are intended for the local WAMP/php
 6. Import `database/loco_db_upgrade.sql`.
 7. Import `database/community_workshop.sql`.
 
-`community_workshop.sql` adds Workshop creations and subscriptions. ZIP uploads (max 10 MB) and optional JPG/PNG/WebP covers (max 2 MB) are stored under `Loco/uploads/workshop/`. Apache must allow PHP to write that directory. The included `.htaccess` blocks direct access to uploads; authenticated downloads are served through `workshop_download.php`. Treat community-uploaded ZIPs as untrusted files.
+`community_workshop.sql` preserves the original Workshop tables and adds missing nullable ZIP/cover filename columns to existing `workshop_creations` records. It is safe to rerun after backing up the database. Existing creations without uploaded ZIPs remain visible but have no download link. ZIP uploads (max 10 MB) and optional JPG/PNG/WebP covers (max 2 MB) are stored under `Loco/uploads/workshop/`. Apache must allow PHP to write that directory. The included `.htaccess` blocks direct access to uploads; authenticated downloads are served through `workshop_download.php`. Treat community-uploaded ZIPs as untrusted files.
 
 `community_inventory.sql` adds the inventory link to marketplace listings and backfills ownership for existing listings. The upgrade migration adds discussion replies, trade requests/history, reports, orders and order items, and the discussion tag column. The scripts use `CREATE TABLE IF NOT EXISTS` or conditional schema changes where applicable.
 
