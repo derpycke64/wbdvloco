@@ -23,6 +23,15 @@ try {
 } catch (\PDOException $e) {
     die("Database lookup error: " . $e->getMessage());
 }
+if(!empty($_SESSION['user_id']) && empty($_SESSION['loco_wishlist_csrf']))$_SESSION['loco_wishlist_csrf']=bin2hex(random_bytes(24));
+$gameWishlisted=false;
+if(!empty($_SESSION['user_id']) && !empty($game)){
+    try{
+        $wishlistCheck=$pdo->prepare('SELECT 1 FROM game_wishlists WHERE user_id=:uid AND game_id=:gid LIMIT 1');
+        $wishlistCheck->execute([':uid'=>(int)$_SESSION['user_id'],':gid'=>(int)$game['id']]);
+        $gameWishlisted=(bool)$wishlistCheck->fetchColumn();
+    }catch(PDOException $e){ /* Migration may not be installed yet. */ }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -74,6 +83,14 @@ try {
                     }
                     ?>
                 </div>
+                <?php if(!empty($_SESSION['user_id'])): ?>
+                <form method="post" action="wishlist.php?tab=games" style="margin-top:12px">
+                  <input type="hidden" name="csrf" value="<?=htmlspecialchars($_SESSION['loco_wishlist_csrf'],ENT_QUOTES,'UTF-8')?>">
+                  <input type="hidden" name="action" value="toggle_game">
+                  <input type="hidden" name="id" value="<?=(int)$game['id']?>">
+                  <button type="submit" class="loco-wishlist-remove" style="padding:10px 14px"><?= $gameWishlisted?'♥ Remove from Wishlist':'♡ Add to Wishlist' ?></button>
+                </form>
+                <?php endif; ?>
             </div>
 
         </div>
