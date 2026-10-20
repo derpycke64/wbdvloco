@@ -86,3 +86,7 @@ Do not re-import root `loco_db.sql` into an existing database; it drops tables.
 After importing `database/community_admin.sql`, import `database/community_admin_response.sql` once to add the nullable `marketplace_reports.admin_response` column. This upgrade preserves existing reports and private `moderator_notes`; it is safe to rerun. Back up `loco_db` first.
 
 Administrators see a **Private moderator note** field and a separate **Response to reporter** field on the admin dashboard. The public response appears under the report in the reporting user's **My Reports** tab. Private moderator notes are not included in the My Reports query. An existing resolved report will show no public response until an administrator reopens its record in the dashboard and adds one. Audit logs record that notes/responses were provided, but not the confidential note text.
+
+## Admin report queue vs. history
+
+`Loco/admin.php` separates **Active report queue** (open/reviewing) from **Report history** (resolved/dismissed). Closed reports are not deleted and remain visible to the reporter with their public response. Admins can expand a historical report, update its response, or reopen it. The moderation action is audited as before. This feature requires no new migration beyond `community_admin_response.sql`.
