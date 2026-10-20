@@ -9,9 +9,12 @@ Use the database name `loco_db`. These steps are intended for the local WAMP/php
 3. Import `database/transaction_history.sql`.
 4. Import `database/marketplace_database.sql`.
 5. Import `database/community_inventory.sql`.
-6. Import `database/loco_db_upgrade.sql`.\n7. Import `database/community_workshop.sql`.
+6. Import `database/loco_db_upgrade.sql`.
+7. Import `database/community_workshop.sql`.
 
-`community_workshop.sql` adds Workshop creations and subscriptions. ZIP uploads (max 10 MB) and optional JPG/PNG/WebP covers (max 2 MB) are stored under `Loco/uploads/workshop/`. Apache must allow PHP to write that directory. The included `.htaccess` blocks direct access to uploads; authenticated downloads are served through `workshop_download.php`. Treat community-uploaded ZIPs as untrusted files.\n\n`community_inventory.sql` adds the inventory link to marketplace listings and backfills ownership for existing listings. The upgrade migration adds discussion replies, trade requests/history, reports, orders and order items, and the discussion tag column. The scripts use `CREATE TABLE IF NOT EXISTS` or conditional schema changes where applicable.
+`community_workshop.sql` adds Workshop creations and subscriptions. ZIP uploads (max 10 MB) and optional JPG/PNG/WebP covers (max 2 MB) are stored under `Loco/uploads/workshop/`. Apache must allow PHP to write that directory. The included `.htaccess` blocks direct access to uploads; authenticated downloads are served through `workshop_download.php`. Treat community-uploaded ZIPs as untrusted files.
+
+`community_inventory.sql` adds the inventory link to marketplace listings and backfills ownership for existing listings. The upgrade migration adds discussion replies, trade requests/history, reports, orders and order items, and the discussion tag column. The scripts use `CREATE TABLE IF NOT EXISTS` or conditional schema changes where applicable.
 
 ## If you already have data in loco_db
 
@@ -39,7 +42,9 @@ SHOW COLUMNS FROM discussions LIKE 'tag';
 SHOW COLUMNS FROM users LIKE 'wallet_balance';
 SHOW COLUMNS FROM library LIKE 'game_id';
 SHOW COLUMNS FROM marketplace_listings LIKE 'inventory_id';
-SHOW TABLES LIKE 'inventories';\nSHOW TABLES LIKE 'workshop_creations';\nSHOW TABLES LIKE 'workshop_subscriptions';
+SHOW TABLES LIKE 'inventories';
+SHOW TABLES LIKE 'workshop_creations';
+SHOW TABLES LIKE 'workshop_subscriptions';
 ```
 
 Make sure the selected database is `loco_db` and each expected table/column is returned.
