@@ -33,24 +33,24 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
                 <p class="loco-install-text">Join LOCO for Free and get games delivered straight to your desktop with automatic updates and a massive gaming community pipeline platform environment.</p>
             </div>
 
-            <!-- Promotional Banner Grid Rows Row elements -->
+            <!-- Promotional cards are selected from the live games table. -->
             <div class="loco-promo-row">
-                <a href="game_details.php?id=1" class="loco-promo-card">
-                    <img src="images/gameplay_01.jpg" class="loco-promo-img" alt="Nebula Drift original cover art">
-                    <div class="loco-promo-overlay">
-                        <span class="loco-promo-title">Nebula Drift</span>
-                        <span class="loco-promo-price">₱2,490.00</span>
-                    </div>
-                </a>
-                <a href="game_details.php?id=2" class="loco-promo-card">
-                    <img src="images/gameplay_02.jpg" class="loco-promo-img" alt="Crimson Freight original cover art">
-                    <div class="loco-promo-overlay">
-                        <span class="loco-promo-title">Crimson Freight</span>
-                        <span class="loco-promo-price">₱899.00</span>
-                    </div>
-                </a>
+                <?php
+                try {
+                    $promoStmt = $pdo->query("SELECT id, title, price, image_url FROM games ORDER BY id ASC LIMIT 2");
+                    foreach ($promoStmt->fetchAll() as $promoGame):
+                        $promoPrice = ((float)$promoGame['price'] <= 0) ? 'Free' : '₱' . number_format((float)$promoGame['price'], 2);
+                ?>
+                    <a href="game_details.php?id=<?=(int)$promoGame['id']?>" class="loco-promo-card">
+                        <img src="<?=htmlspecialchars($promoGame['image_url'] ?: 'images/gameplay_01.jpg', ENT_QUOTES, 'UTF-8')?>" class="loco-promo-img" alt="<?=htmlspecialchars($promoGame['title'], ENT_QUOTES, 'UTF-8')?>">
+                        <div class="loco-promo-overlay">
+                            <span class="loco-promo-title"><?=htmlspecialchars($promoGame['title'], ENT_QUOTES, 'UTF-8')?></span>
+                            <span class="loco-promo-price"><?=htmlspecialchars($promoPrice, ENT_QUOTES, 'UTF-8')?></span>
+                        </div>
+                    </a>
+                <?php endforeach; } catch (PDOException $e) { error_log('LOCO promo query failed: '.$e->getMessage()); } ?>
             </div>
-            
+
             <!-- Dynamic Promotional Slideshow Carousel Viewport Container -->
             <div class="store-hero" id="carousel-viewport"></div>
             <div class="carousel-control-bar">
@@ -241,80 +241,42 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
        // 🌟 SLIDE DATA WITH AUTOMATIC FALLBACKS
     const slideData = <?php
         try {
-            $slide_query = $pdo->query(
-                "SELECT id, title, price, image_url AS img 
-                 FROM games ORDER BY id ASC LIMIT 4"
-            );
+            $slide_query = $pdo->query("SELECT id, title, price, image_url AS img FROM games ORDER BY id ASC LIMIT 4");
             $slides = $slide_query->fetchAll();
-            if (!empty($slides)) {
-                foreach($slides as &$s) {
-                    $s['price'] = ($s['price'] == 0) ? 
-                        'Free' : '₱' . number_format($s['price'], 2);
-                }
-                echo json_encode($slides);
-            } else {
-                throw new Exception("Empty records");
+            foreach ($slides as &$slide) {
+                $slide['price'] = ((float)$slide['price'] <= 0) ? 'Free' : '₱' . number_format((float)$slide['price'], 2);
             }
-        } catch(\Exception $e) { 
-            // Safety backup fallback layout data arrays if database stalls
-            echo json_encode([
-                ["id"=>1, "title"=>"Nebula Drift", "price"=>"₱2,490.00", "img"=>"images/gameplay_01.jpg"],
-                ["id"=>2, "title"=>"Crimson Freight", "price"=>"₱899.00", "img"=>"images/gameplay_02.jpg"],
-                ["id"=>8, "title"=>"Ashen Crown", "price"=>"₱1,299.00", "img"=>"images/gameplay_08.jpg"],
-                ["id"=>12, "title"=>"Starfall Cartographer", "price"=>"₱899.00", "img"=>"images/gameplay_12.jpg"]
-            ]); 
+            unset($slide);
+            echo json_encode($slides, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+        } catch (PDOException $e) {
+            error_log('LOCO slideshow query failed: '.$e->getMessage());
+            echo '[]';
         }
     ?>;
 
     // 🌟 TABBED CATALOG DATA WITH AUTOMATIC FALLBACKS
     const tabbedCatalogData = <?php
         try {
-            $all_query = $pdo->query(
-                "SELECT id, title, price, image_url AS img 
-                 FROM games ORDER BY id ASC"
-            );
+            $all_query = $pdo->query("SELECT id, title, price, image_url AS img FROM games ORDER BY id ASC");
             $all_games = $all_query->fetchAll();
-            if (!empty($all_games)) {
-                $formatted_catalog = ['sellers' => [], 'rated' => [], 'releases' => []];
-                foreach($all_games as $index => $g) {
-                    $item = [
-                        'id'    => $g['id'],
-                        'title' => $g['title'],
-                        'price' => ($g['price'] == 0) ? 
-                            'Free' : '₱' . number_format($g['price'], 2),
-                        'img'   => $g['img']
-                    ];
-                    if ($index < 6) {
-                        $formatted_catalog['sellers'][] = $item;
-                    } else if ($index >= 6 && $index < 12) {
-                        $formatted_catalog['rated'][] = $item;
-                    } else {
-                        $formatted_catalog['releases'][] = $item;
-                    }
-                }
-                echo json_encode($formatted_catalog);
-            } else {
-                throw new Exception("Empty catalog");
+            $formatted_catalog = ['sellers' => [], 'rated' => [], 'releases' => []];
+            foreach ($all_games as $index => $g) {
+                $item = [
+                    'id' => (int)$g['id'],
+                    'title' => $g['title'],
+                    'price' => ((float)$g['price'] <= 0) ? 'Free' : '₱' . number_format((float)$g['price'], 2),
+                    'img' => $g['img'] ?: 'images/gameplay_01.jpg'
+                ];
+                if ($index < 6) $formatted_catalog['sellers'][] = $item;
+                elseif ($index < 12) $formatted_catalog['rated'][] = $item;
+                else $formatted_catalog['releases'][] = $item;
             }
-        } catch(\Exception $e) { 
-            // Safety backup fallback catalog mapping list parameters if query drops
-            echo json_encode([
-                'sellers' => [
-                    ["id"=>1, "title"=>"Nebula Drift", "price"=>"₱2,490.00", "img"=>"images/gameplay_01.jpg"],
-                    ["id"=>2, "title"=>"Crimson Freight", "price"=>"₱899.00", "img"=>"images/gameplay_02.jpg"],
-                    ["id"=>3, "title"=>"Moonroot Hollow", "price"=>"₱699.00", "img"=>"images/gameplay_03.jpg"],
-                    ["id"=>4, "title"=>"Abyss Protocol", "price"=>"₱1,299.00", "img"=>"images/gameplay_04.jpg"],
-                    ["id"=>5, "title"=>"Stormbanner Tactics", "price"=>"₱1,150.00", "img"=>"images/gameplay_05.jpg"],
-                    ["id"=>6, "title"=>"Neon Velocity", "price"=>"₱1,399.00", "img"=>"images/gameplay_06.jpg"]
-                ],
-                'rated' => [],
-                'releases' => []
-            ]); 
+            echo json_encode($formatted_catalog, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+        } catch (PDOException $e) {
+            error_log('LOCO catalog query failed: '.$e->getMessage());
+            echo json_encode(['sellers'=>[], 'rated'=>[], 'releases'=>[]]);
         }
     ?>;
-
-
-
 
     // 🌟 DYNAMIC GENRE MAPPING
     const gameGenres = <?php
