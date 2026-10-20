@@ -9,18 +9,12 @@ if (!isset($_SESSION['username'])) {
 
 $currentUser = (string)$_SESSION['username'];
 if (($_SESSION['loco_catalog_version'] ?? '') !== 'original-games-v2') {
-    foreach (['loco_inventory','loco_next_listing_id','loco_listings','loco_wishlist','loco_trades','loco_trade_history','loco_discussions','loco_reports','loco_next_trade_id','loco_next_post_id','loco_next_inventory_id'] as $sessionKey) unset($_SESSION[$sessionKey]);
+    foreach (['loco_next_listing_id','loco_listings','loco_wishlist','loco_trades','loco_trade_history','loco_discussions','loco_reports','loco_next_trade_id','loco_next_post_id'] as $sessionKey) unset($_SESSION[$sessionKey]);
     $_SESSION['loco_catalog_version'] = 'original-games-v2';
 }
 if (!isset($_SESSION['loco_profile'])) $_SESSION['loco_profile'] = ['bio' => '', 'favorite_games' => ''];
-if (!isset($_SESSION['loco_inventory'])) {
-    $_SESSION['loco_inventory'] = [
-        ['id' => 1, 'name' => 'Nebula Scout Suit', 'game' => 'Nebula Drift', 'type' => 'Cosmetic', 'quantity' => 1],
-        ['id' => 2, 'name' => 'Crimson Rail Token', 'game' => 'Crimson Freight', 'type' => 'Collectible', 'quantity' => 2],
-        ['id' => 3, 'name' => 'Luma Lantern Charm', 'game' => 'Lanterns of Luma', 'type' => 'Collectible', 'quantity' => 1],
-    ];
-}
-// Marketplace records are loaded from MySQL. The remaining session arrays are for demo-only community tools.
+// Inventory and marketplace ownership are stored in MySQL. Trade requests, discussions,
+// and reports remain demo-only until their dedicated implementation steps.
 if (!isset($_SESSION['loco_trades']) || !is_array($_SESSION['loco_trades'])) $_SESSION['loco_trades'] = [];
 if (!isset($_SESSION['loco_trade_history']) || !is_array($_SESSION['loco_trade_history'])) $_SESSION['loco_trade_history'] = [];
 if (!isset($_SESSION['loco_discussions']) || !is_array($_SESSION['loco_discussions'])) $_SESSION['loco_discussions'] = [];
@@ -30,7 +24,6 @@ foreach (['loco_wishlist','loco_trades','loco_trade_history','loco_discussions',
 }
 if (!isset($_SESSION['loco_next_trade_id'])) $_SESSION['loco_next_trade_id'] = 1;
 if (!isset($_SESSION['loco_next_post_id'])) $_SESSION['loco_next_post_id'] = 1;
-if (!isset($_SESSION['loco_next_inventory_id'])) $_SESSION['loco_next_inventory_id'] = 4;
 if (empty($_SESSION['loco_csrf'])) $_SESSION['loco_csrf'] = bin2hex(random_bytes(24));
 $csrf = $_SESSION['loco_csrf'];
 $notice = '';
@@ -53,16 +46,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $title=postText('title',150); $game=postText('game',150); $type=postText('type',50);
                 $condition=postText('condition',50); $description=postText('description',1000);
                 $price=filter_var($_POST['price'] ?? '', FILTER_VALIDATE_FLOAT);
-                if($title===''||$game===''||$type===''||$description===''||$price===false||$price<0||$price>10000000){$error='Enter all listing details and a valid price.';break;}
+                if($title===''||$game===''||$type===''||$description===''||$price===false||$price<=0||$price>10000000){$error='Enter all listing details and a valid price greater than zero.';break;}
                 try {
                     $gs=$pdo->prepare('SELECT id FROM games WHERE title=:title LIMIT 1'); $gs->execute([':title'=>$game]); $g=$gs->fetch();
                     if(!$g){$error='Choose a game already listed in the LOCO store.';break;}
+                    $pdo->beginTransaction();
                     $is=$pdo->prepare('INSERT INTO game_items (game_id,item_name,description,rarity,image_url) VALUES (:gid,:name,:description,:rarity,NULL)');
                     $is->execute([':gid'=>(int)$g['id'],':name'=>$title,':description'=>$description,':rarity'=>($condition?:$type)]);
-                    $ls=$pdo->prepare("INSERT INTO marketplace_listings (seller_id,item_id,price,status) VALUES (:uid,:iid,:price,'active')");
-                    $ls->execute([':uid'=>(int)$_SESSION['user_id'],':iid'=>(int)$pdo->lastInsertId(),':price'=>(float)$price]);
-                    $notice='Listing published to the database.';
-                } catch(PDOException $e){$error='Unable to save listing. Check that the marketplace migration has been imported.';}
+                    $itemId=(int)$pdo->lastInsertId();
+                    $inv=$pdo->prepare('INSERT INTO inventories (user_id,item_id) VALUES (:uid,:iid)');
+                    $inv->execute([':uid'=>(int)$_SESSION['user_id'],':iid'=>$itemId]);
+                    $inventoryId=(int)$pdo->lastInsertId();
+                    $ls=$pdo->prepare("INSERT INTO marketplace_listings (seller_id,item_id,inventory_id,price,status) VALUES (:uid,:iid,:inventory_id,:price,'active')");
+                    $ls->execute([':uid'=>(int)$_SESSION['user_id'],':iid'=>$itemId,':inventory_id'=>$inventoryId,':price'=>(float)$price]);
+                    $pdo->commit();
+                    $notice='Listing published and the item was added to your database inventory.';
+                } catch(PDOException $e){
+                    if($pdo->inTransaction())$pdo->rollBack();
+                    error_log('LOCO marketplace listing creation failed: '.$e->getMessage());
+                    $error='Unable to save listing. Ensure the marketplace and community inventory migrations have been imported.';
+                }
                 break;
             case 'edit_listing':
                 $id=(int)($_POST['listing_id']??0); $title=postText('title',150); $game=postText('game',150);
@@ -105,11 +108,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 elseif((int)$listing['seller_id']===(int)$_SESSION['user_id'])$error='You cannot send a trade request for your own listing.';
                 else{
                     $offer=null;
-                    if($offerId>0)foreach($_SESSION['loco_inventory'] as $inv)if((int)$inv['id']===$offerId){$offer=$inv;break;}
+                    if($offerId>0){
+                        $owned=$pdo->prepare("SELECT gi.item_name AS name,g.title AS game FROM inventories i JOIN game_items gi ON gi.id=i.item_id JOIN games g ON g.id=gi.game_id WHERE i.id=:id AND i.user_id=:uid AND NOT EXISTS (SELECT 1 FROM marketplace_listings ml WHERE ml.inventory_id=i.id AND ml.status='active') LIMIT 1");
+                        $owned->execute([':id'=>$offerId,':uid'=>(int)$_SESSION['user_id']]);
+                        $offer=$owned->fetch()?:null;
+                        if(!$offer){$error='That offer item is not in your available inventory.';break;}
+                    }
                     $tradeId=$_SESSION['loco_next_trade_id']++;
-                    $_SESSION['loco_trades'][$tradeId]=['id'=>$tradeId,'listing_id'=>$id,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offer?$offer['name']:'No item selected (purchase inquiry)','status'=>'Pending','created'=>time()];
-                    $_SESSION['loco_trade_history'][]=['id'=>$tradeId,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offer?$offer['name']:'No item selected (purchase inquiry)','status'=>'Pending','updated'=>time()];
-                    $notice='Trade request created. Listing details came from the database; request history is still session-based.';
+                    $offerName=$offer?$offer['name'].' ('.$offer['game'].')':'No item selected (purchase inquiry)';
+                    $_SESSION['loco_trades'][$tradeId]=['id'=>$tradeId,'listing_id'=>$id,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offerName,'offer_inventory_id'=>$offerId ?: null,'status'=>'Pending','created'=>time()];
+                    $_SESSION['loco_trade_history'][]=['id'=>$tradeId,'listing_title'=>$listing['title'],'seller'=>$listing['seller'],'requester'=>$currentUser,'offer_item'=>$offerName,'status'=>'Pending','updated'=>time()];
+                    $notice='Demo trade request created using your database-owned inventory. Requests and transfers are still session-based.';
                 }
                 break;
             case 'update_trade':
@@ -120,14 +129,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 else { $_SESSION['loco_trades'][$id]['status'] = $status; foreach ($_SESSION['loco_trade_history'] as &$hist) if ((int)$hist['id'] === $id) { $hist['status'] = $status; $hist['updated'] = time(); } unset($hist); $notice = 'Trade request marked '.$status.'. No real item or money was transferred.'; }
                 break;
             case 'add_inventory':
-                $name = postText('item_name', 80); $game = postText('item_game', 60); $type = postText('item_type', 40); $quantity = filter_var($_POST['quantity'] ?? 1, FILTER_VALIDATE_INT);
-                if ($name === '' || $game === '' || $type === '' || $quantity === false || $quantity < 1 || $quantity > 999) $error = 'Enter valid inventory details.';
-                else { $_SESSION['loco_inventory'][] = ['id'=>$_SESSION['loco_next_inventory_id']++,'name'=>$name,'game'=>$game,'type'=>$type,'quantity'=>$quantity]; $notice = 'Demo inventory item added.'; }
+                $name=postText('item_name',150); $game=postText('item_game',150); $type=postText('item_type',50); $quantity=filter_var($_POST['quantity']??1,FILTER_VALIDATE_INT);
+                if($name===''||$game===''||$type===''||$quantity===false||$quantity<1||$quantity>999){$error='Enter valid inventory details.';break;}
+                try{
+                    $gs=$pdo->prepare('SELECT id FROM games WHERE title=:title LIMIT 1');$gs->execute([':title'=>$game]);$g=$gs->fetch();
+                    if(!$g){$error='Choose a game already listed in the LOCO store.';break;}
+                    $pdo->beginTransaction();
+                    $is=$pdo->prepare('INSERT INTO game_items (game_id,item_name,description,rarity,image_url) VALUES (:gid,:name,:description,:rarity,NULL)');
+                    $is->execute([':gid'=>(int)$g['id'],':name'=>$name,':description'=>'User-added inventory item',':rarity'=>$type]);
+                    $itemId=(int)$pdo->lastInsertId();
+                    $inv=$pdo->prepare('INSERT INTO inventories (user_id,item_id) VALUES (:uid,:iid)');
+                    for($n=0;$n<$quantity;$n++)$inv->execute([':uid'=>(int)$_SESSION['user_id'],':iid'=>$itemId]);
+                    $pdo->commit();
+                    $notice='Inventory item saved to your account.';
+                }catch(PDOException $e){
+                    if($pdo->inTransaction())$pdo->rollBack();
+                    error_log('LOCO inventory creation failed: '.$e->getMessage());
+                    $error='Unable to save inventory item. Check that the database schema is up to date.';
+                }
                 break;
             case 'remove_inventory':
-                $id = (int)($_POST['inventory_id'] ?? 0); $found = false;
-                foreach ($_SESSION['loco_inventory'] as $index=>$item) if ((int)$item['id'] === $id) { unset($_SESSION['loco_inventory'][$index]); $found = true; }
-                $_SESSION['loco_inventory'] = array_values($_SESSION['loco_inventory']); $notice = $found ? 'Inventory item removed.' : ''; if (!$found) $error = 'Inventory item not found.';
+                $id=(int)($_POST['inventory_id']??0);
+                $del=$pdo->prepare("DELETE FROM inventories WHERE id=:id AND user_id=:uid AND NOT EXISTS (SELECT 1 FROM marketplace_listings WHERE inventory_id=:id_check AND status='active')");
+                $del->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id'],':id_check'=>$id]);
+                if($del->rowCount())$notice='Inventory item removed from your account.';
+                else{
+                    $listed=$pdo->prepare("SELECT id FROM marketplace_listings WHERE inventory_id=:id AND status='active' LIMIT 1");$listed->execute([':id'=>$id]);
+                    $error=$listed->fetch()?'Remove the active marketplace listing before deleting this inventory item.':'Inventory item not found in your account.';
+                }
                 break;
             case 'create_post':
                 $title = postText('post_title', 100); $body = postText('post_body', 1200); $tag = postText('post_tag', 40);
@@ -155,15 +184,19 @@ $tab=(string)($_GET['tab']??'market');
 $allowedTabs=['market','sell','saved','trades','inventory','discussions','profile'];
 if(!in_array($tab,$allowedTabs,true))$tab='market';
 $editId=(int)($_GET['edit']??0);$editListing=null;
+$inventoryItems=[];$tradeInventoryItems=[];
 try{
-    $q=$pdo->query("SELECT ml.id,ml.seller_id,ml.item_id,ml.price,UNIX_TIMESTAMP(ml.created_at) AS created,gi.item_name AS title,gi.description,gi.rarity,gi.image_url,g.title AS game,u.username AS seller FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN games g ON g.id=gi.game_id JOIN users u ON u.id=ml.seller_id WHERE ml.status='active' ORDER BY ml.created_at DESC,ml.id DESC");
+    $q=$pdo->query("SELECT ml.id,ml.seller_id,ml.item_id,ml.inventory_id,ml.price,UNIX_TIMESTAMP(ml.created_at) AS created,gi.item_name AS title,gi.description,gi.rarity,gi.image_url,g.title AS game,u.username AS seller FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN games g ON g.id=gi.game_id JOIN users u ON u.id=ml.seller_id WHERE ml.status='active' ORDER BY ml.created_at DESC,ml.id DESC");
     $listings=$q->fetchAll();
     foreach($listings as &$item){$item['type']=$item['rarity']??'Collectible';$item['condition']=$item['rarity']??'Good';$item['rating']='New seller';}unset($item);
     $myListings=array_values(array_filter($listings,fn($item)=>(int)$item['seller_id']===(int)$_SESSION['user_id']));
     $q=$pdo->prepare('SELECT listing_id FROM marketplace_wishlists WHERE user_id=:uid');$q->execute([':uid'=>(int)$_SESSION['user_id']]);$savedListingIds=array_map('intval',$q->fetchAll(PDO::FETCH_COLUMN));
     $gameOptions=$pdo->query('SELECT title FROM games ORDER BY title')->fetchAll(PDO::FETCH_COLUMN);
-    if($editId>0){$q=$pdo->prepare("SELECT ml.id,ml.seller_id,ml.item_id,ml.price,gi.item_name AS title,gi.description,gi.rarity,g.title AS game FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN games g ON g.id=gi.game_id WHERE ml.id=:id AND ml.seller_id=:uid AND ml.status='active' LIMIT 1");$q->execute([':id'=>$editId,':uid'=>(int)$_SESSION['user_id']]);$editListing=$q->fetch()?:null;}
-}catch(PDOException $e){$listings=$myListings=$savedListingIds=$gameOptions=[];$error=$error?:'Marketplace database is not ready. Import database/marketplace_database.sql.';}
+    $inventoryStmt=$pdo->prepare("SELECT i.id AS inventory_id,i.item_id,gi.item_name AS title,gi.description,gi.rarity,g.title AS game,gi.image_url,(SELECT ml.id FROM marketplace_listings ml WHERE ml.inventory_id=i.id AND ml.status='active' LIMIT 1) AS active_listing_id FROM inventories i JOIN game_items gi ON gi.id=i.item_id JOIN games g ON g.id=gi.game_id WHERE i.user_id=:uid ORDER BY i.acquired_at DESC,i.id DESC");
+    $inventoryStmt->execute([':uid'=>(int)$_SESSION['user_id']]);$inventoryItems=$inventoryStmt->fetchAll();
+    $tradeInventoryItems=array_values(array_filter($inventoryItems,fn($item)=>empty($item['active_listing_id'])));
+    if($editId>0){$q=$pdo->prepare("SELECT ml.id,ml.seller_id,ml.item_id,ml.inventory_id,ml.price,gi.item_name AS title,gi.description,gi.rarity,g.title AS game FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN games g ON g.id=gi.game_id WHERE ml.id=:id AND ml.seller_id=:uid AND ml.status='active' LIMIT 1");$q->execute([':id'=>$editId,':uid'=>(int)$_SESSION['user_id']]);$editListing=$q->fetch()?:null;}
+}catch(PDOException $e){$listings=$myListings=$savedListingIds=$gameOptions=$inventoryItems=$tradeInventoryItems=[];$error=$error?:'Marketplace database is not ready. Import the marketplace and community inventory migrations.';}
 $myTrades=array_filter($_SESSION['loco_trades'],fn($trade)=>$trade['requester']===$currentUser||$trade['seller']===$currentUser);
 $myHistory=array_reverse($_SESSION['loco_trade_history']);
 $myPosts=array_reverse($_SESSION['loco_discussions'],true);
@@ -187,7 +220,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
         <div class="loco-community-user">
             <span class="loco-avatar">🎮</span>
             <div><strong><?=h($currentUser)?></strong>
-                <small><?=count($myListings)?> listing(s) · <?=count($_SESSION['loco_inventory'])?> inventory item(s)</small>
+                <small><?=count($myListings)?> listing(s) · <?=count($inventoryItems)?> inventory item(s)</small>
             </div>
         </div>
     </div>
@@ -259,11 +292,11 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
         <h3 class="loco-subheading">Trade history</h3><div class="loco-owned-listings"><?php if(!$myHistory): ?><p class="loco-muted">Resolved and pending trade activity will appear here.</p><?php endif; ?><?php foreach($myHistory as $history): if($history['requester']!==$currentUser && $history['seller']!==$currentUser) continue; ?><div class="loco-owned-row"><div><strong><?=h($history['listing_title'])?></strong><small><?=h($history['requester'])?> → <?=h($history['seller'])?> · <?=h($history['offer_item'])?></small></div><span class="loco-status-pill <?=strtolower($history['status'])?>"><?=h($history['status'])?></span></div><?php endforeach; ?></div>
     </section>
     <?php elseif ($tab === 'inventory'): ?>
-    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>My demo inventory</h2><p>Add items to use as example trade offers. This is not connected to any actual game inventory.</p></div></div><form method="post" class="loco-form-grid compact"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="add_inventory"><label>Item name<input name="item_name" maxlength="80" required></label><label>Game<input name="item_game" maxlength="60" required></label><label>Type<input name="item_type" maxlength="40" required placeholder="Skin, collectible…"></label><label>Quantity<input name="quantity" type="number" min="1" max="999" value="1" required></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Add inventory item</button></div></form><div class="loco-inventory-grid"><?php if(!$_SESSION['loco_inventory']): ?><p class="loco-empty-state">Your demo inventory is empty.</p><?php endif; ?><?php foreach($_SESSION['loco_inventory'] as $item): ?><article class="loco-inventory-card"><span class="loco-listing-symbol">✦</span><h3><?=h($item['name'])?></h3><p><?=h($item['game'])?></p><span class="loco-market-tag"><?=h($item['type'])?> · Qty <?=h($item['quantity'])?></span><form method="post" onsubmit="return confirm('Remove this inventory item?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="remove_inventory"><input type="hidden" name="inventory_id" value="<?=$item['id']?>"><button class="loco-danger-link">Remove</button></form></article><?php endforeach; ?></div></section>
+    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>My inventory</h2><p>Items here are saved to your account in the database. Items with an active listing stay in your inventory but cannot be removed until the listing is removed.</p></div></div><form method="post" class="loco-form-grid compact"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="add_inventory"><label>Item name<input name="item_name" maxlength="150" required></label><label>Game<select name="item_game" required><option value="">Choose a game</option><?php foreach($gameOptions as $gameOption): ?><option value="<?=h($gameOption)?>"><?=h($gameOption)?></option><?php endforeach; ?></select></label><label>Type<input name="item_type" maxlength="50" required placeholder="Skin, collectible…"></label><label>Quantity<input name="quantity" type="number" min="1" max="999" value="1" required></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Add to inventory</button></div></form><div class="loco-inventory-grid"><?php if(!$inventoryItems): ?><p class="loco-empty-state">Your inventory is empty. Add an item above or publish a listing to create an owned item.</p><?php endif; ?><?php foreach($inventoryItems as $item): ?><article class="loco-inventory-card"><span class="loco-listing-symbol">✦</span><h3><?=h($item['title'])?></h3><p><?=h($item['game'])?></p><span class="loco-market-tag"><?=h($item['rarity']??'Item')?></span><?php if(!empty($item['active_listing_id'])): ?><p class="loco-session-note">Listed on marketplace</p><a class="loco-small-link" href="community.php?tab=sell">Manage listing</a><?php else: ?><form method="post" onsubmit="return confirm('Remove this inventory item?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="remove_inventory"><input type="hidden" name="inventory_id" value="<?=$item['inventory_id']?>"><button class="loco-danger-link">Remove item</button></form><?php endif; ?></article><?php endforeach; ?></div></section>
     <?php elseif ($tab === 'discussions'): ?>
     <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Community discussions</h2><p>Ask questions, share tips, or start a topic with other players using this session.</p></div></div><form method="post" class="loco-form-grid"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="create_post"><label>Discussion title<input name="post_title" maxlength="100" required placeholder="What do you want to discuss?"></label><label>Category<select name="post_tag"><option>General</option><option>Trading</option><option>Game help</option><option>Showcase</option><option>Feedback</option></select></label><label class="loco-full-width">Message<textarea name="post_body" maxlength="1200" rows="4" required></textarea></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Post discussion</button></div></form><div class="loco-discussion-list"><?php if(!$myPosts): ?><p class="loco-empty-state">No discussions yet. Start the first conversation above.</p><?php endif; ?><?php foreach($myPosts as $post): ?><article class="loco-discussion-card"><div class="loco-discussion-meta"><span class="loco-market-tag"><?=h($post['tag'])?></span><small>By <?=h($post['author'])?> · <?=date('M j, Y g:i A',$post['created'])?></small></div><h3><?=h($post['title'])?></h3><p><?=nl2br(h($post['body']))?></p><details><summary>Replies (<?=count($post['replies'])?>)</summary><?php foreach($post['replies'] as $reply): ?><div class="loco-reply"><strong><?=h($reply['author'])?></strong><p><?=nl2br(h($reply['body']))?></p></div><?php endforeach; ?><form method="post" class="loco-reply-form"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="reply_post"><input type="hidden" name="post_id" value="<?=$post['id']?>"><input name="reply" maxlength="500" placeholder="Write a reply…" required><button class="loco-button-small">Reply</button></form></details></article><?php endforeach; ?></div></section>
     <?php elseif ($tab === 'profile'): ?>
-    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Gamer profile</h2><p>Your profile information is saved in the current PHP session.</p></div></div><div class="loco-profile-summary"><span class="loco-avatar large">🎮</span><div><h3><?=h($currentUser)?></h3><p><?=count($myListings)?> listings · <?=count($_SESSION['loco_inventory'])?> inventory items · <?=count($myTrades)?> trade requests · <?=count($_SESSION['loco_discussions'])?> discussion posts in this session</p></div></div><form method="post" class="loco-form-grid"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="save_profile"><label class="loco-full-width">About me<textarea name="bio" maxlength="300" rows="4" placeholder="Tell the community about yourself…"><?=h($_SESSION['loco_profile']['bio'])?></textarea></label><label class="loco-full-width">Favorite games<input name="favorite_games" maxlength="180" value="<?=h($_SESSION['loco_profile']['favorite_games'])?>" placeholder="e.g. RPGs, strategy, co-op games"></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Save profile</button></div></form><div class="loco-session-note">Session-based demo: data is not shared between separate browsers or devices and may disappear when the session expires.</div></section>
+    <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Gamer profile</h2><p>Your profile information is saved in the current PHP session.</p></div></div><div class="loco-profile-summary"><span class="loco-avatar large">🎮</span><div><h3><?=h($currentUser)?></h3><p><?=count($myListings)?> listings · <?=count($inventoryItems)?> inventory item instances · <?=count($myTrades)?> trade requests · <?=count($_SESSION['loco_discussions'])?> discussion posts in this session</p></div></div><form method="post" class="loco-form-grid"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="save_profile"><label class="loco-full-width">About me<textarea name="bio" maxlength="300" rows="4" placeholder="Tell the community about yourself…"><?=h($_SESSION['loco_profile']['bio'])?></textarea></label><label class="loco-full-width">Favorite games<input name="favorite_games" maxlength="180" value="<?=h($_SESSION['loco_profile']['favorite_games'])?>" placeholder="e.g. RPGs, strategy, co-op games"></label><div class="loco-form-actions"><button class="loco-brand-gloss-btn">Save profile</button></div></form><div class="loco-session-note">Session-based demo: data is not shared between separate browsers or devices and may disappear when the session expires.</div></section>
     <?php endif; ?>
 
     <section class="loco-workshop-keep"><div class="loco-section-heading"><div><h2>Creations Hub</h2><p>Workshop preview retained from the original LOCO page. These buttons are demo interactions and do not download files.</p></div></div><div class="loco-workshop-grid"><article class="loco-workshop-card"><img src="images/game_cover_03.jpg" class="loco-workshop-thumb" alt="Moonroot Hollow original cover art"><h3>Moonroot Hollow: Mooncap Grove Expansion</h3><button type="button" class="loco-workshop-subscribe" data-workshop-id="moonroot-grove">＋ Subscribe</button></article><article class="loco-workshop-card"><img src="images/game_cover_02.jpg" class="loco-workshop-thumb" alt="Crimson Freight original cover art"><h3>Crimson Freight: Midnight Locomotive Skin</h3><button type="button" class="loco-workshop-subscribe" data-workshop-id="crimson-midnight-loco">＋ Subscribe</button></article></div></section>
@@ -318,7 +351,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
     </div>
     </footer>
 
-<div class="loco-modal" id="trade-modal" aria-hidden="true"><div class="loco-modal-card" role="dialog" aria-modal="true" aria-labelledby="trade-modal-title"><button type="button" class="loco-modal-close" onclick="closeTrade()" aria-label="Close">×</button><p class="loco-eyebrow">TRADE REQUEST</p><h2 id="trade-modal-title">Request a trade</h2><p id="trade-listing-name"></p><form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="request_trade"><input type="hidden" name="listing_id" id="trade-listing-id"><label>Offer an inventory item (optional)<select name="offer_inventory_id"><option value="0">No item — purchase inquiry only</option><?php foreach($_SESSION['loco_inventory'] as $item): ?><option value="<?=$item['id']?>"><?=h($item['name'])?> (<?=h($item['game'])?>)</option><?php endforeach; ?></select></label><p class="loco-session-note">Demo only: this records a request in your current session and does not transfer items or money.</p><button class="loco-brand-gloss-btn" type="submit">Send request</button></form></div></div>
+<div class="loco-modal" id="trade-modal" aria-hidden="true"><div class="loco-modal-card" role="dialog" aria-modal="true" aria-labelledby="trade-modal-title"><button type="button" class="loco-modal-close" onclick="closeTrade()" aria-label="Close">×</button><p class="loco-eyebrow">TRADE REQUEST</p><h2 id="trade-modal-title">Request a trade</h2><p id="trade-listing-name"></p><form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="request_trade"><input type="hidden" name="listing_id" id="trade-listing-id"><label>Offer an inventory item (optional)<select name="offer_inventory_id"><option value="0">No item — purchase inquiry only</option><?php foreach($tradeInventoryItems as $item): ?><option value="<?=$item['inventory_id']?>"><?=h($item['title'])?> (<?=h($item['game'])?>)</option><?php endforeach; ?></select></label><p class="loco-session-note">Trade requests are still a demo. This offer is checked against your database-owned inventory, but no item or money is transferred yet.</p><button class="loco-brand-gloss-btn" type="submit">Send request</button></form></div></div>
 <script>
     (function(){
     const search=document.getElementById('market-search'), 
