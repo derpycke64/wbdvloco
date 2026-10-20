@@ -1301,3 +1301,21 @@ h3.loco-label-thingy {
 .loco-profile-showcase-item{padding:9px 4px;border-top:1px solid #2c313b;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .loco-profile-showcase-item small{color:#abb6c5}
 @media(max-width:680px){.loco-profile-showcases{grid-template-columns:1fr}}
+
+/* Persistent discussions and private report history */
+.loco-discussion-card{color:#e5e9f1}
+.loco-discussion-card h3,.loco-discussion-card>p,.loco-subheading{color:#f1f3f8}
+.loco-discussion-card small,.loco-discussion-meta small{color:#abb7c6}
+.loco-discussion-card details{margin:12px 0}
+.loco-discussion-card summary{color:#d7deed;cursor:pointer}
+.loco-discussion-edit-form{display:flex;flex-direction:column;gap:10px;margin:12px 0;max-width:700px}
+.loco-discussion-edit-form label{display:flex;flex-direction:column;gap:6px;color:#dce2ed}
+.loco-discussion-edit-form input,.loco-discussion-edit-form select,.loco-discussion-edit-form textarea{background:#101116;color:#fff;border:1px solid #454a55;padding:10px;box-sizing:border-box;width:100%}
+.loco-discussion-card .loco-inline-form{margin:10px 0}
+.loco-reply{border:1px solid #323743;background:#11141b;border-radius:4px;padding:12px;margin:10px 0;color:#e5e9f1}
+.loco-reply strong{color:#f5f6fa}
+.loco-reply>p{color:#e2e6ee}
+.loco-reply-form{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.loco-reply-form input{min-width:190px;flex:1;background:#101116;color:#fff;border:1px solid #454a55;padding:10px}
+.loco-owned-row,.loco-owned-row strong{color:#e5e9f1}
+.loco-owned-row p{color:#dce2eb}
