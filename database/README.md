@@ -80,3 +80,9 @@ Test with two LOCO accounts: create a post as one, reply as the other, sign out 
 Every request to `admin.php` re-checks the role against the database; hiding the link is not the security boundary. Standard accounts receive HTTP 403. The admin can review report statuses and notes, remove listings, delete discussions, inspect a read-only user directory and see an audit log. The first version does **not** support account suspension, deleting users, or managing roles through the UI; report submissions do not automatically ban sellers. All moderation actions require a CSRF token. Test with two accounts and ensure a standard user cannot open the admin URL.
 
 Do not re-import root `loco_db.sql` into an existing database; it drops tables.
+
+## Public responses to marketplace reports
+
+After importing `database/community_admin.sql`, import `database/community_admin_response.sql` once to add the nullable `marketplace_reports.admin_response` column. This upgrade preserves existing reports and private `moderator_notes`; it is safe to rerun. Back up `loco_db` first.
+
+Administrators see a **Private moderator note** field and a separate **Response to reporter** field on the admin dashboard. The public response appears under the report in the reporting user's **My Reports** tab. Private moderator notes are not included in the My Reports query. An existing resolved report will show no public response until an administrator reopens its record in the dashboard and adds one. Audit logs record that notes/responses were provided, but not the confidential note text.
