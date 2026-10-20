@@ -1361,3 +1361,132 @@ h3.loco-label-thingy {
 .loco-admin-history-entry>summary span{color:#b8c9d8;font-size:.84rem}
 .loco-admin-history-entry[open]>summary{border-bottom:1px solid #3b4553}
 .loco-admin-history-entry .loco-admin-entry{border-top:0}
+
+
+/* ==========================================================================
+   LOCO Classic Client 2026 — Steam-era sharp panels / original LOCO reds
+   Shared page chrome; no database or existing button logic is replaced.
+   ========================================================================== */
+:root{--loco-client-width:1020px;--loco-crimson:#e60000;--loco-burgundy:#300000;--loco-panel:#1a1c20;--loco-well:#101114;--loco-edge:#443036;--loco-text:#e4e7eb}
+body.loco-store-body{background:#300000!important;color:var(--loco-text);padding-top:76px}
+.loco-global-nav{height:76px;padding:0;background:linear-gradient(#1b1d22,#15171c);border-bottom:1px solid #692329;box-shadow:0 3px 9px #0009}
+.loco-nav-inner{max-width:var(--loco-client-width);height:100%;padding:0 12px;gap:22px}
+.loco-nav-left{gap:12px}
+.loco-nav-logo{font-size:2.15rem;letter-spacing:1px;gap:8px;white-space:nowrap;flex-shrink:0}
+.loco-logo-img{width:47px;height:47px}
+.loco-nav-links{gap:8px;align-items:stretch;height:100%;flex:1}
+.loco-nav-group{position:relative;display:flex;align-items:center;height:100%}
+.loco-nav-link{height:100%;padding:0 10px;display:flex;align-items:center;justify-content:center;font-size:.79rem;letter-spacing:.35px;white-space:nowrap;border-bottom:2px solid transparent;box-sizing:border-box}
+.loco-nav-link:hover,.loco-nav-group:hover>.loco-nav-link,.loco-nav-link.active{color:#fff;background:#252026;border-bottom:2px solid #e60000}
+.loco-nav-menu{display:none;position:absolute;z-index:1200;top:calc(100% - 2px);left:0;width:200px;padding:5px 0;background:#2b2e35;border:1px solid #5a4d53;box-shadow:0 10px 24px #000b;text-align:left}
+.loco-nav-group:hover>.loco-nav-menu,.loco-nav-group:focus-within>.loco-nav-menu,.loco-nav-group.is-open>.loco-nav-menu{display:block}
+.loco-nav-menu a{display:block;padding:10px 14px;text-decoration:none;color:#e4e7ed;font-size:.82rem;line-height:1.2;white-space:nowrap}
+.loco-nav-menu a:hover,.loco-nav-menu a:focus{background:#a90000;color:#fff;outline:none}
+.loco-nav-account{flex-shrink:0;align-self:stretch}
+.loco-nav-account-group{height:100%}
+.loco-nav-user-trigger{display:flex;gap:10px;align-items:center;border:1px solid #3a3f48;background:#25272d;color:#fff;padding:6px 9px;cursor:pointer;font:inherit;min-width:142px;max-width:185px;text-align:left}
+.loco-nav-user-trigger:hover,.loco-nav-account-group.is-open .loco-nav-user-trigger{border-color:#91333a;background:#343039}
+.loco-nav-avatar{height:37px!important;width:37px!important;object-fit:cover;border-radius:0!important;margin:0!important}
+.loco-nav-user-info{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.loco-nav-user-info strong{display:block;font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.loco-nav-balance{font-size:.73rem;font-weight:700;color:#75d77c}
+.loco-nav-caret{font-size:.75rem;color:#b5beca}
+.loco-nav-menu-right{left:auto;right:0;width:210px}
+.loco-nav-menu .loco-menu-logout{color:#ff9191;border-top:1px solid #4b4147}
+.loco-nav-signin{display:block;background:linear-gradient(#d41c23,#920900);padding:9px 14px;color:#fff;text-decoration:none;font-weight:800;font-size:.76rem}
+.store-wrapper,.loco-community-wrap,.loco-admin-page{max-width:var(--loco-client-width)!important;width:calc(100% - 30px)!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box}
+.store-wrapper{gap:18px;border:1px solid #a90000;padding:20px;margin-top:24px!important;background:#1a1c20}
+.loco-store-main-col{min-width:0;flex:1 1 0}
+.loco-store-sidebar-col{flex:0 0 245px;min-width:0}
+.loco-community-wrap{margin-top:26px!important;margin-bottom:45px!important}
+.loco-community-heading{background:#1a1c20;border:1px solid #60232a;box-shadow:inset 0 1px #ffffff0d;padding:16px 18px;margin-bottom:16px}
+.loco-community-heading .loco-logo-text{font-size:1.45rem;padding:0;letter-spacing:.4px;margin:0 0 4px}
+.loco-community-heading p{font-size:.8rem}
+.loco-community-heading .loco-eyebrow{font-size:.63rem!important}
+.loco-community-user{background:#101114;border:1px solid #464148;padding:8px 11px;min-width:170px;border-radius:0}
+.loco-profile-avatar{border-radius:0!important}
+.loco-community-tabs{display:none!important} /* All destinations live in the top dropdown menus. */
+.loco-community-panel,.loco-workshop-keep,.loco-admin-panel{border-radius:0;background:#1a1c20;border:1px solid #494046;box-shadow:inset 0 1px #ffffff07;padding:17px;margin-bottom:16px}
+.loco-section-heading{border-bottom:1px solid #463439;padding-bottom:10px;margin-bottom:14px}
+.loco-section-heading h2,.loco-admin-panel h2{font-size:1.06rem;color:#fff}
+.loco-section-heading p{font-size:.78rem;color:#bac2cc}
+.loco-owned-row,.loco-trade-card,.loco-listing-card,.loco-inventory-card,.loco-workshop-card,.loco-discussion-card,.loco-report-response,.loco-profile-summary{border-radius:0!important}
+.loco-owned-row,.loco-trade-card,.loco-inventory-card,.loco-listing-card{background:#111316;border-color:#49393f}
+.loco-listing-card{transition:border-color .14s,background-color .14s}
+.loco-listing-card:hover,.loco-workshop-card:hover{border-color:#bd3030;background:#20191d}
+.loco-listing-card h3,.loco-inventory-card h3{font-size:.92rem}
+.loco-workshop-card{background:#121317;border-color:#4b343b}
+.loco-workshop-thumb{height:118px;border:1px solid #353238}
+.loco-admin-page{margin-top:26px!important}
+.loco-admin-header{border-bottom:2px solid #bb1010;padding:0 0 12px}
+.loco-admin-header h1{font-size:1.55rem}
+.loco-admin-stats>div{border-radius:0;background:#1a1c20;border-color:#593039}
+.loco-admin-jumps a{border-radius:0;background:#851010}
+.loco-admin-form input,.loco-admin-form select,.loco-admin-form textarea,.loco-form-grid input,.loco-form-grid select,.loco-form-grid textarea,.loco-input{border-radius:0;background:#101114;color:#f1f1f1}
+.loco-brand-gloss-btn,.loco-button-small,.game-buy-btn,.loco-admin-form button{border-radius:0!important}
+.loco-label-thingy,.loco-label-retro{border-radius:0}
+.loco-install-banner{border-radius:0;margin-bottom:4px}
+.loco-install-btn{border-radius:0}
+.loco-promo-card{border-radius:0}
+.game-card{border-radius:0!important}
+.game-grid{gap:10px}
+.loco-wishlist-page{min-height:460px}
+.loco-wishlist-tabs{display:flex;gap:0;border-bottom:2px solid #a90000;margin:12px 0 18px}
+.loco-wishlist-tab{display:block;border:1px solid #44353a;border-bottom:0;padding:10px 18px;color:#c9ced4;text-decoration:none;background:#222329;font-weight:800;font-size:.83rem}
+.loco-wishlist-tab.active,.loco-wishlist-tab:hover{color:#fff;background:#a90000}
+.loco-wishlist-entry{display:grid;grid-template-columns:124px minmax(0,1fr) auto;align-items:center;gap:14px;background:#101114;border:1px solid #3b3438;padding:10px;margin:9px 0}
+.loco-wishlist-entry img{width:124px;height:77px;object-fit:cover;border:1px solid #4d353a}
+.loco-wishlist-entry h3{margin:0 0 7px;color:#fff;font-size:.94rem}
+.loco-wishlist-entry p{font-size:.76rem;margin:0 0 5px;color:#bcc3cf}
+.loco-wishlist-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.loco-wishlist-price{color:#72d57a;font-weight:800;white-space:nowrap}
+.loco-wishlist-action{background:#b40000;color:#fff;border:1px solid #e10000;text-decoration:none;padding:7px 12px;cursor:pointer;font-size:.77rem;font-weight:800;white-space:nowrap}
+.loco-wishlist-remove{background:#24242a;border:1px solid #5a4249;color:#d8d8dd;padding:5px 9px;font-size:.73rem;cursor:pointer}
+.loco-wishlist-remove:hover{background:#56252b}
+.loco-sandbox-page{padding:0!important;border:1px solid #74262c}
+.loco-sandbox-layout{display:grid;grid-template-columns:minmax(0,1fr) 235px;gap:20px}
+.loco-sandbox-well{background:#111820;border:1px solid #3b424d;padding:18px}
+.loco-sandbox-heading{font-size:1.1rem;letter-spacing:1px;border-bottom:1px solid #464b57;padding-bottom:12px;margin:0 0 16px}
+.loco-sandbox-step{padding:12px 18px;background:#301015;color:#eee;border-bottom:2px solid #cc1010;font-size:.82rem}
+.loco-sandbox-label{font-size:.76rem;color:#cbd5e1}
+.loco-sandbox-choice{border:1px solid #4c525f;background:#263d50;color:#fff;padding:10px;font:inherit;width:100%;max-width:310px}
+.loco-sandbox-field{width:100%;box-sizing:border-box;padding:10px;background:#080d13;color:#fff;border:1px solid #555e70;border-radius:0}
+.loco-sandbox-sidebar{background:#121820;border:1px solid #36414e;padding:14px;align-self:start}
+.loco-sandbox-sidebar h3{font-size:.85rem;letter-spacing:.5px;color:#fff;margin:0 0 10px}
+.loco-sandbox-sidebar p{font-size:.76rem;color:#c5d0db;line-height:1.5}
+.loco-pay-demo-badge{display:inline-block;padding:6px 10px;background:#293d58;border:1px solid #54739a;font-weight:800;font-size:.8rem;color:#fff}
+.loco-checkout-receipt{width:min(440px,100%);background:#f9fafc;color:#182333;margin:20px auto;box-shadow:0 16px 34px #0005;border:1px solid #c9d2e0}
+.loco-checkout-receipt .receipt-brand{background:#0677e5;color:#fff;text-align:center;padding:23px 16px;font-size:1.4rem;font-weight:800}
+.loco-checkout-receipt.paypal .receipt-brand{background:#003087}
+.loco-checkout-receipt .receipt-content{padding:20px}
+.loco-checkout-receipt .receipt-content h2,.loco-checkout-receipt .receipt-content p{color:#182333}
+.loco-receipt-row{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid #e0e4e9;padding:8px 0;font-size:.83rem}
+.loco-payment-warning{padding:11px;background:#fff3ce;color:#7d5200;text-align:center;font-size:.78rem;font-weight:800}
+@media(max-width:850px){
+ .loco-nav-inner{gap:8px}
+ .loco-nav-logo{font-size:1.65rem}
+ .loco-logo-img{width:38px;height:38px}
+ .loco-nav-links{gap:0}
+ .loco-nav-link{padding:0 7px;font-size:.72rem}
+ .loco-nav-user-trigger{min-width:110px}
+ .loco-store-sidebar-col{flex-basis:210px}
+}
+@media(max-width:650px){
+ body.loco-store-body{padding-top:110px}
+ .loco-global-nav{height:auto;min-height:99px}
+ .loco-nav-inner{flex-wrap:wrap;padding:7px 10px;gap:3px}
+ .loco-nav-logo{order:0}
+ .loco-nav-account{order:1;margin-left:auto;height:46px}
+ .loco-nav-links{order:2;flex-basis:100%;height:33px;justify-content:center}
+ .loco-nav-group{height:33px}
+ .loco-nav-link{font-size:.7rem}
+ .loco-nav-menu{top:100%;min-width:170px}
+ .store-wrapper{flex-direction:column;padding:12px}
+ .loco-store-main-col,.loco-store-sidebar-col{width:100%;flex:1 1 auto}
+ .loco-community-heading{align-items:flex-start;flex-direction:column}
+ .loco-community-user{min-width:0}
+ .loco-wishlist-entry{grid-template-columns:85px minmax(0,1fr);gap:10px}
+ .loco-wishlist-entry img{width:85px;height:70px}
+ .loco-wishlist-actions{grid-column:1/-1;flex-direction:row;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+ .loco-sandbox-layout{grid-template-columns:1fr}
+}
