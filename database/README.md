@@ -10,13 +10,13 @@ Use the database name `loco_db`. These steps are intended for the local WAMP/php
 4. Import `database/marketplace_database.sql`.
 5. Import `database/loco_db_upgrade.sql`.
 
-The upgrade migration adds discussion replies, trade requests/history, reports, orders and order items, and the discussion tag column. The scripts use `CREATE TABLE IF NOT EXISTS` or a conditional column addition where applicable.
+`community_inventory.sql` adds the inventory link to marketplace listings and backfills ownership for existing listings. The upgrade migration adds discussion replies, trade requests/history, reports, orders and order items, and the discussion tag column. The scripts use `CREATE TABLE IF NOT EXISTS` or conditional schema changes where applicable.
 
 ## If you already have data in loco_db
 
 **Do not re-import the root-level `loco_db.sql` into your existing database.** It contains `DROP TABLE IF EXISTS` statements and can delete existing data.
 
-Instead, make a backup first, then import only any migration files that have not already been applied, in the order above. Existing migration tables are designed to be safe to create more than once, but still review phpMyAdmin's result messages and back up before running SQL.
+Instead, make a backup first, then import only any migration files that have not already been applied, in the order above. Import `database/community_inventory.sql` after `database/marketplace_database.sql` so existing listings can be linked to their sellers' inventory. Existing migration tables are designed to be safe to create more than once, but still review phpMyAdmin's result messages and back up before running SQL.
 
 ## Verify after importing
 
@@ -37,6 +37,8 @@ SHOW TABLES LIKE 'order_items';
 SHOW COLUMNS FROM discussions LIKE 'tag';
 SHOW COLUMNS FROM users LIKE 'wallet_balance';
 SHOW COLUMNS FROM library LIKE 'game_id';
+SHOW COLUMNS FROM marketplace_listings LIKE 'inventory_id';
+SHOW TABLES LIKE 'inventories';
 ```
 
 Make sure the selected database is `loco_db` and each expected table/column is returned.
