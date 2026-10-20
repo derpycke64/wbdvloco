@@ -1505,3 +1505,59 @@ body.loco-store-body{background:#300000!important;color:var(--loco-text);padding
 .loco-profile-side-links a:hover{background:#77151e;color:#fff}
 @media(max-width:740px){.loco-profile-classic-layout{grid-template-columns:minmax(0,1fr)}.loco-profile-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.loco-profile-side .loco-community-panel{margin:0}}
 @media(max-width:460px){.loco-profile-side{display:block}.loco-profile-side .loco-community-panel{margin-bottom:12px}}
+
+
+/* Original-inspired compact GCash / PayPal provider checkout sandbox */
+.loco-provider-mode.loco-sandbox-page{border:0!important;box-shadow:none;background:transparent;min-height:500px;margin-top:25px!important}
+.loco-provider-mode .loco-sandbox-step{display:none}
+.loco-provider-mode .loco-sandbox-layout{display:block;padding:0!important;margin:0 auto;max-width:640px}
+.loco-provider-mode .loco-sandbox-layout > .loco-sandbox-well{background:transparent;border:0;padding:0}
+.loco-provider-mode .loco-sandbox-layout > .loco-sandbox-sidebar{display:none}
+.loco-provider-mode .loco-sandbox-layout > .loco-sandbox-well > .loco-sandbox-heading,
+.loco-provider-mode .loco-sandbox-layout > .loco-sandbox-well > p:not(.loco-notice),
+.loco-provider-mode .loco-cart-summary{display:none!important}
+.loco-provider-mode #checkout-form > :not(#provider-panel),
+.loco-provider-mode #wallet-topup-form > :not(#topup-provider){display:none!important}
+.loco-provider-mode #provider-panel,
+.loco-provider-mode #topup-provider{display:block!important}
+.loco-provider-stage{margin:0 auto}
+.loco-provider-card{box-sizing:border-box;width:min(100%,410px);margin:0 auto 30px;border:1px solid #dce2eb;border-radius:10px!important;overflow:hidden;background:#fff;color:#16283b;box-shadow:0 18px 38px #0005;text-align:left}
+.loco-provider-card .receipt-brand{box-sizing:border-box;min-height:115px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:20px 18px;background:#087cfa;color:#fff;text-align:center;font-size:1.9rem;font-weight:900;line-height:1.1}
+.loco-provider-card.paypal .receipt-brand{background:#003087}
+.loco-provider-card .receipt-brand small{font-weight:500;letter-spacing:.1px;font-size:.8rem;color:#e7f4ff}
+.loco-provider-card .loco-provider-wordmark{letter-spacing:-.8px}
+.loco-provider-card:not(.paypal) .loco-provider-wordmark::before{content:'ⓖ';font-weight:800;font-size:1.1em;vertical-align:-1px;margin-right:4px}
+.loco-provider-card.paypal .loco-provider-wordmark{font-style:italic;letter-spacing:-.9px}
+.loco-provider-card .loco-payment-warning{display:flex;flex-direction:column;gap:3px;line-height:1.4;background:#fff2d1;border-bottom:1px solid #f3ce79;color:#7c5200;padding:12px 16px;font-size:.75rem;text-align:center}
+.loco-provider-card .loco-payment-warning strong{display:block;font-weight:800}
+.loco-provider-card .loco-payment-warning span{font-size:.72rem;font-weight:500}
+.loco-provider-card .receipt-content{padding:20px!important;color:#15273a}
+.loco-provider-card .receipt-content strong{color:#18283c}
+.loco-provider-amount{text-align:center;margin:0 0 19px}
+.loco-provider-amount span{display:block;color:#7890a7;font-size:.75rem;font-weight:500;margin-bottom:4px}
+.loco-provider-amount strong{display:block;font-size:1.85rem;font-weight:900;line-height:1.15;letter-spacing:-.4px}
+.loco-provider-details{border:1px solid #e2e8f2;background:#f5f7fa;border-radius:7px;padding:11px 12px}
+.loco-provider-payer{display:flex;align-items:center;gap:10px;padding:0 0 10px;margin-bottom:7px;border-bottom:1px solid #e2e7ef}
+.loco-provider-payer img{flex:0 0 42px;width:42px;height:42px;object-fit:cover;border:1px solid #c9d3dc;border-radius:3px}
+.loco-provider-payer>div{min-width:0;display:flex;flex-direction:column;gap:3px}
+.loco-provider-payer strong{display:block;font-size:.82rem}
+.loco-provider-payer span{color:#698096;font-size:.7rem}
+.loco-provider-detail-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:4px 0;font-size:.75rem;line-height:1.45}
+.loco-provider-detail-row span{white-space:nowrap;color:#37465a}
+.loco-provider-detail-row strong{color:#273344;max-width:65%;overflow-wrap:anywhere;text-align:right;font-size:.72rem;font-weight:800}
+.loco-provider-explanation{color:#718399!important;text-align:center;font-size:.73rem;line-height:1.55;margin:17px auto}
+.loco-provider-confirm,.loco-provider-cancel{display:block;box-sizing:border-box;width:100%;border:0;border-radius:4px;padding:13px 14px;font-size:.81rem;font-weight:700;cursor:pointer;text-align:center}
+.loco-provider-confirm{background:#087cfa;color:#fff;box-shadow:inset 0 1px #ffffff60}
+.loco-provider-card.paypal .loco-provider-confirm{background:#0070ba}
+.loco-provider-confirm:hover{background:#086bda}
+.loco-provider-cancel{margin-top:9px;background:#e9eef4;color:#344c68}
+.loco-provider-cancel:hover{background:#d9e2ee}
+.loco-provider-footer-note{margin:17px 0 0!important;color:#8799ad!important;text-align:center;font-size:.65rem!important}
+.loco-checkout-receipt.loco-provider-card .loco-receipt-row{border-bottom:1px solid #e0e4e9;padding:9px 0}
+.loco-wip-panel{margin:38px auto 0;padding:30px;max-width:730px;border:1px solid #8c1820;background:#16181e}
+.loco-wip-panel h1{color:#fff;letter-spacing:.13em;font-size:1.8rem;margin:0 0 16px}
+.loco-wip-panel p{color:#bdc5cd;font-size:.9rem;line-height:1.65}
+.loco-wip-panel .loco-wip-feature{background:#290d14;border-left:3px solid #dd1515;padding:10px 14px;font-size:1.06rem;font-weight:800;color:#fff}
+.loco-wip-links{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:24px}
+.loco-wip-links .loco-wishlist-remove{padding:9px 13px}
+@media(max-width:480px){.loco-provider-card{width:100%;border-radius:6px!important}.loco-provider-card .receipt-brand{min-height:100px}.loco-provider-card .receipt-content{padding:15px!important}}
