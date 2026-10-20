@@ -55,6 +55,16 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
                     $q->execute([':id'=>$target]);
                     $auditAction='remove_listing';$type='listing';$details=substr($note,0,500);
                     $notice='Marketplace listing removed. Item remains in its owner\'s inventory.';
+                } elseif($action==='remove_game_resale') {
+                    // Moderation removes the offer; the game stays in the owner's Library.
+                    $q=$pdo->prepare("SELECT id FROM game_resale_listings WHERE id=:id AND status='active' FOR UPDATE");
+                    $q->execute([':id'=>$target]);
+                    if(!$q->fetch())throw new RuntimeException('Game resale listing is not active.');
+                    $q=$pdo->prepare("UPDATE game_resale_listings SET status='removed' WHERE id=:id AND status='active'");
+                    $q->execute([':id'=>$target]);
+                    if($q->rowCount()!==1)throw new RuntimeException('Game resale listing already changed.');
+                    $auditAction='remove_game_resale';$type='game_resale';$details=substr($note,0,500);
+                    $notice='Used-game listing removed. The license stays with its current Library owner.';
                 } elseif($action==='delete_discussion') {
                     $q=$pdo->prepare('SELECT id FROM discussions WHERE id=:id FOR UPDATE');
                     $q->execute([':id'=>$target]);
@@ -75,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         }
     }
 }
-$users=[];$reports=[];$reportHistory=[];$listings=[];$discussions=[];$audit=[];$stats=[];
+$users=[];$reports=[];$reportHistory=[];$listings=[];$gameResaleListings=[];$discussions=[];$audit=[];$stats=[];
 try{
     $stats=[
       'users'=>(int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn(),
@@ -95,6 +105,12 @@ try{
     $discussions=$pdo->query('SELECT d.id,d.title,d.created_at,u.username AS author FROM discussions d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 100')->fetchAll(PDO::FETCH_ASSOC);
     $audit=$pdo->query('SELECT al.*,u.username AS administrator FROM admin_audit_log al JOIN users u ON u.id=al.admin_user_id ORDER BY al.created_at DESC,al.id DESC LIMIT 40')->fetchAll(PDO::FETCH_ASSOC);
 }catch(PDOException $e){error_log('LOCO admin dashboard failed: '.$e->getMessage());$error=$error?:'Could not load the admin dashboard. Verify community_admin.sql and loco_db_upgrade.sql.';}
+// Resale migration is optional; do not hide other moderator tools before it is installed.
+try{
+    $gameResaleListings=$pdo->query("SELECT r.id,r.price,g.title,u.username AS seller
+      FROM game_resale_listings r JOIN games g ON g.id=r.game_id
+      JOIN users u ON u.id=r.seller_id WHERE r.status='active' ORDER BY r.created_at DESC,r.id DESC LIMIT 100")->fetchAll(PDO::FETCH_ASSOC);
+}catch(PDOException $e){$gameResaleListings=[];}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -110,7 +126,7 @@ try{
       <div><strong><?=number_format($stats[$name]??0)?></strong><span><?=adminEsc($label)?></span></div>
     <?php endforeach; ?>
   </div>
-  <nav class="loco-admin-jumps"><a href="#admin-reports">Active reports</a><a href="#admin-report-history">Report history</a><a href="#admin-listings">Listings</a><a href="#admin-discussions">Discussions</a><a href="#admin-users">Accounts</a><a href="#admin-audit">Audit log</a></nav>
+  <nav class="loco-admin-jumps"><a href="#admin-reports">Active reports</a><a href="#admin-report-history">Report history</a><a href="#admin-listings">Listings</a><a href="#admin-game-resale">Game resale</a><a href="#admin-discussions">Discussions</a><a href="#admin-users">Accounts</a><a href="#admin-audit">Audit log</a></nav>
   <section id="admin-reports" class="loco-admin-panel"><h2>Active report queue (<?=count($reports)?>)</h2>
     <p>Only Open and Reviewing reports appear here. Resolving or dismissing a report moves it into Report History automatically.</p>
     <?php if(!$reports): ?><p>All caught up — no open or reviewing reports.</p><?php endif; ?>
@@ -152,6 +168,21 @@ try{
         <input type="hidden" name="csrf" value="<?=adminEsc($csrf)?>"><input type="hidden" name="action" value="remove_listing"><input type="hidden" name="target_id" value="<?=$listing['id']?>">
         <label>Reason<input name="note" maxlength="500" placeholder="Reason for removal"></label><button type="submit" class="loco-admin-danger">Remove listing</button>
       </form></article><?php endforeach; ?>
+  </section>
+  <section id="admin-game-resale" class="loco-admin-panel"><h2>Used-game Marketplace</h2>
+    <p>Moderate resale offers without taking the original game or its LOCO license from the owner's Library.</p>
+    <?php if(!$gameResaleListings): ?><p>No active used-game listings.</p><?php endif; ?>
+    <?php foreach($gameResaleListings as $sale): ?>
+      <article class="loco-admin-entry"><div><h3>#<?=$sale['id']?> · <?=adminEsc($sale['title'])?></h3>
+        <p>Seller: <?=adminEsc($sale['seller'])?> · ₱<?=number_format((float)$sale['price'],2)?></p></div>
+        <form method="post" class="loco-admin-form" onsubmit="return confirm('Remove this used-game listing? The game stays with its owner.')">
+          <input type="hidden" name="csrf" value="<?=adminEsc($csrf)?>">
+          <input type="hidden" name="action" value="remove_game_resale">
+          <input type="hidden" name="target_id" value="<?=$sale['id']?>">
+          <label>Moderation reason<input name="note" maxlength="500" placeholder="Reason for removal"></label>
+          <button type="submit" class="loco-admin-danger">Remove game listing</button>
+        </form></article>
+    <?php endforeach; ?>
   </section>
   <section id="admin-discussions" class="loco-admin-panel"><h2>Community discussions</h2>
     <?php if(!$discussions): ?><p>No discussions yet.</p><?php endif; ?>
