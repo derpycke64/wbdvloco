@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS game_resale_listings (
   status ENUM('active','sold','cancelled','removed') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   sold_at TIMESTAMP NULL DEFAULT NULL,
-  UNIQUE KEY uq_loco_resale_library (library_id),
+  active_library_id INT GENERATED ALWAYS AS (CASE WHEN status = 'active' THEN library_id ELSE NULL END) STORED,
+  UNIQUE KEY uq_loco_resale_active_library (active_library_id),
   KEY idx_loco_resale_active (status,created_at),
   KEY idx_loco_resale_seller (seller_id,status),
   KEY idx_loco_resale_game (game_id,status),
@@ -46,4 +47,5 @@ CREATE TABLE IF NOT EXISTS game_resale_listings (
   CONSTRAINT fk_loco_resale_buyer FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_loco_resale_game FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
--- To relist a previously cancelled game, PHP reuses its existing listing row.
+-- Closed listing rows remain in history; one active listing per owned license.
+-- A buyer can relist the license later after ownership has been transferred.
