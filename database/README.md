@@ -41,8 +41,15 @@ SHOW COLUMNS FROM library LIKE 'game_id';
 
 Make sure the selected database is `loco_db` and each expected table/column is returned.
 
-## Checkout behavior
+## Payment sandbox and checkout
 
-`Loco/payment.php` now uses database game IDs and prices, checks the logged-in user's wallet balance, and records the order, order lines, library ownership, and transaction history in one database transaction. If any part fails, the transaction is rolled back. The wallet is an internal demo balance only; no real payment provider is connected.
+`Loco/payment.php` supports either the internal LOCO wallet or the simulated LOCO Payment Sandbox for direct game purchases. On successful checkout, the game order, order items, library ownership, and transaction history are saved in one database transaction. Wallet purchases deduct the wallet balance; sandbox card purchases do not deduct wallet funds. If a database operation fails, the transaction is rolled back.
 
-Checkout expects all migrations above to have been applied. It has not been tested against your local WAMP/MySQL instance from this repository environment, so run the verification queries and test with a low-cost/free game and a test account before relying on it.
+`Loco/wallet.php` uses the same sandbox simulation to add a selected demo amount to the user's wallet. The sandbox does not connect to PayPal or any real payment processor, does not charge real money, and does not store the submitted card number, expiry, or CVV. It accepts these clearly fictional test cards:
+
+- Approved: `4242 4242 4242 4242`
+- Declined: `4000 0000 0000 0002`
+
+Use any current/future expiry month and a 3- or 4-digit test CVV. The declined test card should not create an order or add wallet balance.
+
+Checkout expects all migrations above to have been applied. It has not been tested against your local WAMP/MySQL instance from this repository environment, so run the verification queries and test with a test account before relying on it.
