@@ -20,6 +20,7 @@ $current_page = basename($_SERVER['SCRIPT_NAME']);
                 <?php endif; ?>
                 
                 <?php if ($isLoggedIn): ?>
+                        <a href="wallet.php" class="loco-nav-link <?php echo ($current_page == 'wallet.php') ? 'active' : ''; ?>">WALLET</a>
                     <a href="profile.php" class="loco-nav-link <?php echo ($current_page == 'profile.php') ? 'active' : ''; ?>" style="text-transform: uppercase;">
                         <?php echo htmlspecialchars($currentUser); ?>
                     </a>
