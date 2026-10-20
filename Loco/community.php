@@ -505,7 +505,7 @@ try {
     }
     foreach($myPosts as &$post)$post['replies']=$repliesByPost[(int)$post['id']]??[];
     unset($post);
-    $q=$pdo->prepare("SELECT mr.id,mr.status,mr.reason,mr.created_at,gi.item_name AS item_name FROM marketplace_reports mr JOIN marketplace_listings ml ON ml.id=mr.listing_id JOIN game_items gi ON gi.id=ml.item_id WHERE mr.reporter_id=:uid ORDER BY mr.created_at DESC,mr.id DESC LIMIT 50");
+    $q=$pdo->prepare("SELECT mr.id,mr.status,mr.reason,mr.admin_response,mr.created_at,gi.item_name AS item_name FROM marketplace_reports mr JOIN marketplace_listings ml ON ml.id=mr.listing_id JOIN game_items gi ON gi.id=ml.item_id WHERE mr.reporter_id=:uid ORDER BY mr.created_at DESC,mr.id DESC LIMIT 50");
     $q->execute([':uid'=>(int)$_SESSION['user_id']]);$myReports=$q->fetchAll(PDO::FETCH_ASSOC);
 }catch(PDOException $e){error_log('LOCO community discussions/reports load: '.$e->getMessage());if(in_array(($_GET['tab']??''),['discussions','reports'],true))$error=$error?:'Discussions and reports require database/loco_db_upgrade.sql.';}
 
@@ -677,7 +677,7 @@ try {
         <div class="loco-section-heading"><div><h2>My marketplace reports</h2><p>Reports are private. Only reports submitted by your account appear here; moderation actions are not available to players.</p></div></div>
         <?php if(!$myReports): ?><p class="loco-empty-state">You haven't submitted any marketplace reports. Use “Report listing” on a Marketplace item.</p><?php endif; ?>
         <div class="loco-owned-listings"><?php foreach($myReports as $report): ?>
-            <article class="loco-owned-row"><div><strong><?=h($report['item_name'])?></strong><p><?=h($report['reason'])?></p><small>Submitted <?=h($report['created_at'])?></small></div><span class="loco-status-pill <?=h($report['status'])?>"><?=h(ucfirst($report['status']))?></span></article>
+            <article class="loco-owned-row"><div><strong><?=h($report['item_name'])?></strong><p><?=h($report['reason'])?></p><small>Submitted <?=h($report['created_at'])?></small><?php if(!empty($report['admin_response'])): ?><div class="loco-report-response"><strong>Response from LOCO Moderation</strong><p><?=nl2br(h($report['admin_response']))?></p></div><?php elseif(in_array($report['status'],['resolved','dismissed'],true)): ?><p class="loco-muted">No public moderator response has been provided.</p><?php endif; ?></div><span class="loco-status-pill <?=h($report['status'])?>"><?=h(ucfirst($report['status']))?></span></article>
         <?php endforeach; ?></div>
     </section>
     <?php elseif ($tab === 'profile'): ?>
