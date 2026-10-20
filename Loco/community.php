@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->beginTransaction();
                     $q=$pdo->prepare("SELECT id,seller_id,item_id,inventory_id,price FROM marketplace_listings WHERE id=:id AND status='active' FOR UPDATE");
                     $q->execute([':id'=>$listingId]); $listing=$q->fetch(PDO::FETCH_ASSOC);
-                    if(!$listing || !$listing['inventory_id'] || (float)$listing['price']<=0) throw new RuntimeException('This item is not available for purchase.');
+                    if(!$listing || !$listing['inventory_id'] || (float)$listing['price']<0) throw new RuntimeException('This item is not available for purchase.');
                     if((int)$listing['seller_id']===$buyerId) throw new RuntimeException('You cannot buy your own listing.');
                     $q=$pdo->prepare('SELECT id,user_id,item_id FROM inventories WHERE id=:id FOR UPDATE');
                     $q->execute([':id'=>(int)$listing['inventory_id']]); $owned=$q->fetch(PDO::FETCH_ASSOC);
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $q->execute([':id'=>$listingId]);
                     if($q->rowCount()!==1) throw new RuntimeException('Listing is no longer available.');
                     $pdo->commit();
-                    $notice='Purchase complete. Item added to your inventory and payment sent to the seller.';
+                    $notice=$price>0 ? 'Purchase complete. Item added to your inventory and payment sent to the seller.' : 'Free item claimed and added to your inventory.';
                 } catch (Throwable $e) {
                     if($pdo->inTransaction()) $pdo->rollBack();
                     if($e instanceof PDOException){error_log('LOCO marketplace purchase failed: '.$e->getMessage());$error='Purchase could not be completed. Check the database setup.';}
@@ -301,7 +301,7 @@ $myPosts=array_reverse($_SESSION['loco_discussions'],true);
                     <span><?=h($item['condition'])?></span>
                 </div>
                 <div class="loco-listing-seller"><span class="loco-avatar small">👤</span><div><strong><?=h($item['seller'])?></strong><small><?=$item['rating']==='New seller'?'New seller':'★ '.h($item['rating']).' seller rating'?></small></div></div>
-                <div class="loco-listing-bottom"><strong class="loco-listing-price">₱<?=number_format((float)$item['price'],2)?></strong><?php if ((int)$item['seller_id'] === (int)$_SESSION['user_id']): ?><a class="loco-small-link" href="community.php?tab=sell&edit=<?=$item['id']?>">Edit listing</a><?php else: ?><div><form method="post" class="loco-inline-form" onsubmit="return confirm('Buy this item for ₱<?=number_format((float)$item['price'],2)?> using your LOCO wallet?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="buy_listing"><input type="hidden" name="listing_id" value="<?=$item['id']?>"><button class="loco-button-small" type="submit">Buy Now</button></form> <button class="loco-button-small" type="button" onclick="openTrade(<?=$item['id']?>, <?=json_encode($item['title'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP)?>)">Request trade</button></div><?php endif; ?></div>
+                <div class="loco-listing-bottom"><strong class="loco-listing-price">₱<?=number_format((float)$item['price'],2)?></strong><?php if ((int)$item['seller_id'] === (int)$_SESSION['user_id']): ?><a class="loco-small-link" href="community.php?tab=sell&edit=<?=$item['id']?>">Edit listing</a><?php else: ?><div><form method="post" class="loco-inline-form" onsubmit="return confirm('<?=((float)$item['price']===0.0)?'Claim this free item?':'Buy this item for ₱'.number_format((float)$item['price'],2).' using your LOCO wallet?'?>')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="buy_listing"><input type="hidden" name="listing_id" value="<?=$item['id']?>"><button class="loco-button-small" type="submit"><?=((float)$item['price']===0.0)?'Claim Free':'Buy Now'?></button></form> <button class="loco-button-small" type="button" onclick="openTrade(<?=$item['id']?>, <?=json_encode($item['title'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP)?>)">Request trade</button></div><?php endif; ?></div>
                 <details class="loco-report-details"><summary>Report listing</summary><form method="post" class="loco-report-form"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="report_listing"><input type="hidden" name="listing_id" value="<?=$item['id']?>"><input name="reason" maxlength="250" placeholder="Why are you reporting this?" required><button class="loco-small-link" type="submit">Submit report</button></form></details>
             </article>
         <?php endforeach; ?>
