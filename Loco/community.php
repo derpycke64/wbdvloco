@@ -20,29 +20,11 @@ if (!isset($_SESSION['loco_inventory'])) {
         ['id' => 3, 'name' => 'Luma Lantern Charm', 'game' => 'Lanterns of Luma', 'type' => 'Collectible', 'quantity' => 1],
     ];
 }
-if (!isset($_SESSION['loco_next_listing_id'])) $_SESSION['loco_next_listing_id'] = 19;
-if (!isset($_SESSION['loco_listings'])) {
-    $_SESSION['loco_listings'] = [
-        1 => ['id'=>1, 'title'=>'Nebula Drift: Starfarer Suit', 'game'=>'Nebula Drift', 'type'=>'Cosmetic', 'condition'=>'Excellent', 'description'=>'An exploration suit with a pearlescent visor finish.', 'price'=>2490.00, 'seller'=>'OrbitMason', 'rating'=>'4.9', 'created'=>time()-3600],
-        2 => ['id'=>2, 'title'=>'Crimson Freight: Ember Rail Token', 'game'=>'Crimson Freight', 'type'=>'Collectible', 'condition'=>'Excellent', 'description'=>'A rare conductor token from the Emberline route.', 'price'=>420.00, 'seller'=>'RedSignal', 'rating'=>'4.8', 'created'=>time()-3200],
-        3 => ['id'=>3, 'title'=>'Moonroot Hollow: Mooncap Satchel', 'game'=>'Moonroot Hollow', 'type'=>'Accessory', 'condition'=>'Very good', 'description'=>'A stitched satchel patterned with moonlit mushrooms.', 'price'=>315.00, 'seller'=>'MossKeeper', 'rating'=>'4.9', 'created'=>time()-2900],
-        4 => ['id'=>4, 'title'=>'Abyss Protocol: Pressure Diver Rig', 'game'=>'Abyss Protocol', 'type'=>'Equipment skin', 'condition'=>'Excellent', 'description'=>'A deep-sea rig cosmetic with luminous gauge details.', 'price'=>1290.00, 'seller'=>'DeepCurrent', 'rating'=>'4.7', 'created'=>time()-2600],
-        5 => ['id'=>5, 'title'=>'Stormbanner Tactics: Silver Hawk Standard', 'game'=>'Stormbanner Tactics', 'type'=>'Banner', 'condition'=>'Good', 'description'=>'A commander banner with silver-threaded edges.', 'price'=>575.00, 'seller'=>'BannerSmith', 'rating'=>'4.8', 'created'=>time()-2300],
-        6 => ['id'=>6, 'title'=>'Neon Velocity: Pulseframe Bike Skin', 'game'=>'Neon Velocity', 'type'=>'Vehicle skin', 'condition'=>'Excellent', 'description'=>'A magenta-cyan body kit with animated light accents.', 'price'=>1399.00, 'seller'=>'NightApex', 'rating'=>'4.9', 'created'=>time()-2000],
-        7 => ['id'=>7, 'title'=>'Clockwork Reverie: Brass Key Set', 'game'=>'Clockwork Reverie', 'type'=>'Puzzle collectible', 'condition'=>'Very good', 'description'=>'A set of ornate keys for collectors of mechanical curiosities.', 'price'=>245.00, 'seller'=>'GearGarden', 'rating'=>'4.6', 'created'=>time()-1800],
-        8 => ['id'=>8, 'title'=>'Ashen Crown: Cinderblade Wrap', 'game'=>'Ashen Crown', 'type'=>'Weapon skin', 'condition'=>'Excellent', 'description'=>'A dark steel finish with glowing ember veins.', 'price'=>850.00, 'seller'=>'Crownless', 'rating'=>'4.9', 'created'=>time()-1600],
-        9 => ['id'=>9, 'title'=>'Skydrift Homestead: Cloudseed Planter', 'game'=>'Skydrift Homestead', 'type'=>'Decorative item', 'condition'=>'Good', 'description'=>'A floating planter designed for sky-island gardens.', 'price'=>199.00, 'seller'=>'CloudTiller', 'rating'=>'4.7', 'created'=>time()-1400],
-        10 => ['id'=>10, 'title'=>'The Last Bell: Seaglass Locket', 'game'=>'The Last Bell', 'type'=>'Collectible', 'condition'=>'Excellent', 'description'=>'A tiny locket holding a fragment of sea-polished glass.', 'price'=>360.00, 'seller'=>'QuietHour', 'rating'=>'4.8', 'created'=>time()-1200],
-        11 => ['id'=>11, 'title'=>'Emberline Chronicles: Phoenix Sigil', 'game'=>'Emberline Chronicles', 'type'=>'Artifact', 'condition'=>'Excellent', 'description'=>'An old-world sigil with a warm, ember-like glow.', 'price'=>1490.00, 'seller'=>'AshArchivist', 'rating'=>'4.9', 'created'=>time()-1000],
-        12 => ['id'=>12, 'title'=>'Starfall Cartographer: Celestial Compass', 'game'=>'Starfall Cartographer', 'type'=>'Tool skin', 'condition'=>'Very good', 'description'=>'A polished compass casing inspired by mapped star routes.', 'price'=>699.00, 'seller'=>'MapmakerMira', 'rating'=>'4.8', 'created'=>time()-900],
-        13 => ['id'=>13, 'title'=>'Riftbound Arena: Rift Core Badge', 'game'=>'Riftbound Arena', 'type'=>'Badge', 'condition'=>'Excellent', 'description'=>'A limited arena badge with a prismatic rift motif.', 'price'=>0.00, 'seller'=>'PhaseRunner', 'rating'=>'4.6', 'created'=>time()-800],
-        14 => ['id'=>14, 'title'=>'Lanterns of Luma: Glowpet Lantern', 'game'=>'Lanterns of Luma', 'type'=>'Companion accessory', 'condition'=>'Good', 'description'=>'A soft-glowing lantern charm shaped like a tiny spirit.', 'price'=>325.00, 'seller'=>'LumaLight', 'rating'=>'4.9', 'created'=>time()-700],
-        15 => ['id'=>15, 'title'=>'Iron Orchard: Clockwork Apple', 'game'=>'Iron Orchard', 'type'=>'Collectible', 'condition'=>'Very good', 'description'=>'A small brass fruit from the orchard engineering set.', 'price'=>410.00, 'seller'=>'IronBloom', 'rating'=>'4.7', 'created'=>time()-600],
-        16 => ['id'=>16, 'title'=>'Echoes Below: Sonar Charm', 'game'=>'Echoes Below', 'type'=>'Accessory', 'condition'=>'Excellent', 'description'=>'A sonar-themed charm for deep exploration loadouts.', 'price'=>590.00, 'seller'=>'BlueTrench', 'rating'=>'4.8', 'created'=>time()-500],
-        17 => ['id'=>17, 'title'=>'Glass Harbor: Tideglass Vase', 'game'=>'Glass Harbor', 'type'=>'Decorative item', 'condition'=>'Good', 'description'=>'A translucent vase with a blue-green tide pattern.', 'price'=>275.00, 'seller'=>'HarborGlass', 'rating'=>'4.7', 'created'=>time()-400],
-        18 => ['id'=>18, 'title'=>'Wild Circuit: Volt Runner Gloves', 'game'=>'Wild Circuit', 'type'=>'Gear skin', 'condition'=>'Excellent', 'description'=>'Racing gloves with electric linework and reinforced knuckles.', 'price'=>799.00, 'seller'=>'CircuitFox', 'rating'=>'4.9', 'created'=>time()-300]
-    ];
-}
+// Marketplace records are loaded from MySQL. The remaining session arrays are for demo-only community tools.
+if (!isset($_SESSION['loco_trades']) || !is_array($_SESSION['loco_trades'])) $_SESSION['loco_trades'] = [];
+if (!isset($_SESSION['loco_trade_history']) || !is_array($_SESSION['loco_trade_history'])) $_SESSION['loco_trade_history'] = [];
+if (!isset($_SESSION['loco_discussions']) || !is_array($_SESSION['loco_discussions'])) $_SESSION['loco_discussions'] = [];
+if (!isset($_SESSION['loco_reports']) || !is_array($_SESSION['loco_reports'])) $_SESSION['loco_reports'] = [];
 foreach (['loco_wishlist','loco_trades','loco_trade_history','loco_discussions','loco_reports'] as $key) {
     if (!isset($_SESSION[$key]) || !is_array($_SESSION[$key])) $_SESSION[$key] = [];
 }
@@ -68,34 +50,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $notice = 'Profile saved for this session.';
                 break;
             case 'create_listing':
-                $title = postText('title', 90); $game = postText('game', 60); $type = postText('type', 45);
-                $condition = postText('condition', 30); $description = postText('description', 400);
-                $price = filter_var($_POST['price'] ?? '', FILTER_VALIDATE_FLOAT);
-                if ($title === '' || $game === '' || $type === '' || $description === '' || $price === false || $price <= 0 || $price > 10000000) {
-                    $error = 'Enter a title, game, type, description, and a valid price greater than zero.';
-                } else {
-                    $id = $_SESSION['loco_next_listing_id']++;
-                    $_SESSION['loco_listings'][$id] = ['id'=>$id,'title'=>$title,'game'=>$game,'type'=>$type,'condition'=>$condition ?: 'Good','description'=>$description,'price'=>(float)$price,'seller'=>$currentUser,'rating'=>'New seller','created'=>time()];
-                    $notice = 'Your listing was created.';
-                }
+                $title=postText('title',150); $game=postText('game',150); $type=postText('type',50);
+                $condition=postText('condition',50); $description=postText('description',1000);
+                $price=filter_var($_POST['price'] ?? '', FILTER_VALIDATE_FLOAT);
+                if($title===''||$game===''||$type===''||$description===''||$price===false||$price<0||$price>10000000){$error='Enter all listing details and a valid price.';break;}
+                try {
+                    $gs=$pdo->prepare('SELECT id FROM games WHERE title=:title LIMIT 1'); $gs->execute([':title'=>$game]); $g=$gs->fetch();
+                    if(!$g){$error='Choose a game already listed in the LOCO store.';break;}
+                    $is=$pdo->prepare('INSERT INTO game_items (game_id,item_name,description,rarity,image_url) VALUES (:gid,:name,:description,:rarity,NULL)');
+                    $is->execute([':gid'=>(int)$g['id'],':name'=>$title,':description'=>$description,':rarity'=>($condition?:$type)]);
+                    $ls=$pdo->prepare("INSERT INTO marketplace_listings (seller_id,item_id,price,status) VALUES (:uid,:iid,:price,'active')");
+                    $ls->execute([':uid'=>(int)$_SESSION['user_id'],':iid'=>(int)$pdo->lastInsertId(),':price'=>(float)$price]);
+                    $notice='Listing published to the database.';
+                } catch(PDOException $e){$error='Unable to save listing. Check that the marketplace migration has been imported.';}
                 break;
             case 'edit_listing':
-                $id = (int)($_POST['listing_id'] ?? 0); $listing = $_SESSION['loco_listings'][$id] ?? null;
-                $title = postText('title', 90); $game = postText('game', 60); $type = postText('type', 45); $condition = postText('condition', 30); $description = postText('description', 400); $price = filter_var($_POST['price'] ?? '', FILTER_VALIDATE_FLOAT);
-                if (!$listing || $listing['seller'] !== $currentUser) $error = 'You can only edit your own listings.';
-                elseif ($title === '' || $game === '' || $type === '' || $description === '' || $price === false || $price <= 0) $error = 'Complete all listing fields and enter a valid price.';
-                else { $_SESSION['loco_listings'][$id] = array_merge($listing, ['title'=>$title,'game'=>$game,'type'=>$type,'condition'=>$condition ?: 'Good','description'=>$description,'price'=>(float)$price]); $notice = 'Listing updated.'; }
+                $id=(int)($_POST['listing_id']??0); $title=postText('title',150); $game=postText('game',150);
+                $type=postText('type',50); $condition=postText('condition',50); $description=postText('description',1000);
+                $price=filter_var($_POST['price']??'',FILTER_VALIDATE_FLOAT);
+                if($id<=0||$title===''||$game===''||$type===''||$description===''||$price===false||$price<0){$error='Complete every field and enter a valid price.';break;}
+                try {
+                    $chk=$pdo->prepare("SELECT item_id FROM marketplace_listings WHERE id=:id AND seller_id=:uid AND status='active' LIMIT 1");
+                    $chk->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]); $own=$chk->fetch();
+                    $gs=$pdo->prepare('SELECT id FROM games WHERE title=:title LIMIT 1');$gs->execute([':title'=>$game]);$g=$gs->fetch();
+                    if(!$own){$error='You can only edit your own active listings.';break;}
+                    if(!$g){$error='Choose a game already listed in the LOCO store.';break;}
+                    $up=$pdo->prepare('UPDATE game_items SET game_id=:gid,item_name=:name,description=:description,rarity=:rarity WHERE id=:iid');
+                    $up->execute([':gid'=>(int)$g['id'],':name'=>$title,':description'=>$description,':rarity'=>($condition?:$type),':iid'=>(int)$own['item_id']]);
+                    $up=$pdo->prepare('UPDATE marketplace_listings SET price=:price WHERE id=:id AND seller_id=:uid');
+                    $up->execute([':price'=>(float)$price,':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);$notice='Listing updated in the database.';
+                }catch(PDOException $e){$error='Unable to update this listing.';}
                 break;
             case 'delete_listing':
-                $id = (int)($_POST['listing_id'] ?? 0); $listing = $_SESSION['loco_listings'][$id] ?? null;
-                if (!$listing || $listing['seller'] !== $currentUser) $error = 'You can only remove your own listings.';
-                else { unset($_SESSION['loco_listings'][$id]); $_SESSION['loco_wishlist'] = array_values(array_diff($_SESSION['loco_wishlist'], [$id])); $notice = 'Listing removed.'; }
+                $id=(int)($_POST['listing_id']??0);
+                $del=$pdo->prepare("UPDATE marketplace_listings SET status='removed' WHERE id=:id AND seller_id=:uid AND status='active'");
+                $del->execute([':id'=>$id,':uid'=>(int)$_SESSION['user_id']]);
+                if($del->rowCount())$notice='Listing removed from the marketplace.';else $error='You can only remove your own active listing.';
                 break;
             case 'toggle_wishlist':
-                $id = (int)($_POST['listing_id'] ?? 0);
-                if (!isset($_SESSION['loco_listings'][$id])) $error = 'That listing is no longer available.';
-                elseif (in_array($id, $_SESSION['loco_wishlist'], true)) { $_SESSION['loco_wishlist'] = array_values(array_diff($_SESSION['loco_wishlist'], [$id])); $notice = 'Removed from saved listings.'; }
-                else { $_SESSION['loco_wishlist'][] = $id; $notice = 'Listing saved to your wishlist.'; }
+                $id=(int)($_POST['listing_id']??0);
+                try{
+                    $chk=$pdo->prepare("SELECT id FROM marketplace_listings WHERE id=:id AND status='active' LIMIT 1");$chk->execute([':id'=>$id]);
+                    if(!$chk->fetch()){$error='That listing is no longer available.';break;}
+                    $chk=$pdo->prepare('SELECT id FROM marketplace_wishlists WHERE user_id=:uid AND listing_id=:lid LIMIT 1');$chk->execute([':uid'=>(int)$_SESSION['user_id'],':lid'=>$id]);
+                    if($chk->fetch()){$del=$pdo->prepare('DELETE FROM marketplace_wishlists WHERE user_id=:uid AND listing_id=:lid');$del->execute([':uid'=>(int)$_SESSION['user_id'],':lid'=>$id]);$notice='Removed from wishlist.';}
+                    else{$ins=$pdo->prepare('INSERT INTO marketplace_wishlists(user_id,listing_id) VALUES(:uid,:lid)');$ins->execute([':uid'=>(int)$_SESSION['user_id'],':lid'=>$id]);$notice='Listing saved to your database wishlist.';}
+                }catch(PDOException $e){$error='Import database/marketplace_database.sql to enable wishlist storage.';}
                 break;
             case 'request_trade':
                 $id = (int)($_POST['listing_id'] ?? 0); $listing = $_SESSION['loco_listings'][$id] ?? null; $offerId = (int)($_POST['offer_inventory_id'] ?? 0);
@@ -147,16 +147,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$tab = (string)($_GET['tab'] ?? 'market');
-$allowedTabs = ['market','sell','saved','trades','inventory','discussions','profile'];
-if (!in_array($tab, $allowedTabs, true)) $tab = 'market';
-$editId = (int)($_GET['edit'] ?? 0); $editListing = $_SESSION['loco_listings'][$editId] ?? null;
-if ($editListing && $editListing['seller'] !== $currentUser) $editListing = null;
-$listings = array_reverse($_SESSION['loco_listings'], true);
-$myListings = array_filter($listings, fn($item) => $item['seller'] === $currentUser);
-$myTrades = array_filter($_SESSION['loco_trades'], fn($trade) => $trade['requester'] === $currentUser || $trade['seller'] === $currentUser);
-$myHistory = array_reverse($_SESSION['loco_trade_history']);
-$myPosts = array_reverse($_SESSION['loco_discussions'], true);
+$tab=(string)($_GET['tab']??'market');
+$allowedTabs=['market','sell','saved','trades','inventory','discussions','profile'];
+if(!in_array($tab,$allowedTabs,true))$tab='market';
+$editId=(int)($_GET['edit']??0);$editListing=null;
+try{
+    $q=$pdo->query("SELECT ml.id,ml.seller_id,ml.item_id,ml.price,UNIX_TIMESTAMP(ml.created_at) AS created,gi.item_name AS title,gi.description,gi.rarity,gi.image_url,g.title AS game,u.username AS seller FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN games g ON g.id=gi.game_id JOIN users u ON u.id=ml.seller_id WHERE ml.status='active' ORDER BY ml.created_at DESC,ml.id DESC");
+    $listings=$q->fetchAll();
+    foreach($listings as &$item){$item['type']=$item['rarity']??'Collectible';$item['condition']=$item['rarity']??'Good';$item['rating']='New seller';}unset($item);
+    $myListings=array_values(array_filter($listings,fn($item)=>(int)$item['seller_id']===(int)$_SESSION['user_id']));
+    $q=$pdo->prepare('SELECT listing_id FROM marketplace_wishlists WHERE user_id=:uid');$q->execute([':uid'=>(int)$_SESSION['user_id']]);$savedListingIds=array_map('intval',$q->fetchAll(PDO::FETCH_COLUMN));
+    $gameOptions=$pdo->query('SELECT title FROM games ORDER BY title')->fetchAll(PDO::FETCH_COLUMN);
+    if($editId>0){$q=$pdo->prepare("SELECT ml.id,ml.seller_id,ml.item_id,ml.price,gi.item_name AS title,gi.description,gi.rarity,g.title AS game FROM marketplace_listings ml JOIN game_items gi ON gi.id=ml.item_id JOIN games g ON g.id=gi.game_id WHERE ml.id=:id AND ml.seller_id=:uid AND ml.status='active' LIMIT 1");$q->execute([':id'=>$editId,':uid'=>(int)$_SESSION['user_id']]);$editListing=$q->fetch()?:null;}
+}catch(PDOException $e){$listings=$myListings=$savedListingIds=$gameOptions=[];$error=$error?:'Marketplace database is not ready. Import database/marketplace_database.sql.';}
+$myTrades=array_filter($_SESSION['loco_trades'],fn($trade)=>$trade['requester']===$currentUser||$trade['seller']===$currentUser);
+$myHistory=array_reverse($_SESSION['loco_trade_history']);
+$myPosts=array_reverse($_SESSION['loco_discussions'],true);
 ?>
 <!DOCTYPE html>
 <html lang="en">
