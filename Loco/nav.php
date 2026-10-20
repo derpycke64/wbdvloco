@@ -105,6 +105,19 @@ $libraryActive = $current_page === 'profile.php';
       button.setAttribute('aria-expanded',String(open));
     });
   });
+  // On touchscreen devices the first tap expands Store/Library/Community; menu links navigate normally.
+  document.querySelectorAll('.loco-nav-group > .loco-nav-link').forEach(function(link){
+    link.addEventListener('click',function(event){
+      if(window.matchMedia('(hover: none)').matches){
+        const group=link.closest('.loco-nav-group');
+        if(!group.classList.contains('is-open')){
+          event.preventDefault();
+          document.querySelectorAll('.loco-nav-group.is-open').forEach(function(g){g.classList.remove('is-open');});
+          group.classList.add('is-open');
+        }
+      }
+    });
+  });
   document.addEventListener('click',function(event){if(!event.target.closest('.loco-nav-group'))document.querySelectorAll('.loco-nav-group.is-open').forEach(function(g){g.classList.remove('is-open');const b=g.querySelector('button[aria-expanded]');if(b)b.setAttribute('aria-expanded','false');});});
   document.addEventListener('keydown',function(event){if(event.key==='Escape')document.querySelectorAll('.loco-nav-group.is-open').forEach(function(g){g.classList.remove('is-open');const b=g.querySelector('button[aria-expanded]');if(b){b.setAttribute('aria-expanded','false');b.focus();}});});
 })();
