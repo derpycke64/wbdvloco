@@ -28,7 +28,7 @@ try {
     }
 
     // 2. Fetch all games this user has purchased from the database library
-    $library_sql = "SELECT l.id AS library_id, g.title, g.image_url, g.price, l.purchase_date 
+    $library_sql = "SELECT l.id AS library_id, g.id AS game_id, g.title, g.image_url, g.price, l.purchase_date 
                     FROM library l
                     INNER JOIN games g ON l.game_id = g.id 
                     WHERE l.user_id = :user_id 
@@ -126,8 +126,10 @@ try {
             <?php else: ?>
                 <div class="game-grid">
                     <?php foreach($purchased_games as $game): ?>
-                        <div class="game-card">
-                            <img src="<?=h($game['image_url'] ?? 'images/gameplay_01.jpg')?>" class="game-thumb" alt="Game Cover">
+                        <div class="game-card loco-library-game-card">
+                            <a class="loco-library-artwork" href="game_details.php?id=<?=(int)$game['game_id']?>" title="View <?=h($game['title'])?> game details">
+                                <img src="<?=h($game['image_url'] ?: 'images/gameplay_01.jpg')?>" alt="<?=h($game['title'])?> cover artwork" loading="lazy">
+                            </a>
                             <div class="game-details">
                                 <h4 class="game-title" style="margin-bottom: 5px;"><?=h($game['title'])?></h4>
                                 <p class="game-desc" style="font-size: 11px; color: #888;">Acquired on <?=date('M d, Y', strtotime($game['purchase_date']))?></p>
