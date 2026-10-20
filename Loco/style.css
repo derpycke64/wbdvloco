@@ -1353,3 +1353,11 @@ h3.loco-label-thingy {
 .loco-report-response{margin-top:14px;padding:13px 15px;border:1px solid #455163;background:#181f2a;border-radius:5px;max-width:800px}
 .loco-report-response strong{color:#f0f4fd}
 .loco-report-response p{color:#dfe7f2;white-space:normal;line-height:1.5;margin:9px 0 0;overflow-wrap:anywhere}
+
+/* Resolved report history stays available without cluttering active moderation */
+.loco-admin-history-entry{border-top:1px solid #3b4553;color:#e4ebf4}
+.loco-admin-history-entry>summary{cursor:pointer;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding:16px 6px;align-items:center}
+.loco-admin-history-entry>summary strong{color:#fff}
+.loco-admin-history-entry>summary span{color:#b8c9d8;font-size:.84rem}
+.loco-admin-history-entry[open]>summary{border-bottom:1px solid #3b4553}
+.loco-admin-history-entry .loco-admin-entry{border-top:0}
