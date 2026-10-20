@@ -1264,3 +1264,12 @@ h3.loco-label-thingy {
 @media(max-width:520px){.loco-community-wrap{width:calc(100% - 20px);margin-top:45px}.loco-community-heading .loco-logo-text{font-size:1.5rem}.loco-community-tabs a{padding:9px;font-size:.72rem}.loco-form-grid{grid-template-columns:1fr}.loco-full-width,.loco-form-actions{grid-column:auto}.loco-section-heading{align-items:flex-start;flex-direction:column}.loco-owned-row,.loco-trade-card{align-items:flex-start;flex-direction:column}.loco-inventory-grid,.loco-workshop-keep .loco-workshop-grid{grid-template-columns:1fr}.loco-report-form{flex-direction:column}.loco-discussion-meta{align-items:flex-start;flex-direction:column}}
 
 .loco-market-item-image{display:block;width:100%;height:158px;object-fit:contain;background:linear-gradient(135deg,#10131c,#21121a);border:1px solid #343943;border-radius:4px;box-sizing:border-box;padding:4px}.loco-listing-card{gap:12px}.loco-listing-card h3{font-size:1rem}@media(max-width:800px){.loco-market-item-image{height:180px}}
+
+/* Accessible inline marketplace trade offers (works without JavaScript). */
+.loco-trade-inline{display:inline-block;position:relative}
+.loco-trade-inline>summary{cursor:pointer;list-style:none;display:inline-block}
+.loco-trade-inline>summary::-webkit-details-marker{display:none}
+.loco-trade-inline[open] .loco-trade-inline-form{display:flex}
+.loco-trade-inline-form{position:absolute;right:0;top:calc(100% + 8px);z-index:40;min-width:min(290px,80vw);padding:16px;flex-direction:column;gap:12px;background:#171a21;border:1px solid #5f626b;box-shadow:0 12px 30px #0009;border-radius:5px}
+.loco-trade-inline-form label{display:flex;flex-direction:column;gap:7px;color:#eee;font-size:.8rem}
+.loco-trade-inline-form select{width:100%;box-sizing:border-box;background:#101116;color:#fff;border:1px solid #444956;padding:9px}
