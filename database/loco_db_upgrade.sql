@@ -4,6 +4,22 @@
 -- Marketplace wishlist and transaction history are created by their existing migrations;
 -- this file adds persistent community records and checkout/order records.
 
+-- Preserve the existing discussions table and add the optional category/tag used by Community.
+SET @loco_add_discussion_tag = (
+    SELECT IF(
+        COUNT(*) = 0,
+        'ALTER TABLE discussions ADD COLUMN tag VARCHAR(40) NOT NULL DEFAULT ''General'' AFTER content',
+        'SELECT 1'
+    )
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'discussions'
+      AND COLUMN_NAME = 'tag'
+);
+PREPARE loco_tag_stmt FROM @loco_add_discussion_tag;
+EXECUTE loco_tag_stmt;
+DEALLOCATE PREPARE loco_tag_stmt;
+
 -- Discussion replies are separate from discussions so existing discussion rows remain intact.
 CREATE TABLE IF NOT EXISTS discussion_replies (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
