@@ -24,16 +24,16 @@ $libraryActive = $current_page === 'profile.php';
 ?>
 <header class="loco-global-nav">
   <div class="loco-nav-inner">
-    <a href="Products.php" class="loco-nav-logo" aria-label="LOCO Store home">
-      <img src="images/logo.png" class="loco-logo-img" alt="LOCO emblem">
+    <a href="products.php" class="loco-nav-logo" aria-label="LOCO Store home">
+      <img src="/Loco/images/loco-logo.png" class="loco-logo-img" alt="LOCO emblem">
       <span>LOCO</span>
     </a>
     <nav class="loco-nav-links" aria-label="Main navigation">
       <div class="loco-nav-group">
-        <a class="loco-nav-link <?= $storeActive?'active':'' ?>" href="Products.php">STORE</a>
+        <a class="loco-nav-link <?= $storeActive?'active':'' ?>" href="products.php">STORE</a>
         <div class="loco-nav-menu">
-          <a href="Products.php">Store Home</a>
-          <a href="Products.php#catalog-tab-grid">Browse Games</a>
+          <a href="products.php">Store Home</a>
+          <a href="products.php#catalog-tab-grid">Browse Games</a>
           <?php if($isLoggedIn): ?>
             <a href="wishlist.php">Wishlist</a>
             <a href="wallet.php">Add Wallet Funds</a>
@@ -41,14 +41,14 @@ $libraryActive = $current_page === 'profile.php';
         </div>
       </div>
       <div class="loco-nav-group">
-        <a class="loco-nav-link <?= $libraryActive?'active':'' ?>" href="<?= $isLoggedIn?'profile.php#library':'Login.php' ?>">LIBRARY</a>
+        <a class="loco-nav-link <?= $libraryActive?'active':'' ?>" href="<?= $isLoggedIn?'profile.php#library':'login.php' ?>">LIBRARY</a>
         <div class="loco-nav-menu">
-          <a href="<?= $isLoggedIn?'profile.php#library':'Login.php' ?>">Owned Games</a>
+          <a href="<?= $isLoggedIn?'profile.php#library':'login.php' ?>">Owned Games</a>
           <?php if($isLoggedIn): ?><a href="transaction_history.php">Purchase History</a><?php endif; ?>
         </div>
       </div>
       <div class="loco-nav-group">
-        <a class="loco-nav-link <?= $communityActive?'active':'' ?>" href="<?= $isLoggedIn?'community.php?tab=market':'Login.php' ?>">COMMUNITY</a>
+        <a class="loco-nav-link <?= $communityActive?'active':'' ?>" href="<?= $isLoggedIn?'community.php?tab=market':'login.php' ?>">COMMUNITY</a>
         <div class="loco-nav-menu">
           <?php if($isLoggedIn): ?>
             <a href="community.php?tab=market">Marketplace</a>
@@ -58,7 +58,7 @@ $libraryActive = $current_page === 'profile.php';
             <a href="community.php?tab=workshop">Workshop</a>
             <a href="community.php?tab=discussions">Discussions</a>
           <?php else: ?>
-            <a href="Login.php">Sign in to Community</a>
+            <a href="login.php">Sign in to Community</a>
           <?php endif; ?>
         </div>
       </div>
@@ -87,7 +87,7 @@ $libraryActive = $current_page === 'profile.php';
           </div>
         </div>
       <?php else: ?>
-        <a href="Login.php" class="loco-nav-signin">SIGN IN</a>
+        <a href="login.php" class="loco-nav-signin">SIGN IN</a>
       <?php endif; ?>
     </div>
   </div>
