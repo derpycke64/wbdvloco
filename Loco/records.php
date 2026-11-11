@@ -5,7 +5,7 @@ require_once 'db.php';
 // This is a simple CRUD demonstration page for the games table.
 // Require a signed-in user so the page is not publicly accessible.
 if (!isset($_SESSION['user_id'])) {
-    header('Location: Login.php');
+    header('Location: login.php');
     exit();
 }
 
