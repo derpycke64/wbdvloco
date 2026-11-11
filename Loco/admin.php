@@ -4,7 +4,7 @@ require_once 'db.php';
 
 function adminEsc($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 if (empty($_SESSION['user_id'])) {
-    header('Location: Login.php');
+    header('Location: login.php');
     exit();
 }
 $adminId=(int)$_SESSION['user_id'];
