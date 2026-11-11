@@ -4,7 +4,7 @@ require_once 'db.php';
 require_once 'game_license.php';
 
 if (!isset($_SESSION['username'])) {
-    header('Location: Login.php');
+    header('Location: login.php');
     exit();
 }
 
@@ -121,7 +121,7 @@ try {
             <div class="loco-library-helper-links"><a class="loco-button-small" href="game_marketplace.php?filter=mine">Sell a game</a> <a class="loco-small-link" href="game_marketplace.php">Browse used games</a></div>
             <?php if(empty($purchased_games)): ?>
                 <div class="loco-empty-state">
-                    You haven't bought any games yet. Visit the <a href="Products.php">LOCO Store</a> to purchase your first catalog item.
+                    You haven't bought any games yet. Visit the <a href="products.php">LOCO Store</a> to purchase your first catalog item.
                 </div>
             <?php else: ?>
                 <div class="game-grid">
