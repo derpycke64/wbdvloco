@@ -46,7 +46,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
                 ':display_name' => $username
             ]);
             $pdo -> commit();
-            header("Location: Login.php?registered=" . urlencode($username));
+            header("Location: login.php?registered=" . urlencode($username));
             exit();
         }catch(\PDOexception $e){
             $pdo->rollBack();
@@ -69,7 +69,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
     <header class="loco-global-nav">
         <div class="loco-nav-inner">
             <a href="index.php" class="loco-nav-logo">
-                <img src="images/logo.png" class="loco-logo-img" alt="Logo">
+                <img src="/Loco/images/loco-logo.png" class="loco-logo-img" alt="Logo">
                 LOCO
             </a>
             <nav class="loco-nav-links">
@@ -139,7 +139,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
 
             <button type="submit" class="loco-button">CONTINUE</button>
             <div class="loco-redirect-action-box" style="padding-top: 10px;">
-                    <a href="Login.php" class="loco-brand-gloss-btn">Already have an account?</a>
+                    <a href="login.php" class="loco-brand-gloss-btn">Already have an account?</a>
                 </div>
         </form>
     </div>
