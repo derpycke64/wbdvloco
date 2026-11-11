@@ -23,11 +23,11 @@ function wipEsc($value){return htmlspecialchars((string)$value,ENT_QUOTES,'UTF-8
    <p class="loco-wip-feature"><?=wipEsc($label)?></p>
    <p>This area of LOCO is still being developed. Thank you for checking it out — more features are coming soon.</p>
    <div class="loco-wip-links">
-    <a href="Products.php" class="loco-wishlist-action">BACK TO STORE</a>
+    <a href="products.php" class="loco-wishlist-action">BACK TO STORE</a>
     <?php if(!empty($_SESSION['user_id'])): ?>
      <a href="community.php?tab=market" class="loco-wishlist-action">COMMUNITY</a>
     <?php endif; ?>
-    <button type="button" onclick="history.length>1?history.back():location.assign('Products.php')" class="loco-wishlist-remove">GO BACK</button>
+    <button type="button" onclick="history.length>1?history.back():location.assign('products.php')" class="loco-wishlist-remove">GO BACK</button>
    </div>
   </section>
  </main>
