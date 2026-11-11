@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
-if (empty($_SESSION['user_id'])) { header('Location: Login.php'); exit; }
+if (empty($_SESSION['user_id'])) { header('Location: login.php'); exit; }
 function wishlistEsc($value){return htmlspecialchars((string)$value,ENT_QUOTES,'UTF-8');}
 $userId=(int)$_SESSION['user_id'];
 if(empty($_SESSION['loco_wishlist_csrf']))$_SESSION['loco_wishlist_csrf']=bin2hex(random_bytes(24));
@@ -89,7 +89,7 @@ try{
     <?php if($tab==='games'): ?>
       <h2 class="loco-sandbox-heading">Game Wishlist</h2>
       <?php if($gamesError): ?><p class="loco-notice error"><?=wishlistEsc($gamesError)?></p><?php endif; ?>
-      <?php if(!$games&&!$gamesError): ?><p class="loco-empty-state">You haven't added any games yet. Visit the <a href="Products.php">Store</a> and open a game to add it.</p><?php endif; ?>
+      <?php if(!$games&&!$gamesError): ?><p class="loco-empty-state">You haven't added any games yet. Visit the <a href="products.php">Store</a> and open a game to add it.</p><?php endif; ?>
       <?php foreach($games as $game): ?>
       <article class="loco-wishlist-entry">
         <a href="game_details.php?id=<?=(int)$game['id']?>"><img src="<?=wishlistEsc($game['image_url']?:'images/gameplay_01.jpg')?>" alt="<?=wishlistEsc($game['title'])?>"></a>
@@ -107,7 +107,7 @@ try{
       <?php foreach($market as $item): ?>
       <?php $available=($item['status']??'')==='active'; ?>
       <article class="loco-wishlist-entry">
-        <a href="community.php?tab=market"><img src="<?=wishlistEsc($item['image_url']?:'images/logo.png')?>" alt="<?=wishlistEsc($item['item_name']??'Marketplace collectible')?>"></a>
+        <a href="community.php?tab=market"><img src="<?=wishlistEsc($item['image_url']?:'/Loco/images/loco-logo.png')?>" alt="<?=wishlistEsc($item['item_name']??'Marketplace collectible')?>"></a>
         <div><h3><?=wishlistEsc($item['item_name']??'Unavailable listing')?></h3>
           <p><?=wishlistEsc($item['game_title']??'Marketplace')?> · Seller: <?=wishlistEsc($item['seller']??'Unavailable')?></p>
           <?php if(!$available): ?><p style="color:#ff9f9f;font-weight:700">No longer available</p><?php endif; ?>
