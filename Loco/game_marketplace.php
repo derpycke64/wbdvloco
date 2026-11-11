@@ -2,7 +2,7 @@
 session_start();
 require_once 'db.php';
 require_once 'game_license.php';
-if(empty($_SESSION['user_id']) || empty($_SESSION['username'])){header('Location: Login.php');exit;}
+if(empty($_SESSION['user_id']) || empty($_SESSION['username'])){header('Location: login.php');exit;}
 $userId=(int)$_SESSION['user_id'];
 if(empty($_SESSION['loco_game_resale_csrf']))$_SESSION['loco_game_resale_csrf']=bin2hex(random_bytes(24));
 $csrf=$_SESSION['loco_game_resale_csrf'];
