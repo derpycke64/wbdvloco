@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
-if (!isset($_SESSION['user_id'], $_SESSION['username'])) { header('Location: Login.php'); exit(); }
+if (!isset($_SESSION['user_id'], $_SESSION['username'])) { header('Location: login.php'); exit(); }
 $userId = (int)$_SESSION['user_id'];
 if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) $_SESSION['cart'] = [];
 if (empty($_SESSION['checkout_csrf'])) $_SESSION['checkout_csrf'] = bin2hex(random_bytes(32));
@@ -158,7 +158,7 @@ try {
       <p style="font-size:.8rem">Your games have been added to your LOCO Library.</p>
     </div>
    </div>
-   <p><a class="loco-wishlist-action" href="profile.php#library">VIEW LIBRARY</a>　<a class="loco-wishlist-remove" href="transaction_history.php">Transaction History</a>　<a href="Products.php">Back to Store</a></p>
+   <p><a class="loco-wishlist-action" href="profile.php#library">VIEW LIBRARY</a>　<a class="loco-wishlist-remove" href="transaction_history.php">Transaction History</a>　<a href="products.php">Back to Store</a></p>
   </section>
  <?php else: ?>
   <div class="loco-sandbox-layout" style="padding:20px">
@@ -166,7 +166,7 @@ try {
     <h1 class="loco-sandbox-heading">PAYMENT METHOD</h1>
     <?php if($error): ?><p class="loco-notice error" role="alert"><?=h($error)?></p><?php endif; ?>
     <?php if(!$cartGames): ?>
-      <p>Your cart is empty. <a href="Products.php">Browse the Store</a>.</p>
+      <p>Your cart is empty. <a href="products.php">Browse the Store</a>.</p>
     <?php else: ?>
       <div class="loco-cart-summary" style="margin-bottom:18px">
        <?php foreach($_SESSION['cart'] as $entry): $id=(int)$entry['game_id'];if(!isset($cartGames[$id]))continue;$g=$cartGames[$id]; ?>
@@ -241,7 +241,7 @@ try {
         </section>
         <p class="loco-sandbox-label" style="margin:18px 0">You can review your order above. No real payment information is stored.</p>
         <button type="submit" class="loco-brand-gloss-btn" style="min-width:200px;border-radius:0">CONFIRM ₱<?=number_format($total,2)?></button>
-        <a href="Products.php" class="loco-cart-secondary-btn" style="margin-left:12px">Continue Shopping</a>
+        <a href="products.php" class="loco-cart-secondary-btn" style="margin-left:12px">Continue Shopping</a>
       </form>
     <?php endif; ?>
    </section>
