@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
-if (!isset($_SESSION['user_id'], $_SESSION['username'])) { header('Location: Login.php'); exit(); }
+if (!isset($_SESSION['user_id'], $_SESSION['username'])) { header('Location: login.php'); exit(); }
 $userId = (int)$_SESSION['user_id'];
 if (empty($_SESSION['wallet_csrf'])) $_SESSION['wallet_csrf'] = bin2hex(random_bytes(32));
 $message = (string)($_SESSION['wallet_notice'] ?? '');
@@ -101,7 +101,7 @@ try {
         <div class="loco-receipt-row"><span>Status</span><strong>Completed (Simulation)</strong></div>
       </div>
     </div>
-    <p style="padding:12px 20px"><a href="wallet.php" class="loco-wishlist-action">ADD MORE FUNDS</a>　<a href="Products.php">RETURN TO STORE</a>　<a href="transaction_history.php">Transaction History</a></p>
+    <p style="padding:12px 20px"><a href="wallet.php" class="loco-wishlist-action">ADD MORE FUNDS</a>　<a href="products.php">RETURN TO STORE</a>　<a href="transaction_history.php">Transaction History</a></p>
   <?php else: ?>
   <div class="loco-sandbox-layout" style="padding:20px">
     <section class="loco-sandbox-well">
@@ -169,7 +169,7 @@ try {
       <p><span class="loco-pay-demo-badge">GCash Demo</span> <span class="loco-pay-demo-badge">PayPal Demo</span></p>
       <h3 style="margin-top:25px">TRANSACTION HISTORY</h3><p>All completed simulated wallet top-ups are recorded in MySQL.</p>
       <a href="transaction_history.php" style="color:#fff">View transaction history →</a>
-      <p style="margin-top:25px"><a href="Products.php">← Return to LOCO Store</a></p>
+      <p style="margin-top:25px"><a href="products.php">← Return to LOCO Store</a></p>
     </aside>
   </div>
   <?php endif; ?>
