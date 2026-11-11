@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['username'])) {
-    header("Location: Login.php");
+    header("Location: login.php");
     exit();
 }
 ?>
@@ -19,7 +19,7 @@ if (!isset($_SESSION['username'])) {
         <div class="loco-nav-inner">
             <div class="loco-nav-left">
                 <a href="products.php" class="loco-nav-logo">
-                    <img src="images/logo.png" class="loco-logo-img" alt="Logo">
+                    <img src="/Loco/images/loco-logo.png" class="loco-logo-img" alt="Logo">
                     LOCO
                 </a>
                 <nav class="loco-nav-links">
