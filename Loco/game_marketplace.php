@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session.php';
 require_once 'db.php';
 require_once 'game_license.php';
 if(empty($_SESSION['user_id']) || empty($_SESSION['username'])){header('Location: login.php');exit;}
