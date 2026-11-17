@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session.php';
 require_once 'db.php';
 
 function adminEsc($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
