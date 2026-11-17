@@ -97,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="loco-panel">
+            <p class="loco-demo-disclaimer" role="note"><strong>Student project demonstration.</strong> LOCO is not affiliated with Steam, PayPal, or GCash. Purchases and wallet payments are simulated. Do not reuse passwords from other services.</p>
         <?php if(!empty($message)) echo "<p class='loco-alert-danger'>$message</p>"; ?>
         
         <form method="POST" action="register.php">
@@ -108,16 +109,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="loco-group">
                 <label class="loco-label">EMAIL ADDRESS</label>
-                <input type="email" name="email" class="loco-input" placeholder="you@example.com" required autocomplete="off">
+                <input type="email" name="email" autocomplete="email" class="loco-input" placeholder="you@example.com" required autocomplete="off">
             </div>
 
             <div class="loco-group">
                 <label class="loco-label">PASSWORD</label>
-                <input type="password" name="password" class="loco-input" placeholder="••••••••" required>
+                <input type="password" name="password" autocomplete="new-password" class="loco-input" placeholder="••••••••" required>
             </div>
             <div class="loco-group">
                 <label class="loco-label-password">CONFIRM YOUR PASSWORD</label>
-                <input type="password" name="confirm_password" id="reg-confirm" class="loco-input" required>
+                <input type="password" name="confirm_password" id="reg-confirm" autocomplete="new-password" class="loco-input" required>
             </div>
 
             
