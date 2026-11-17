@@ -14,11 +14,11 @@ $error = '';
 function paymentDisplayName($method,$notes){
     if($method==='sandbox_card'){
         $notes=strtolower((string)$notes);
-        if(strpos($notes,'gcash')!==false)return 'GCash (Test)';
-        if(strpos($notes,'paypal')!==false)return 'PayPal (Test)';
-        if(strpos($notes,'mastercard')!==false)return 'Mastercard (Test)';
-        if(strpos($notes,'visa')!==false)return 'Visa (Test)';
-        return 'Test Card';
+        if(strpos($notes,'gcash')!==false)return 'GCash';
+        if(strpos($notes,'paypal')!==false)return 'PayPal';
+        if(strpos($notes,'mastercard')!==false)return 'Mastercard';
+        if(strpos($notes,'visa')!==false)return 'Visa';
+        return 'Card';
     }
     return ucwords(str_replace('_',' ',(string)$method));
 }
