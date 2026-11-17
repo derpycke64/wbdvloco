@@ -1,48 +1,60 @@
 <?php
-session_start();
-require_once 'db.php';
+require_once __DIR__ . '/session.php';
+require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth_rate_limit.php';
 
-if(isset($_SESSION['username'])){
-    header("Location: products.php");
-    exit();
+if (isset($_SESSION['username'])) {
+    header('Location: products.php');
+    exit;
 }
 
-$message = "";
-$prefilled_name = isset($_GET['registered']) ? $_GET['registered'] : '';
-$success_msg = !empty($prefilled_name) ? "Registration Successful" : "";
+if (empty($_SESSION['loco_auth_csrf'])) {
+    $_SESSION['loco_auth_csrf'] = bin2hex(random_bytes(32));
+}
+$csrf = $_SESSION['loco_auth_csrf'];
+$message = '';
+$prefilled_name = is_string($_GET['registered'] ?? null) ? $_GET['registered'] : '';
+$success_msg = $prefilled_name !== '' ? 'Registration Successful' : '';
 
-if($_SERVER["REQUEST_METHOD"] == "POST"){
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
-    
-    if(!empty($username) && !empty($password)){
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $postedCsrf = is_string($_POST['csrf'] ?? null) ? $_POST['csrf'] : '';
+    $username = is_string($_POST['username'] ?? null) ? trim($_POST['username']) : '';
+    $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+
+    if (!hash_equals($csrf, $postedCsrf)) {
+        http_response_code(403);
+        $message = 'This form expired. Refresh the page and try again.';
+    } elseif ($username === '' || $password === '') {
+        $message = 'Please fill in all fields.';
+    } else {
         try {
-            $sql = "SELECT * FROM users WHERE username = :user_param OR email = :email_param LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                ':user_param' => $username, 
-                ':email_param' => $username
-            ]);
-            $user = $stmt->fetch();
-            
-            if($user && password_verify($password, $user['password'])) {
-                session_regenerate_id(true);
-                $_SESSION['user_id']        = $user['id'];
-                $_SESSION['username']       = $user['username'];
-                $_SESSION['wallet_balance'] = $user['wallet_balance'];
-                header("Location: products.php");
-                exit();
+            if (locoAuthRateLimited($pdo, $username)) {
+                http_response_code(429);
+                header('Retry-After: 900');
+                $message = 'Too many sign-in attempts. Please try again in 15 minutes.';
             } else {
-                $message = "The username/email or password you typed is incorrect.";
+                $stmt = $pdo->prepare(
+                    'SELECT * FROM users WHERE username = :user_param OR email = :email_param LIMIT 1'
+                );
+                $stmt->execute([':user_param' => $username, ':email_param' => $username]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($user && password_verify($password, (string)$user['password'])) {
+                    locoAuthClearAccountFailures($pdo, $username);
+                    session_regenerate_id(true);
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['wallet_balance'] = $user['wallet_balance'];
+                    header('Location: products.php');
+                    exit;
+                }
+                locoAuthRecordFailure($pdo, $username);
+                $message = 'The username/email or password you typed is incorrect.';
             }
-        }
-        catch (\PDOException $e) {
+        } catch (PDOException $e) {
             error_log('LOCO login database error: ' . $e->getMessage());
+            http_response_code(503);
             $message = 'Unable to sign in right now. Please try again later.';
         }
-    }
-    else {
-        $message = "Please fill in all fields.";
     }
 }
 ?>
@@ -80,6 +92,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
         <div class="loco-panel">
             <form method="POST" action="login.php">
+                <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="loco-group">
                     <label class="loco-label">USERNAME</label>
                     <input type="text" name="username" class="loco-input" value="<?php echo htmlspecialchars($prefilled_name); ?>" required autocomplete="off">
