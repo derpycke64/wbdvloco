@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "INSERT INTO transaction_history (user_id, transaction_type, payment_method, amount, status, reference_code, notes)
                      VALUES (:user_id, 'wallet_topup', 'sandbox_card', :amount, 'completed', :reference, :notes)"
                 );
-                $txStmt->execute([':user_id' => $userId, ':amount' => $value, ':reference' => $reference, ':notes'=>'Simulated '.str_replace('sandbox_','',$method).' wallet top-up; no real payment processed']);
+                $txStmt->execute([':user_id' => $userId, ':amount' => $value, ':reference' => $reference, ':notes'=>'Test '.str_replace('sandbox_','',$method).' wallet top-up; no real payment processed']);
                 $pdo->commit();
                 $_SESSION['wallet_notice']='Top-up complete. ₱'.number_format($value,2).' added to your LOCO wallet.';
                 $_SESSION['last_wallet_receipt']=['reference'=>$reference,'amount'=>$value,'method'=>$method];
