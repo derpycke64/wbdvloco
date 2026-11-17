@@ -16,6 +16,8 @@ function paymentDisplayName($method,$notes){
         $notes=strtolower((string)$notes);
         if(strpos($notes,'gcash')!==false)return 'GCash (Test)';
         if(strpos($notes,'paypal')!==false)return 'PayPal (Test)';
+        if(strpos($notes,'mastercard')!==false)return 'Mastercard (Test)';
+        if(strpos($notes,'visa')!==false)return 'Visa (Test)';
         return 'Test Card';
     }
     return ucwords(str_replace('_',' ',(string)$method));
