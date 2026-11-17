@@ -91,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="loco-panel">
-            <p class="loco-demo-disclaimer" role="note"><strong>Student project demonstration.</strong> LOCO is not affiliated with Steam, PayPal, or GCash. Purchases and wallet payments are simulated. Do not reuse passwords from other services.</p>
             <form method="POST" action="login.php">
                 <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="loco-group">
@@ -105,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="loco-forgot-container">
-                    <span class="loco-forgot-link">Password reset is not available in this demo.</span>
+                    <a href="#" class="loco-forgot-link">Forgot Password?</a>
                 </div>  
                 <?php if(!empty($message)) echo "<p class='loco-alert-error'>$message</p>"; ?>
                 <?php if(!empty($success_msg)) echo "<p class='loco-alert-success'>$success_msg</p>"; ?>
