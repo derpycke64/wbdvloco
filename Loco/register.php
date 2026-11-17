@@ -97,7 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="loco-panel">
-            <p class="loco-demo-disclaimer" role="note"><strong>Student project demonstration.</strong> LOCO is not affiliated with Steam, PayPal, or GCash. Purchases and wallet payments are simulated. Do not reuse passwords from other services.</p>
         <?php if(!empty($message)) echo "<p class='loco-alert-danger'>$message</p>"; ?>
         
         <form method="POST" action="register.php">
