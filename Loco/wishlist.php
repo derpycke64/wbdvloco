@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session.php';
 require_once 'db.php';
 if (empty($_SESSION['user_id'])) { header('Location: login.php'); exit; }
 function wishlistEsc($value){return htmlspecialchars((string)$value,ENT_QUOTES,'UTF-8');}
