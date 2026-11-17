@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $total = round($total, 2);
                 $balance = (float)$account['wallet_balance'];
-                if ($method === 'wallet' && $balance + 0.00001 < $total) throw new RuntimeException('Insufficient wallet balance. Balance: ₱' . number_format($balance, 2) . '; total: ₱' . number_format($total, 2) . '. Add funds to your wallet or select another payment method.');
+                if ($method === 'wallet' && $balance + 0.00001 < $total) throw new RuntimeException('Insufficient wallet balance. Balance: ₱' . number_format($balance, 2) . '; total: ₱' . number_format($total, 2) . '. Add funds to your wallet.');
 
                 $reference = 'LOCO-' . strtoupper(bin2hex(random_bytes(8)));
                 $orderMethod = $method === 'wallet' ? 'wallet' : 'external';
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $txMethod = $method === 'wallet' ? 'wallet' : 'sandbox_card'; // Existing transaction schema records mock providers as sandbox_card.
                 $historyStmt = $pdo->prepare("INSERT INTO transaction_history (user_id, transaction_type, payment_method, amount, status, reference_code, items_json, notes) VALUES (?, 'purchase', ?, ?, 'completed', ?, ?, ?)");
-                $historyStmt->execute([$userId, $txMethod, $total, $reference, json_encode(array_column($items, 'title'), JSON_UNESCAPED_UNICODE), $method === 'wallet' ? 'Paid using LOCO wallet' : 'Simulated '.str_replace('sandbox_','',$method).' payment; no real payment was processed']);
+                $historyStmt->execute([$userId, $txMethod, $total, $reference, json_encode(array_column($items, 'title'), JSON_UNESCAPED_UNICODE), $method === 'wallet' ? 'Paid using LOCO wallet' : 'Test '.str_replace('sandbox_','',$method).' payment; no real payment was processed']);
                 $pdo->commit();
                 $_SESSION['cart'] = [];
                 $_SESSION['wallet_balance'] = number_format($method === 'wallet' ? $balance - $total : $balance, 2, '.', '');
