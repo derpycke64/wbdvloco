@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session.php';
 require_once 'db.php';
 $label=trim((string)($_GET['feature']??'This feature'));
 $label=preg_replace('/[^\p{L}\p{N}\s&.\-\/]/u','',$label);
