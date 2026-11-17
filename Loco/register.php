@@ -1,64 +1,75 @@
 <?php
-session_start();
-require_once 'db.php';
+require_once __DIR__ . '/session.php';
+require_once __DIR__ . '/db.php';
 
-if(isset($_SESSION['username'])){
-    header("Location: products.php");
-    exit();
+if (isset($_SESSION['username'])) {
+    header('Location: products.php');
+    exit;
 }
+if (empty($_SESSION['loco_auth_csrf'])) {
+    $_SESSION['loco_auth_csrf'] = bin2hex(random_bytes(32));
+}
+$csrf = $_SESSION['loco_auth_csrf'];
+$message = '';
 
-$message = "";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $postedCsrf = is_string($_POST['csrf'] ?? null) ? $_POST['csrf'] : '';
+    $username = is_string($_POST['username'] ?? null) ? trim($_POST['username']) : '';
+    $email = is_string($_POST['email'] ?? null) ? trim($_POST['email']) : '';
+    $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+    $confirmPassword = is_string($_POST['confirm_password'] ?? null) ? $_POST['confirm_password'] : '';
+    $year = filter_var($_POST['dob-year'] ?? null, FILTER_VALIDATE_INT);
+    $month = filter_var($_POST['dob-month'] ?? null, FILTER_VALIDATE_INT);
+    $day = filter_var($_POST['dob-day'] ?? null, FILTER_VALIDATE_INT);
 
-if($_SERVER['REQUEST_METHOD'] == "POST"){
-    $username = trim($_POST['username']);
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
-    $confirm_passwrd = $_POST['confirm_password'];
-    $birth_year  = $_POST['dob-year'] ?? null;
-    $birth_month = $_POST['dob-month'] ?? null;
-    $birth_day   = $_POST['dob-day'] ?? null;
-
-    if(empty($username) || empty($email) || empty($password) || empty($confirm_passwrd) || empty($birth_year) || empty($birth_month) || empty($birth_day)){
-        $message = "All fields are required.";
-    }
-    elseif($password !== $confirm_passwrd){
-        $message = "Your Passwords do not match.";
-    }
-    else{
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $birthday = sprintf('%04d-%02d-%02d', $birth_year, $birth_month, $birth_day);
-        try{
-            $pdo -> beginTransaction();
-            $sql_user = "INSERT INTO users (username, email, password, birthday, wallet_balance) VALUES (:username, :email, :password, :birthday, 0.00)";
-            $statement_user = $pdo->prepare($sql_user);
-            $statement_user->execute([
+    if (!hash_equals($csrf, $postedCsrf)) {
+        http_response_code(403);
+        $message = 'This form expired. Refresh the page and try again.';
+    } elseif ($username === '' || $email === '' || $password === '' || $confirmPassword === '' || !$year || !$month || !$day) {
+        $message = 'All fields are required.';
+    } elseif (strlen($username) > 50 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) {
+        $message = 'Enter a valid username and email address.';
+    } elseif (strlen($password) < 8 || strlen($password) > 72) {
+        $message = 'Use a password between 8 and 72 characters.';
+    } elseif ($password !== $confirmPassword) {
+        $message = 'Your passwords do not match.';
+    } elseif ($year < 1900 || $year > (int)gmdate('Y') || !checkdate($month, $day, $year)) {
+        $message = 'Enter a valid date of birth.';
+    } else {
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $birthday = sprintf('%04d-%02d-%02d', $year, $month, $day);
+        try {
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare(
+                'INSERT INTO users (username, email, password, birthday, wallet_balance)
+                 VALUES (:username, :email, :password, :birthday, 0.00)'
+            );
+            $stmt->execute([
                 ':username' => $username,
                 ':email' => $email,
-                ':password' => $hashed_password,
-                ':birthday' => $birthday
+                ':password' => $hashedPassword,
+                ':birthday' => $birthday,
             ]);
-
-            $new_user_id = $pdo ->lastinsertid();
-            $sql_profile = "INSERT INTO user_profiles (user_id, display_name, avatar_url) VALUES (:user_id, :display_name, 'images/default_avatar.png')";
-            $stmt_profile = $pdo-> prepare($sql_profile);
-            $stmt_profile->execute([
-                ':user_id'      => $new_user_id,
-                ':display_name' => $username
-            ]);
-            $pdo -> commit();
-            header("Location: login.php?registered=" . urlencode($username));
-            exit();
-        }catch(\PDOexception $e){
-            $pdo->rollBack();
-            if($e->getCode() == 23000){
-                $message = "Username or Email already exists.";
+            $newUserId = $pdo->lastInsertId();
+            $profile = $pdo->prepare(
+                "INSERT INTO user_profiles (user_id, display_name, avatar_url)
+                 VALUES (:user_id, :display_name, 'images/default_avatar.png')"
+            );
+            $profile->execute([':user_id' => $newUserId, ':display_name' => $username]);
+            $pdo->commit();
+            header('Location: login.php?registered=' . urlencode($username));
+            exit;
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            if ((string)$e->getCode() === '23000') {
+                $message = 'Username or email already exists.';
             } else {
-                 error_log('LOCO registration database error: ' . $e->getMessage());
-                 $message = 'Registration is temporarily unavailable. Please try again later.'; 
+                error_log('LOCO registration database error: ' . $e->getMessage());
+                $message = 'Registration is temporarily unavailable. Please try again later.';
             }
         }
     }
-} 
+}
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -89,6 +100,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
         <?php if(!empty($message)) echo "<p class='loco-alert-danger'>$message</p>"; ?>
         
         <form method="POST" action="register.php">
+            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
             <div class="loco-group">
                 <label class="loco-label">CREATE A PROFILE USERNAME</label>
                 <input type="text" name="username" class="loco-input" placeholder="Your Username" required autocomplete="off">
