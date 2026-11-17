@@ -25,10 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!in_array($amount, $allowedAmounts, true)) {
         $error = 'Choose one of the available top-up amounts.';
     } else {
-        $method=(string)($_POST['payment_method']??'sandbox_card');
+        $method=(string)($_POST['payment_method']??'sandbox_visa');
         $paymentError=null;
-        if(!in_array($method,['sandbox_card','sandbox_gcash','sandbox_paypal'],true))$paymentError='Choose a supported payment method.';
-        elseif($method==='sandbox_card')$paymentError=walletSandboxCardError((string)($_POST['demo_card_result'] ?? ''));
+        if(!in_array($method,['sandbox_visa','sandbox_mastercard','sandbox_gcash','sandbox_paypal'],true))$paymentError='Choose a supported payment method.';
+        elseif(in_array($method,['sandbox_visa','sandbox_mastercard'],true))$paymentError=walletSandboxCardError((string)($_POST['demo_card_result'] ?? ''));
         elseif((string)($_POST['demo_confirm']??'')!=='yes')$paymentError='Confirm the test payment to continue.';
         if ($paymentError !== null) {
             $error = $paymentError;
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "INSERT INTO transaction_history (user_id, transaction_type, payment_method, amount, status, reference_code, notes)
                      VALUES (:user_id, 'wallet_topup', 'sandbox_card', :amount, 'completed', :reference, :notes)"
                 );
-                $txStmt->execute([':user_id' => $userId, ':amount' => $value, ':reference' => $reference, ':notes'=>'Test '.str_replace('sandbox_','',$method).' wallet top-up; no real payment processed']);
+                $txStmt->execute([':user_id' => $userId, ':amount' => $value, ':reference' => $reference, ':notes'=>'Test '.ucfirst(str_replace('sandbox_','',$method)).' wallet top-up; no real payment processed']);
                 $pdo->commit();
                 $_SESSION['wallet_notice']='Top-up complete. ₱'.number_format($value,2).' added to your LOCO wallet.';
                 $_SESSION['last_wallet_receipt']=['reference'=>$reference,'amount'=>$value,'method'=>$method];
@@ -80,7 +80,7 @@ try {
   <?php if($error): ?><p role="alert" class="loco-notice error" style="margin:12px"><?=h($error)?></p><?php endif; ?>
   <?php if($receipt): ?>
     <div class="loco-checkout-receipt loco-provider-card <?=($receipt['method']==='sandbox_paypal')?'paypal':''?>">
-      <div class="receipt-brand"><span><?=h($receipt['method']==='sandbox_gcash'?'GCash':($receipt['method']==='sandbox_paypal'?'PayPal':'LOCO'))?></span><small>LOCO wallet receipt</small></div>
+      <div class="receipt-brand"><span><?=h($receipt['method']==='sandbox_gcash'?'GCash':($receipt['method']==='sandbox_paypal'?'PayPal':($receipt['method']==='sandbox_visa'?'Visa':($receipt['method']==='sandbox_mastercard'?'Mastercard':'LOCO'))))?></span><small>LOCO wallet receipt</small></div>
       <div class="loco-payment-warning"><strong>Test payment</strong><span>No real account or funds were used. This confirms a local wallet top-up test.</span></div>
       <div class="receipt-content">
         <div style="display:flex;gap:12px;align-items:center">
@@ -89,7 +89,7 @@ try {
         </div>
         <p style="font-size:.74rem;margin:13px 0 3px">AMOUNT ADDED TO LOCO WALLET</p><h2 style="font-size:1.75rem;margin:3px 0 17px">₱<?=number_format((float)$receipt['amount'],2)?></h2>
         <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
-        <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['sandbox_card'=>'Test Card','sandbox_gcash'=>'GCash (Test)','sandbox_paypal'=>'PayPal (Test)'][$receipt['method']]??'Test payment')?></strong></div>
+        <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['sandbox_card'=>'Test Card','sandbox_visa'=>'Visa (Test)','sandbox_mastercard'=>'Mastercard (Test)','sandbox_gcash'=>'GCash (Test)','sandbox_paypal'=>'PayPal (Test)'][$receipt['method']]??'Test payment')?></strong></div>
         <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
         <div class="loco-receipt-row"><span>Status</span><strong>Completed</strong></div>
       </div>
@@ -109,13 +109,14 @@ try {
         </select>
         <p class="loco-sandbox-label" style="margin-top:16px">Please select a payment method</p>
         <select id="topup-method" name="payment_method" class="loco-sandbox-choice">
-          <option value="sandbox_card" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_card'?'selected':''?>>Visa / Mastercard (Test Card)</option>
+          <option value="sandbox_visa" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_visa'?'selected':''?>>Visa (Test)</option>
+          <option value="sandbox_mastercard" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_mastercard'?'selected':''?>>Mastercard (Test)</option>
           <option value="sandbox_gcash" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_gcash'?'selected':''?>>GCash (Test)</option>
           <option value="sandbox_paypal" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_paypal'?'selected':''?>>PayPal (Test)</option>
         </select>
         <div id="topup-card" style="margin:17px 0" class="loco-sandbox-well">
-          <h2 class="loco-sandbox-heading">CARD INFORMATION</h2>
-          <p class="loco-sandbox-label">Only test card numbers are supported: approved 4242 4242 4242 4242, declined 4000 0000 0000 0002. Do not enter real card details.</p>
+          <h2 class="loco-sandbox-heading" id="topup-card-title">VISA CARD INFORMATION</h2>
+          <p class="loco-sandbox-label" id="topup-card-instructions">Use Visa test numbers only: 4242 4242 4242 4242 (approved) or 4000 0000 0000 0002 (declined). Never enter real card details.</p>
           <div style="display:grid;gap:9px">
             <label class="loco-sandbox-label" for="card_number">Test card number</label>
             <input class="loco-sandbox-field" id="card_number" placeholder="4242 4242 4242 4242" maxlength="23" inputmode="numeric" autocomplete="off">
@@ -177,8 +178,14 @@ try {
  const sel=document.getElementById('topup-method');if(!sel)return;
  const card=document.getElementById('topup-card'),provider=document.getElementById('topup-provider');
  function update(){
-  const m=sel.value,cardMode=m==='sandbox_card';
+  const m=sel.value,cardMode=(m==='sandbox_visa'||m==='sandbox_mastercard');
   card.hidden=!cardMode;
+  const mastercard=m==='sandbox_mastercard';
+  document.getElementById('topup-card-title').textContent=mastercard?'MASTERCARD INFORMATION':'VISA CARD INFORMATION';
+  document.getElementById('topup-card-instructions').textContent=mastercard
+   ?'Use Mastercard test numbers only: 5555 5555 5555 4444 (approved) or 5105 1051 0510 5100 (declined). Never enter real card details.'
+   :'Use Visa test numbers only: 4242 4242 4242 4242 (approved) or 4000 0000 0000 0002 (declined). Never enter real card details.';
+  document.getElementById('card_number').placeholder=mastercard?'5555 5555 5555 4444':'4242 4242 4242 4242';
   provider.style.display=cardMode?'none':'block';
   provider.classList.toggle('paypal',m==='sandbox_paypal');
   document.getElementById('topup-provider-brand').textContent=m==='sandbox_paypal'?'PayPal':'GCash';
@@ -191,7 +198,7 @@ try {
  const amountSelect=document.getElementById('amount'),demoAmount=document.getElementById('topup-demo-amount');
  function updateAmount(){if(demoAmount)demoAmount.textContent=amountSelect.value?'PHP '+Number(amountSelect.value).toLocaleString('en-PH',{minimumFractionDigits:2}):'Select an amount';}
  amountSelect.addEventListener('change',updateAmount);updateAmount();
- document.getElementById('topup-provider-cancel').addEventListener('click',function(){sel.value='sandbox_card';update();sel.focus();});
+ document.getElementById('topup-provider-cancel').addEventListener('click',function(){sel.value='sandbox_visa';update();sel.focus();});
  const cardNumber=document.getElementById('card_number');
  const cardExpiry=document.getElementById('card_expiry');
  const cardCvv=document.getElementById('card_cvv');
@@ -200,10 +207,13 @@ try {
  cardExpiry.addEventListener('input',()=>cardExpiry.setCustomValidity(''));
  cardCvv.addEventListener('input',()=>cardCvv.setCustomValidity(''));
  document.getElementById('wallet-topup-form').addEventListener('submit',function(event){
-  if(sel.value!=='sandbox_card')return;
-  // Never transmit card-style entries. Only allow the two published test card numbers.
+  if(sel.value!=='sandbox_visa'&&sel.value!=='sandbox_mastercard')return;
+  // Never transmit card-style entries. Only send the selected test outcome.
   const digits=cardNumber.value.replace(/\D/g,'');
-  if(digits!=='4242424242424242' && digits!=='4000000000000002'){
+  const isMastercard=sel.value==='sandbox_mastercard';
+  const approved=isMastercard?'5555555555554444':'4242424242424242';
+  const declined=isMastercard?'5105105105105100':'4000000000000002';
+  if(digits!==approved && digits!==declined){
    cardNumber.setCustomValidity('Use only one of the two displayed test card numbers.');
    cardNumber.reportValidity();event.preventDefault();return;
   }
@@ -217,7 +227,7 @@ try {
    cardCvv.setCustomValidity('Enter a 3- or 4-digit test security code.');
    cardCvv.reportValidity();event.preventDefault();return;
   }
-  cardResult.value=digits==='4242424242424242'?'approved':'declined';
+  cardResult.value=digits===approved?'approved':'declined';
  });
  sel.addEventListener('change',update);update();
 })();
