@@ -14,9 +14,9 @@ $error = '';
 function paymentDisplayName($method,$notes){
     if($method==='sandbox_card'){
         $notes=strtolower((string)$notes);
-        if(strpos($notes,'gcash')!==false)return 'GCash (Simulation)';
-        if(strpos($notes,'paypal')!==false)return 'PayPal (Simulation)';
-        return 'Test Card (Simulation)';
+        if(strpos($notes,'gcash')!==false)return 'GCash (Test)';
+        if(strpos($notes,'paypal')!==false)return 'PayPal (Test)';
+        return 'Test Card';
     }
     return ucwords(str_replace('_',' ',(string)$method));
 }
