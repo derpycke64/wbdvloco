@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session.php';
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
     exit();
