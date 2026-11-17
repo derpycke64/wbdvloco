@@ -32,7 +32,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
         $q->execute([':lid'=>$id,':uid'=>$userId]);
         if($q->fetch())throw new RuntimeException('This game was removed by moderation and cannot be relisted by the same seller.');
         // An owned license must exist before it can be resold; never ask users for real game keys.
-        if(!locoEnsureGameLicense($pdo,$id,$userId))throw new RuntimeException('Unable to create your LOCO demo license key.');
+        if(!locoEnsureGameLicense($pdo,$id,$userId))throw new RuntimeException('Unable to create your LOCO license key.');
         $q=$pdo->prepare("INSERT INTO game_resale_listings(library_id,seller_id,game_id,price,status) VALUES(:lid,:uid,:gid,:price,'active')");
         $q->execute([':lid'=>$id,':uid'=>$userId,':gid'=>(int)$owned['game_id'],':price'=>number_format((float)$price,2,'.','')]);
         $message='Your owned game is now listed for resale in the Community Marketplace.';
@@ -97,7 +97,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
           ':items'=>$items,':notes'=>'LOCO used-game resale: license transferred from seller']);
         $q->execute([':uid'=>$sellerId,':type'=>'marketplace_sale',':amount'=>$amount,':ref'=>$ref.'-S',
           ':items'=>$items,':notes'=>'LOCO used-game sale: license transferred to buyer']);
-        $message='Game purchased! The game and LOCO demo license are now in your Library; your wallet was charged and the seller was paid.';
+        $message='Game purchased! The game and LOCO license are now in your Library; your wallet was charged and the seller was paid.';
       }else throw new RuntimeException('Unsupported game marketplace action.');
       $pdo->commit();
       $_SESSION['loco_game_market_notice']=$message;
@@ -148,7 +148,7 @@ $prefill=(int)($_GET['sell']??0);
   <div class="loco-community-heading">
     <div><p class="loco-eyebrow">COMMUNITY / LOCO LICENSE MARKET</p>
       <h1 class="loco-logo-text">Game Marketplace</h1>
-      <p>Resell LOCO-owned games to other players using the wallet. Demo license ownership transfers with the game.</p>
+      <p>Resell LOCO-owned games to other players using the wallet. LOCO license ownership transfers with the game.</p>
     </div>
     <a class="loco-button-small" href="community.php?tab=market">Collectible Marketplace →</a>
   </div>
@@ -169,7 +169,7 @@ $prefill=(int)($_GET['sell']??0);
         <div class="loco-game-resale-info">
           <h3><?=gmEsc($game['title'])?></h3>
           <p><?=gmEsc(substr((string)($game['description']??''),0,180))?></p>
-          <small>Seller: <?=gmEsc($game['seller'])?> · LOCO demo license</small>
+          <small>Seller: <?=gmEsc($game['seller'])?> · LOCO license</small>
         </div>
         <div class="loco-game-resale-buy">
           <strong>₱<?=number_format((float)$game['price'],2)?></strong>
@@ -190,7 +190,7 @@ $prefill=(int)($_GET['sell']??0);
   </section>
   <?php else: ?>
   <section class="loco-community-panel" id="sell-owned-game">
-    <div class="loco-section-heading"><div><h2>Sell an owned game</h2><p>Choose a game that you own. On sale, ownership and the demo key move to the buyer, and funds move to your wallet.</p></div></div>
+    <div class="loco-section-heading"><div><h2>Sell an owned game</h2><p>Choose a game that you own. On sale, ownership and the LOCO key move to the buyer, and funds move to your wallet.</p></div></div>
     <?php if(!$ownedGames): ?><p class="loco-empty-state">You have no unlisted games available for resale. Check <a href="profile.php#library">your Library</a>.</p><?php endif; ?>
     <form method="post" class="loco-form-grid">
       <input type="hidden" name="csrf" value="<?=gmEsc($csrf)?>">
