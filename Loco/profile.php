@@ -113,7 +113,7 @@ try {
             <div class="loco-section-heading">
                 <div>
                     <h2>Games Library (<?=count($purchased_games)?>)</h2>
-                    <p>Owned games and their LOCO demo license keys. Click Reveal Key to view your copy; the key transfers on resale.</p>
+                    <p>Owned games and their LOCO license keys. Click Reveal Key to view your copy; the key transfers on resale.</p>
                 </div>
             </div>
 
@@ -142,9 +142,9 @@ try {
                                 <?php endif; ?>
                                 <?php if(!empty($game['license_display'])): ?>
                                   <details class="loco-library-key">
-                                    <summary title="Click to reveal your LOCO demo key">🔑 Reveal Key</summary>
+                                    <summary title="Click to reveal your LOCO key">🔑 Reveal Key</summary>
                                     <code><?=h($game['license_display'])?></code>
-                                    <small>LOCO demo only · not redeemable elsewhere</small>
+                                    <small>LOCO-only key · not redeemable elsewhere</small>
                                   </details>
                                 <?php else: ?>
                                   <small class="loco-muted">Key pending setup</small>
