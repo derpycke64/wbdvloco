@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session.php';
 require_once 'db.php';
 $id=filter_input(INPUT_GET,'id',FILTER_VALIDATE_INT);
 if(!$id || $id<1){http_response_code(400);exit('Invalid user.');}
