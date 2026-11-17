@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $newUserId = $pdo->lastInsertId();
             $profile = $pdo->prepare(
                 "INSERT INTO user_profiles (user_id, display_name, avatar_url)
-                 VALUES (:user_id, :display_name, 'images/default_avatar.png')"
+                 VALUES (:user_id, :display_name, 'images/default_avatar.jpg')"
             );
             $profile->execute([':user_id' => $newUserId, ':display_name' => $username]);
             $pdo->commit();
