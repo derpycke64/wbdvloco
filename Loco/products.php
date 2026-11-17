@@ -11,6 +11,26 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
     unset($_SESSION['cart']);
     $_SESSION['loco_game_catalog_version'] = 'original-games-v2';
 }
+
+// Resolve the featured links on the server. The Store should never link
+// a featured game back to itself while waiting for JavaScript.
+$carouselSlides = [];
+try {
+    $slideStmt = $pdo->query("SELECT id, title, price, image_url AS img FROM games ORDER BY id ASC LIMIT 4");
+    $carouselSlides = $slideStmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($carouselSlides as &$slide) {
+        $slide['id'] = (int)$slide['id'];
+        $slide['price'] = ((float)$slide['price'] <= 0)
+            ? 'Free' : '₱' . number_format((float)$slide['price'], 2);
+    }
+    unset($slide);
+} catch (PDOException $e) {
+    error_log('LOCO slideshow query failed: ' . $e->getMessage());
+}
+$firstCarouselGame = $carouselSlides[0] ?? null;
+$firstCarouselHref = $firstCarouselGame
+    ? 'game_details.php?id=' . (int)$firstCarouselGame['id']
+    : '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -52,11 +72,19 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
             </div>
 
             <!-- Dynamic Promotional Slideshow Carousel Viewport Container -->
-            <a class="store-hero" id="carousel-viewport" href="products.php" aria-label="View featured game details"></a>
+            <?php if ($firstCarouselGame): ?>
+            <a class="store-hero" id="carousel-viewport" href="<?=htmlspecialchars($firstCarouselHref, ENT_QUOTES, 'UTF-8')?>" aria-label="View <?=htmlspecialchars($firstCarouselGame['title'], ENT_QUOTES, 'UTF-8')?> details"></a>
+            <?php else: ?>
+            <div class="store-hero" id="carousel-viewport" aria-label="No featured games available"></div>
+            <?php endif; ?>
             <div class="carousel-control-bar">
-                <div class="carousel-tabs" id="carousel-tabs-row"></div>    
-                <a class="carousel-status-text" id="carousel-label" href="products.php">Loading...</a>
-                <span class="carousel-price-tag" id="carousel-price">$0.00</span>
+                <div class="carousel-tabs" id="carousel-tabs-row"></div>
+                <?php if ($firstCarouselGame): ?>
+                <a class="carousel-status-text" id="carousel-label" href="<?=htmlspecialchars($firstCarouselHref, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($firstCarouselGame['title'], ENT_QUOTES, 'UTF-8')?></a>
+                <?php else: ?>
+                <span class="carousel-status-text" id="carousel-label">No featured games</span>
+                <?php endif; ?>
+                <span class="carousel-price-tag" id="carousel-price"><?=htmlspecialchars($firstCarouselGame['price'] ?? '', ENT_QUOTES, 'UTF-8')?></span>
             </div>
             
             <!-- Featured Games Section - Fully Dynamic Database Query Loop -->
@@ -256,20 +284,7 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
 
     // 🌟 SLIDER ENGINE DATA
        // 🌟 SLIDE DATA WITH AUTOMATIC FALLBACKS
-    const slideData = <?php
-        try {
-            $slide_query = $pdo->query("SELECT id, title, price, image_url AS img FROM games ORDER BY id ASC LIMIT 4");
-            $slides = $slide_query->fetchAll();
-            foreach ($slides as &$slide) {
-                $slide['price'] = ((float)$slide['price'] <= 0) ? 'Free' : '₱' . number_format((float)$slide['price'], 2);
-            }
-            unset($slide);
-            echo json_encode($slides, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-        } catch (PDOException $e) {
-            error_log('LOCO slideshow query failed: '.$e->getMessage());
-            echo '[]';
-        }
-    ?>;
+    const slideData = <?=json_encode($carouselSlides, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE) ?: '[]'?>;
 
     // 🌟 TABBED CATALOG DATA WITH AUTOMATIC FALLBACKS
     const tabbedCatalogData = <?php
