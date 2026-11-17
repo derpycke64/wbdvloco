@@ -26,9 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (($_POST['action'] ?? '') === 'checkout') {
         $method = (string)($_POST['payment_method'] ?? 'wallet');
         $errorMethod = $method;
-        if (!in_array($method, ['wallet', 'sandbox_card', 'sandbox_gcash', 'sandbox_paypal'], true)) {
+        if (!in_array($method, ['wallet', 'sandbox_visa', 'sandbox_mastercard', 'sandbox_gcash', 'sandbox_paypal'], true)) {
             $error = 'Choose a supported payment method.';
-        } elseif ($method === 'sandbox_card') {
+        } elseif (in_array($method, ['sandbox_visa', 'sandbox_mastercard'], true)) {
             $error = sandboxCardResult((string)($_POST['demo_card_result'] ?? '')) ?? '';
         } elseif (in_array($method, ['sandbox_gcash','sandbox_paypal'], true) && (string)($_POST['demo_confirm'] ?? '') !== 'yes') {
             $error = 'Confirm the test payment to continue. No real account or funds are used.';
@@ -80,9 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $deductStmt->execute([$total, $userId, $total]);
                     if ($deductStmt->rowCount() !== 1) throw new RuntimeException('Your wallet balance changed. Please try again.');
                 }
-                $txMethod = $method === 'wallet' ? 'wallet' : 'sandbox_card'; // Existing transaction schema records mock providers as sandbox_card.
+                $txMethod = $method === 'wallet' ? 'wallet' : 'sandbox_card'; // Preserve the existing transaction schema; provider is distinguished in notes.
                 $historyStmt = $pdo->prepare("INSERT INTO transaction_history (user_id, transaction_type, payment_method, amount, status, reference_code, items_json, notes) VALUES (?, 'purchase', ?, ?, 'completed', ?, ?, ?)");
-                $historyStmt->execute([$userId, $txMethod, $total, $reference, json_encode(array_column($items, 'title'), JSON_UNESCAPED_UNICODE), $method === 'wallet' ? 'Paid using LOCO wallet' : 'Test '.str_replace('sandbox_','',$method).' payment; no real payment was processed']);
+                $historyStmt->execute([$userId, $txMethod, $total, $reference, json_encode(array_column($items, 'title'), JSON_UNESCAPED_UNICODE), $method === 'wallet' ? 'Paid using LOCO wallet' : 'Test '.ucfirst(str_replace('sandbox_','',$method)).' payment; no real payment was processed']);
                 $pdo->commit();
                 $_SESSION['cart'] = [];
                 $_SESSION['wallet_balance'] = number_format($method === 'wallet' ? $balance - $total : $balance, 2, '.', '');
@@ -134,7 +134,7 @@ try {
   <section style="padding:22px">
    <h1 class="loco-sandbox-heading">Purchase Complete</h1>
    <div class="loco-checkout-receipt loco-provider-card <?=h($receipt['method']==='sandbox_paypal'?'paypal':'')?>">
-    <div class="receipt-brand"><span><?=h($receipt['method']==='sandbox_gcash'?'GCash':($receipt['method']==='sandbox_paypal'?'PayPal':'LOCO'))?></span><small>LOCO payment receipt</small></div>
+    <div class="receipt-brand"><span><?=h($receipt['method']==='sandbox_gcash'?'GCash':($receipt['method']==='sandbox_paypal'?'PayPal':($receipt['method']==='sandbox_visa'?'Visa':($receipt['method']==='sandbox_mastercard'?'Mastercard':'LOCO'))))?></span><small>LOCO payment receipt</small></div>
     <div class="loco-payment-warning"><strong>Test payment</strong><span>No real account or funds were used. This receipt is for a LOCO test purchase.</span></div>
     <div class="receipt-content">
       <div style="display:flex;align-items:center;gap:12px;margin:0 0 14px">
@@ -144,7 +144,7 @@ try {
       <p style="font-weight:800;font-size:1.2rem;margin:3px 0">₱<?=number_format((float)$receipt['total'],2)?></p>
       <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
       <div class="loco-receipt-row"><span>Player</span><strong><?=h($_SESSION['username'])?></strong></div>
-      <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Test Card','sandbox_gcash'=>'GCash (Test)','sandbox_paypal'=>'PayPal (Test)'][$receipt['method']]??$receipt['method'])?></strong></div>
+      <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Test Card','sandbox_visa'=>'Visa (Test)','sandbox_mastercard'=>'Mastercard (Test)','sandbox_gcash'=>'GCash (Test)','sandbox_paypal'=>'PayPal (Test)'][$receipt['method']]??$receipt['method'])?></strong></div>
       <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
       <div class="loco-receipt-row"><span>Status</span><strong>Completed</strong></div>
       <?php foreach($receipt['items'] as $item): ?><div class="loco-receipt-row"><span><?=h($item['title'])?></span><strong>₱<?=number_format((float)$item['price'],2)?></strong></div><?php endforeach; ?>
@@ -177,14 +177,15 @@ try {
         <label class="loco-sandbox-label" for="payment-method">Please select a payment method</label>
         <select id="payment-method" name="payment_method" class="loco-sandbox-choice" required>
           <option value="wallet" <?=($_POST['payment_method']??'wallet')==='wallet'?'selected':''?>>LOCO Wallet</option>
-          <option value="sandbox_card" <?=($_POST['payment_method']??'wallet')==='sandbox_card'?'selected':''?>>Visa / Mastercard (Test Card)</option>
+          <option value="sandbox_visa" <?=($_POST['payment_method']??'wallet')==='sandbox_visa'?'selected':''?>>Visa (Test)</option>
+          <option value="sandbox_mastercard" <?=($_POST['payment_method']??'wallet')==='sandbox_mastercard'?'selected':''?>>Mastercard (Test)</option>
           <option value="sandbox_gcash" <?=($_POST['payment_method']??'wallet')==='sandbox_gcash'?'selected':''?>>GCash (Test)</option>
           <option value="sandbox_paypal" <?=($_POST['payment_method']??'wallet')==='sandbox_paypal'?'selected':''?>>PayPal (Test)</option>
         </select>
         <p id="wallet-summary" style="font-size:.8rem;color:#c5cdd8">Wallet balance: <strong><?=$walletBalance===false||$walletBalance===null?'Unavailable':'₱'.number_format((float)$walletBalance,2)?></strong>　<a href="wallet.php">Add Funds</a></p>
         <section id="card-panel" class="loco-sandbox-well" style="margin-top:14px" hidden>
-          <h2 class="loco-sandbox-heading">CARD INFORMATION</h2>
-          <p class="loco-sandbox-label">Use test card numbers only: 4242 4242 4242 4242 (approved) or 4000 0000 0000 0002 (declined). Never enter real card details.</p>
+          <h2 class="loco-sandbox-heading" id="checkout-card-title">VISA CARD INFORMATION</h2>
+          <p class="loco-sandbox-label" id="checkout-card-instructions">Use Visa test numbers only: 4242 4242 4242 4242 (approved) or 4000 0000 0000 0002 (declined). Never enter real card details.</p>
           <div style="display:grid;gap:9px">
             <label class="loco-sandbox-label" for="checkout-card-number">Test card number</label>
             <input class="loco-sandbox-field" id="checkout-card-number" inputmode="numeric" maxlength="23" placeholder="4242 4242 4242 4242" autocomplete="off">
@@ -252,8 +253,14 @@ try {
  if(!method)return;
  const card=document.getElementById('card-panel'),provider=document.getElementById('provider-panel'),wallet=document.getElementById('wallet-summary');
  function update(){
-  const m=method.value,isCard=m==='sandbox_card',isProvider=(m==='sandbox_gcash'||m==='sandbox_paypal');
+  const m=method.value,isCard=(m==='sandbox_visa'||m==='sandbox_mastercard'),isProvider=(m==='sandbox_gcash'||m==='sandbox_paypal');
   card.hidden=!isCard;
+  const mastercard=m==='sandbox_mastercard';
+  document.getElementById('checkout-card-title').textContent=mastercard?'MASTERCARD INFORMATION':'VISA CARD INFORMATION';
+  document.getElementById('checkout-card-instructions').textContent=mastercard
+   ?'Use Mastercard test numbers only: 5555 5555 5555 4444 (approved) or 5105 1051 0510 5100 (declined). Never enter real card details.'
+   :'Use Visa test numbers only: 4242 4242 4242 4242 (approved) or 4000 0000 0000 0002 (declined). Never enter real card details.';
+  document.getElementById('checkout-card-number').placeholder=mastercard?'5555 5555 5555 4444':'4242 4242 4242 4242';
   provider.style.display=isProvider?'block':'none';
   provider.classList.toggle('paypal',m==='sandbox_paypal');
   document.getElementById('provider-brand').textContent=m==='sandbox_paypal'?'PayPal':'GCash';
@@ -281,12 +288,15 @@ try {
   field.addEventListener('change',function(){field.setCustomValidity('');cardMessage.hidden=true;});
  });
  form.addEventListener('submit',function(event){
-  if(method.value!=='sandbox_card')return;
+  if(method.value!=='sandbox_visa'&&method.value!=='sandbox_mastercard')return;
   const digits=cardNumber.value.replace(/\D/g,'');
+  const isMastercard=method.value==='sandbox_mastercard';
+  const approved=isMastercard?'5555555555554444':'4242424242424242';
+  const declined=isMastercard?'5105105105105100':'4000000000000002';
   if(!digits || !cardExpiry.value || !cardCvv.value){
    event.preventDefault();cardError('Card details incomplete. Enter the test card number, expiration month, and security code.');return;
   }
-  if(digits!=='4242424242424242' && digits!=='4000000000000002'){
+  if(digits!==approved && digits!==declined){
    event.preventDefault();cardError('Use one of the listed test card numbers.',cardNumber);return;
   }
   const now=new Date();
@@ -298,7 +308,7 @@ try {
    event.preventDefault();cardError('Enter a 3- or 4-digit test security code.',cardCvv);return;
   }
   // Only a test outcome is submitted, never the card-style field values.
-  cardResult.value=digits==='4242424242424242'?'approved':'declined';
+  cardResult.value=digits===approved?'approved':'declined';
  });
  const cancel=document.getElementById('provider-cancel');
  cancel.addEventListener('click',function(){method.value='wallet';update();method.focus();});
