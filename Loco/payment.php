@@ -10,10 +10,11 @@ function h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function sandboxCardResult(string $result): ?string {
     if ($result === 'approved') return null;
     if ($result === 'declined') return 'Card declined. No charge was made.';
-    return 'Choose a simulated card result. Never enter real payment details.';
+    return 'Card details incomplete. Use the listed test card numbers.';
 }
 
 $error = '';
+$errorMethod = null;
 $receipt = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($_SESSION['checkout_csrf'], (string)($_POST['csrf_token'] ?? ''))) {
@@ -24,12 +25,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: payment.php'); exit();
     } elseif (($_POST['action'] ?? '') === 'checkout') {
         $method = (string)($_POST['payment_method'] ?? 'wallet');
+        $errorMethod = $method;
         if (!in_array($method, ['wallet', 'sandbox_card', 'sandbox_gcash', 'sandbox_paypal'], true)) {
             $error = 'Choose a supported payment method.';
         } elseif ($method === 'sandbox_card') {
             $error = sandboxCardResult((string)($_POST['demo_card_result'] ?? '')) ?? '';
         } elseif (in_array($method, ['sandbox_gcash','sandbox_paypal'], true) && (string)($_POST['demo_confirm'] ?? '') !== 'yes') {
-            $error = 'Confirm that you are completing a simulated payment. No real account or funds are used.';
+            $error = 'Confirm the test payment to continue. No real account or funds are used.';
         }
         if ($error === '') {
             try {
@@ -60,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $total = round($total, 2);
                 $balance = (float)$account['wallet_balance'];
-                if ($method === 'wallet' && $balance + 0.00001 < $total) throw new RuntimeException('Insufficient wallet balance. Balance: ₱' . number_format($balance, 2) . '; total: ₱' . number_format($total, 2) . '. Add funds to your wallet or choose the payment sandbox.');
+                if ($method === 'wallet' && $balance + 0.00001 < $total) throw new RuntimeException('Insufficient wallet balance. Balance: ₱' . number_format($balance, 2) . '; total: ₱' . number_format($total, 2) . '. Add funds to your wallet or select another payment method.');
 
                 $reference = 'LOCO-' . strtoupper(bin2hex(random_bytes(8)));
                 $orderMethod = $method === 'wallet' ? 'wallet' : 'external';
@@ -133,7 +135,7 @@ try {
    <h1 class="loco-sandbox-heading">Purchase Complete</h1>
    <div class="loco-checkout-receipt loco-provider-card <?=h($receipt['method']==='sandbox_paypal'?'paypal':'')?>">
     <div class="receipt-brand"><span><?=h($receipt['method']==='sandbox_gcash'?'GCash':($receipt['method']==='sandbox_paypal'?'PayPal':'LOCO'))?></span><small>LOCO payment receipt</small></div>
-    <div class="loco-payment-warning"><strong>Payment simulation</strong><span>No real account or funds were used. This receipt confirms a local LOCO test.</span></div>
+    <div class="loco-payment-warning"><strong>Test payment</strong><span>No real account or funds were used. This receipt is for a LOCO test purchase.</span></div>
     <div class="receipt-content">
       <div style="display:flex;align-items:center;gap:12px;margin:0 0 14px">
         <img src="profile_avatar.php?id=<?=$userId?>" alt="LOCO player avatar" style="width:44px;height:44px;object-fit:cover;border:1px solid #b6bec8">
@@ -142,9 +144,9 @@ try {
       <p style="font-weight:800;font-size:1.2rem;margin:3px 0">₱<?=number_format((float)$receipt['total'],2)?></p>
       <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
       <div class="loco-receipt-row"><span>Player</span><strong><?=h($_SESSION['username'])?></strong></div>
-      <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Test Card (Simulation)','sandbox_gcash'=>'GCash Simulation','sandbox_paypal'=>'PayPal Simulation'][$receipt['method']]??$receipt['method'])?></strong></div>
+      <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Test Card','sandbox_gcash'=>'GCash (Test)','sandbox_paypal'=>'PayPal (Test)'][$receipt['method']]??$receipt['method'])?></strong></div>
       <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
-      <div class="loco-receipt-row"><span>Status</span><strong>Completed (Simulation)</strong></div>
+      <div class="loco-receipt-row"><span>Status</span><strong>Completed</strong></div>
       <?php foreach($receipt['items'] as $item): ?><div class="loco-receipt-row"><span><?=h($item['title'])?></span><strong>₱<?=number_format((float)$item['price'],2)?></strong></div><?php endforeach; ?>
       <p style="font-size:.8rem">Your games have been added to your LOCO Library.</p>
     </div>
@@ -155,7 +157,7 @@ try {
   <div class="loco-sandbox-layout" style="padding:20px">
    <section class="loco-sandbox-well">
     <h1 class="loco-sandbox-heading">PAYMENT METHOD</h1>
-    <?php if($error): ?><p class="loco-notice error" role="alert"><?=h($error)?></p><?php endif; ?>
+    <?php if($error): ?><p class="loco-notice error" role="alert" id="checkout-error" data-payment-method="<?=h($errorMethod ?? '')?>"><?=h($error)?></p><?php endif; ?>
     <?php if(!$cartGames): ?>
       <p>Your cart is empty. <a href="products.php">Browse the Store</a>.</p>
     <?php else: ?>
@@ -169,27 +171,33 @@ try {
        </div>
        <?php endforeach; ?>
       </div>
-      <form method="post" id="checkout-form">
+      <form method="post" id="checkout-form" novalidate>
         <input type="hidden" name="csrf_token" value="<?=h($_SESSION['checkout_csrf'])?>">
         <input type="hidden" name="action" value="checkout">
         <label class="loco-sandbox-label" for="payment-method">Please select a payment method</label>
         <select id="payment-method" name="payment_method" class="loco-sandbox-choice" required>
           <option value="wallet" <?=($_POST['payment_method']??'wallet')==='wallet'?'selected':''?>>LOCO Wallet</option>
           <option value="sandbox_card" <?=($_POST['payment_method']??'wallet')==='sandbox_card'?'selected':''?>>Visa / Mastercard (Test Card)</option>
-          <option value="sandbox_gcash" <?=($_POST['payment_method']??'wallet')==='sandbox_gcash'?'selected':''?>>GCash (Payment Simulation)</option>
-          <option value="sandbox_paypal" <?=($_POST['payment_method']??'wallet')==='sandbox_paypal'?'selected':''?>>PayPal (Payment Simulation)</option>
+          <option value="sandbox_gcash" <?=($_POST['payment_method']??'wallet')==='sandbox_gcash'?'selected':''?>>GCash (Test)</option>
+          <option value="sandbox_paypal" <?=($_POST['payment_method']??'wallet')==='sandbox_paypal'?'selected':''?>>PayPal (Test)</option>
         </select>
         <p id="wallet-summary" style="font-size:.8rem;color:#c5cdd8">Wallet balance: <strong><?=$walletBalance===false||$walletBalance===null?'Unavailable':'₱'.number_format((float)$walletBalance,2)?></strong>　<a href="wallet.php">Add Funds</a></p>
         <section id="card-panel" class="loco-sandbox-well" style="margin-top:14px" hidden>
-          <h2 class="loco-sandbox-heading">SIMULATED CARD PAYMENT</h2>
-          <p class="loco-sandbox-label">Payment simulation only. No real payment processing. Do not enter real card details.</p>
-          <label class="loco-sandbox-label" for="demo_card_result">Choose a test outcome</label>
-          <select class="loco-sandbox-choice" id="demo_card_result" name="demo_card_result">
-            <option value="approved">Approved (simulation)</option>
-            <option value="declined">Declined (simulation)</option>
-          </select>
+          <h2 class="loco-sandbox-heading">CARD INFORMATION</h2>
+          <p class="loco-sandbox-label">Use test card numbers only: 4242 4242 4242 4242 (approved) or 4000 0000 0000 0002 (declined). Never enter real card details.</p>
+          <div style="display:grid;gap:9px">
+            <label class="loco-sandbox-label" for="checkout-card-number">Test card number</label>
+            <input class="loco-sandbox-field" id="checkout-card-number" inputmode="numeric" maxlength="23" placeholder="4242 4242 4242 4242" autocomplete="off">
+            <label class="loco-sandbox-label" for="checkout-card-expiry">Expiration month</label>
+            <input class="loco-sandbox-field" id="checkout-card-expiry" type="month" autocomplete="off">
+            <label class="loco-sandbox-label" for="checkout-card-cvv">Test security code</label>
+            <input class="loco-sandbox-field" id="checkout-card-cvv" inputmode="numeric" maxlength="4" placeholder="123" autocomplete="off">
+          </div>
+          <input type="hidden" name="demo_card_result" id="checkout-card-result" value="">
+          <p id="checkout-card-help" class="loco-sandbox-label" style="margin-top:12px">Complete the card details to continue. Test payments only; no real money is charged.</p>
+          <p id="checkout-card-message" class="loco-notice error" role="alert" hidden></p>
         </section>
-        <section id="provider-panel" class="loco-provider-stage" style="display:none" aria-label="Simulated payment provider">
+        <section id="provider-panel" class="loco-provider-stage" style="display:none" aria-label="Test payment provider">
           <div class="loco-checkout-receipt loco-provider-card" id="provider-card">
             <div class="receipt-brand">
               <span id="provider-brand" class="loco-provider-wordmark">GCash</span>
@@ -211,11 +219,11 @@ try {
                 <div class="loco-provider-detail-row"><span>Reference</span><strong>LOCO-SIM-<?=str_pad((string)$userId,4,'0',STR_PAD_LEFT)?></strong></div>
                 <div class="loco-provider-detail-row"><span>Status</span><strong>Pending</strong></div>
               </div>
-              <p class="loco-provider-explanation">Your LOCO account details were filled automatically. Confirming this payment completes only the local LOCO simulation. No real money is sent.</p>
+              <p class="loco-provider-explanation">Your LOCO account details were filled automatically. This checkout is for testing only. No real money is sent.</p>
               <input type="hidden" name="demo_confirm" value="yes">
-              <button type="submit" class="loco-provider-confirm">Confirm simulated payment</button>
+              <button type="submit" class="loco-provider-confirm">Confirm test payment</button>
               <button type="button" class="loco-provider-cancel" id="provider-cancel">Cancel and return to merchant</button>
-              <p class="loco-provider-footer-note">Local payment sandbox hosted by LOCO / Stoker Studios</p>
+              <p class="loco-provider-footer-note">Test checkout hosted by LOCO / Stoker Studios</p>
             </div>
           </div>
         </section>
@@ -227,9 +235,9 @@ try {
    </section>
    <aside class="loco-sandbox-sidebar">
     <h3>PAYMENT METHODS</h3>
-    <p>This classroom sandbox supports simulated card, GCash, and PayPal confirmation.</p>
+    <p>Card, GCash, and PayPal are available for testing. No real charges are made.</p>
     <p><span class="loco-pay-demo-badge">VISA</span> <span class="loco-pay-demo-badge">Mastercard</span></p>
-    <p><span class="loco-pay-demo-badge">GCash (Simulation)</span> <span class="loco-pay-demo-badge">PayPal (Simulation)</span></p>
+    <p><span class="loco-pay-demo-badge">GCash (Test)</span> <span class="loco-pay-demo-badge">PayPal (Test)</span></p>
     <h3 style="margin-top:26px">ORDER TOTAL</h3>
     <p style="font-size:1.4rem;color:#84e28c;font-weight:800">₱<?=number_format($total,2)?></p>
     <p>All game prices come from the LOCO database. Completed purchases are recorded in your account's library.</p>
@@ -253,9 +261,45 @@ try {
   document.querySelector('.loco-sandbox-page').classList.toggle('loco-provider-mode',isProvider);
   document.body.classList.toggle('loco-provider-screen',isProvider);
   if(wallet)wallet.hidden=m!=='wallet';
-  card.querySelectorAll('select').forEach(function(f){f.required=isCard;});
-
+  const serverError=document.getElementById('checkout-error');
+  if(serverError && serverError.dataset.paymentMethod && serverError.dataset.paymentMethod!==m)serverError.hidden=true;
+  if(!isCard)document.getElementById('checkout-card-message').hidden=true;
  }
+ const form=document.getElementById('checkout-form');
+ const cardNumber=document.getElementById('checkout-card-number');
+ const cardExpiry=document.getElementById('checkout-card-expiry');
+ const cardCvv=document.getElementById('checkout-card-cvv');
+ const cardResult=document.getElementById('checkout-card-result');
+ const cardMessage=document.getElementById('checkout-card-message');
+ function cardError(message,field){
+  cardMessage.textContent=message;
+  cardMessage.hidden=false;
+  if(field){field.setCustomValidity(message);field.reportValidity();}
+ }
+ [cardNumber,cardExpiry,cardCvv].forEach(function(field){
+  field.addEventListener('input',function(){field.setCustomValidity('');cardMessage.hidden=true;});
+  field.addEventListener('change',function(){field.setCustomValidity('');cardMessage.hidden=true;});
+ });
+ form.addEventListener('submit',function(event){
+  if(method.value!=='sandbox_card')return;
+  const digits=cardNumber.value.replace(/\D/g,'');
+  if(!digits || !cardExpiry.value || !cardCvv.value){
+   event.preventDefault();cardError('Card details incomplete. Enter the test card number, expiration month, and security code.');return;
+  }
+  if(digits!=='4242424242424242' && digits!=='4000000000000002'){
+   event.preventDefault();cardError('Use one of the listed test card numbers.',cardNumber);return;
+  }
+  const now=new Date();
+  const thisMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(cardExpiry.value)||cardExpiry.value<thisMonth){
+   event.preventDefault();cardError('Choose the current month or a future expiration month.',cardExpiry);return;
+  }
+  if(!/^\d{3,4}$/.test(cardCvv.value)){
+   event.preventDefault();cardError('Enter a 3- or 4-digit test security code.',cardCvv);return;
+  }
+  // Only a test outcome is submitted, never the card-style field values.
+  cardResult.value=digits==='4242424242424242'?'approved':'declined';
+ });
  const cancel=document.getElementById('provider-cancel');
  cancel.addEventListener('click',function(){method.value='wallet';update();method.focus();});
  method.addEventListener('change',update);update();
