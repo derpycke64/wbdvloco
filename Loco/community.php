@@ -545,7 +545,7 @@ try {
 
     <?php if ($tab === 'market'): ?>
     <section class="loco-community-panel"><div class="loco-section-heading"><div><h2>Marketplace</h2><p>Browse items, buy with your LOCO wallet, or offer an item in trade.</p></div><div class="loco-market-heading-actions"><a class="loco-secondary-btn" href="game_marketplace.php">🎮 Buy / Sell Games</a><a class="loco-brand-gloss-btn" href="community.php?tab=sell">＋ Create Item Listing</a></div></div>
-        <div class="loco-game-market-promo"><div><strong>LOCO USED-GAME MARKET</strong><p>Buy complete games from other players. The LOCO demo license transfers directly to your Library.</p></div><a class="loco-wishlist-action" href="game_marketplace.php">BROWSE USED GAMES →</a></div>
+        <div class="loco-game-market-promo"><div><strong>LOCO USED-GAME MARKET</strong><p>Buy complete games from other players. The LOCO license transfers directly to your Library.</p></div><a class="loco-wishlist-action" href="game_marketplace.php">BROWSE USED GAMES →</a></div>
         <div class="loco-market-tools">
             <label class="loco-market-search-wrap">
                 <span class="sr-only">Search listings</span>
