@@ -7,19 +7,10 @@ if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) $_SESSION['cart']
 if (empty($_SESSION['checkout_csrf'])) $_SESSION['checkout_csrf'] = bin2hex(random_bytes(32));
 
 function h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
-function sandboxCardResult(string $number, string $expiry, string $cvv): ?string {
-    $digits = preg_replace('/\D+/', '', $number);
-    if (!in_array($digits, ['4242424242424242', '4000000000000002'], true)) {
-        return 'Use a supported test card: 4242 4242 4242 4242 (approved) or 4000 0000 0000 0002 (declined). Do not enter real card details.';
-    }
-    if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $expiry)) return 'Enter a valid future expiry month.';
-    [$year, $month] = array_map('intval', explode('-', $expiry));
-    $now = new DateTimeImmutable('first day of this month');
-    $expires = DateTimeImmutable::createFromFormat('!Y-n', $year . '-' . $month);
-    if (!$expires || $expires < $now) return 'The test card expiry date must be this month or later.';
-    if (!preg_match('/^\d{3,4}$/', $cvv)) return 'Enter a 3- or 4-digit test CVV.';
-    if ($digits === '4000000000000002') return 'The sandbox simulated a card decline. No charge was made.';
-    return null;
+function sandboxCardResult(string $result): ?string {
+    if ($result === 'approved') return null;
+    if ($result === 'declined') return 'The demo simulated a declined card. No charge was made.';
+    return 'Choose a simulated card result. Never enter real payment details.';
 }
 
 $error = '';
@@ -36,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!in_array($method, ['wallet', 'sandbox_card', 'sandbox_gcash', 'sandbox_paypal'], true)) {
             $error = 'Choose a supported payment method.';
         } elseif ($method === 'sandbox_card') {
-            $error = sandboxCardResult((string)($_POST['card_number'] ?? ''), (string)($_POST['card_expiry'] ?? ''), (string)($_POST['card_cvv'] ?? '')) ?? '';
+            $error = sandboxCardResult((string)($_POST['demo_card_result'] ?? '')) ?? '';
         } elseif (in_array($method, ['sandbox_gcash','sandbox_paypal'], true) && (string)($_POST['demo_confirm'] ?? '') !== 'yes') {
             $error = 'Confirm that you are completing a simulated payment. No real account or funds are used.';
         }
@@ -190,24 +181,13 @@ try {
         </select>
         <p id="wallet-summary" style="font-size:.8rem;color:#c5cdd8">Wallet balance: <strong><?=$walletBalance===false||$walletBalance===null?'Unavailable':'₱'.number_format((float)$walletBalance,2)?></strong>　<a href="wallet.php">Add Funds</a></p>
         <section id="card-panel" class="loco-sandbox-well" style="margin-top:14px" hidden>
-          <h2 class="loco-sandbox-heading">CARD INFORMATION</h2>
-          <p class="loco-sandbox-label">Use test cards only. Approved: 4242 4242 4242 4242 · Declined: 4000 0000 0000 0002.</p>
-          <div class="sandbox-card-fields" style="display:grid;gap:10px">
-            <label class="loco-sandbox-label" for="card_number">Test card number</label>
-            <input class="loco-sandbox-field" id="card_number" name="card_number" inputmode="numeric" autocomplete="off" placeholder="4242 4242 4242 4242" maxlength="23">
-            <label class="loco-sandbox-label" for="card_expiry">Expiry date</label>
-            <input class="loco-sandbox-field" id="card_expiry" name="card_expiry" type="month">
-            <label class="loco-sandbox-label" for="card_cvv">Security code</label>
-            <input class="loco-sandbox-field" id="card_cvv" name="card_cvv" autocomplete="off" inputmode="numeric" maxlength="4" placeholder="123">
-          </div>
-          <h3 class="loco-sandbox-heading" style="margin-top:17px">BILLING INFORMATION (DEMO)</h3>
-          <p class="loco-sandbox-label">Optional placeholder details only. Use fictional information; nothing below is stored.</p>
-          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
-            <label class="loco-sandbox-label">First name <input class="loco-sandbox-field" name="demo_first_name" autocomplete="off" placeholder="Demo"></label>
-            <label class="loco-sandbox-label">Last name <input class="loco-sandbox-field" name="demo_last_name" autocomplete="off" placeholder="Player"></label>
-            <label class="loco-sandbox-label">City <input class="loco-sandbox-field" name="demo_city" autocomplete="off" placeholder="Quezon City"></label>
-            <label class="loco-sandbox-label">Country <select class="loco-sandbox-field" name="demo_country"><option value="Philippines">Philippines</option></select></label>
-          </div>
+          <h2 class="loco-sandbox-heading">SIMULATED CARD PAYMENT</h2>
+          <p class="loco-sandbox-label">Classroom demo only. No real payment processing. Do not enter any card number, expiration date, or CVV.</p>
+          <label class="loco-sandbox-label" for="demo_card_result">Choose a test outcome</label>
+          <select class="loco-sandbox-choice" id="demo_card_result" name="demo_card_result">
+            <option value="approved">Approved (simulation)</option>
+            <option value="declined">Declined (simulation)</option>
+          </select>
         </section>
         <section id="provider-panel" class="loco-provider-stage" style="display:none" aria-label="Simulated payment provider">
           <div class="loco-checkout-receipt loco-provider-card" id="provider-card">
@@ -273,7 +253,7 @@ try {
   document.querySelector('.loco-sandbox-page').classList.toggle('loco-provider-mode',isProvider);
   document.body.classList.toggle('loco-provider-screen',isProvider);
   if(wallet)wallet.hidden=m!=='wallet';
-  card.querySelectorAll('input').forEach(function(f){f.required=isCard;});
+  card.querySelectorAll('select').forEach(function(f){f.required=isCard;});
 
  }
  const cancel=document.getElementById('provider-cancel');
