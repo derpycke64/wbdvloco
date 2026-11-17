@@ -1720,10 +1720,31 @@ body.loco-store-body.loco-provider-screen{background:#edf4fb!important;padding-t
 .loco-demo-disclaimer {
   margin: 0 0 18px;
   padding: 12px 14px;
-  border: 1px solid #805e35;
-  background: rgba(110, 73, 31, .15);
-  color: inherit;
+  border: 1px solid #b98452;
+  background: #30251f;
+  color: #f8ede1;
   font-size: .86rem;
   line-height: 1.5;
 }
 .loco-demo-disclaimer strong { font-weight: 700; }
+
+/* High-contrast feedback on the dark LOCO sign-in and registration panels. */
+.loco-panel .loco-alert-error,
+.loco-panel .loco-alert-danger {
+  color: #ffe1e1;
+  background: #451a20;
+  border-left: 3px solid #ff7777;
+  padding: 10px 12px;
+  margin: 14px 0;
+  font-size: .9rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.loco-panel .loco-alert-success {
+  color: #c4f5d0;
+  background: #1d3b2a;
+  border-left: 3px solid #77d99b;
+  padding: 10px 12px;
+  margin: 14px 0;
+  line-height: 1.5;
+}
