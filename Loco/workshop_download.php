@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session.php';
 require_once 'db.php';
 if (!isset($_SESSION['user_id'])) { http_response_code(403); exit('Please log in first.'); }
 $id=filter_input(INPUT_GET,'id',FILTER_VALIDATE_INT);
