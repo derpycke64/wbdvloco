@@ -144,7 +144,7 @@ try {
       <p style="font-weight:800;font-size:1.2rem;margin:3px 0">₱<?=number_format((float)$receipt['total'],2)?></p>
       <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
       <div class="loco-receipt-row"><span>Player</span><strong><?=h($_SESSION['username'])?></strong></div>
-      <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Test Card','sandbox_visa'=>'Visa (Test)','sandbox_mastercard'=>'Mastercard (Test)','sandbox_gcash'=>'GCash (Test)','sandbox_paypal'=>'PayPal (Test)'][$receipt['method']]??$receipt['method'])?></strong></div>
+      <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Card','sandbox_visa'=>'Visa','sandbox_mastercard'=>'Mastercard','sandbox_gcash'=>'GCash','sandbox_paypal'=>'PayPal'][$receipt['method']]??$receipt['method'])?></strong></div>
       <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
       <div class="loco-receipt-row"><span>Status</span><strong>Completed</strong></div>
       <?php foreach($receipt['items'] as $item): ?><div class="loco-receipt-row"><span><?=h($item['title'])?></span><strong>₱<?=number_format((float)$item['price'],2)?></strong></div><?php endforeach; ?>
@@ -177,10 +177,10 @@ try {
         <label class="loco-sandbox-label" for="payment-method">Please select a payment method</label>
         <select id="payment-method" name="payment_method" class="loco-sandbox-choice" required>
           <option value="wallet" <?=($_POST['payment_method']??'wallet')==='wallet'?'selected':''?>>LOCO Wallet</option>
-          <option value="sandbox_visa" <?=($_POST['payment_method']??'wallet')==='sandbox_visa'?'selected':''?>>Visa (Test)</option>
-          <option value="sandbox_mastercard" <?=($_POST['payment_method']??'wallet')==='sandbox_mastercard'?'selected':''?>>Mastercard (Test)</option>
-          <option value="sandbox_gcash" <?=($_POST['payment_method']??'wallet')==='sandbox_gcash'?'selected':''?>>GCash (Test)</option>
-          <option value="sandbox_paypal" <?=($_POST['payment_method']??'wallet')==='sandbox_paypal'?'selected':''?>>PayPal (Test)</option>
+          <option value="sandbox_visa" <?=($_POST['payment_method']??'wallet')==='sandbox_visa'?'selected':''?>>Visa</option>
+          <option value="sandbox_mastercard" <?=($_POST['payment_method']??'wallet')==='sandbox_mastercard'?'selected':''?>>Mastercard</option>
+          <option value="sandbox_gcash" <?=($_POST['payment_method']??'wallet')==='sandbox_gcash'?'selected':''?>>GCash</option>
+          <option value="sandbox_paypal" <?=($_POST['payment_method']??'wallet')==='sandbox_paypal'?'selected':''?>>PayPal</option>
         </select>
         <p id="wallet-summary" style="font-size:.8rem;color:#c5cdd8">Wallet balance: <strong><?=$walletBalance===false||$walletBalance===null?'Unavailable':'₱'.number_format((float)$walletBalance,2)?></strong>　<a href="wallet.php">Add Funds</a></p>
         <section id="card-panel" class="loco-sandbox-well" style="margin-top:14px" hidden>
@@ -238,7 +238,7 @@ try {
     <h3>PAYMENT METHODS</h3>
     <p>Card, GCash, and PayPal are available for testing. No real charges are made.</p>
     <p><span class="loco-pay-demo-badge">VISA</span> <span class="loco-pay-demo-badge">Mastercard</span></p>
-    <p><span class="loco-pay-demo-badge">GCash (Test)</span> <span class="loco-pay-demo-badge">PayPal (Test)</span></p>
+    <p><span class="loco-pay-demo-badge">GCash</span> <span class="loco-pay-demo-badge">PayPal</span></p>
     <h3 style="margin-top:26px">ORDER TOTAL</h3>
     <p style="font-size:1.4rem;color:#84e28c;font-weight:800">₱<?=number_format($total,2)?></p>
     <p>All game prices come from the LOCO database. Completed purchases are recorded in your account's library.</p>
