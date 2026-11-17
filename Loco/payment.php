@@ -9,7 +9,7 @@ if (empty($_SESSION['checkout_csrf'])) $_SESSION['checkout_csrf'] = bin2hex(rand
 function h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function sandboxCardResult(string $result): ?string {
     if ($result === 'approved') return null;
-    if ($result === 'declined') return 'The demo simulated a declined card. No charge was made.';
+    if ($result === 'declined') return 'Card declined. No charge was made.';
     return 'Choose a simulated card result. Never enter real payment details.';
 }
 
@@ -123,7 +123,7 @@ try {
 } catch (Throwable $e) { error_log('LOCO checkout wallet balance read failed: ' . $e->getMessage()); }
 ?>
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LOCO | Secure Demo Checkout</title><link rel="stylesheet" href="style.css"></head>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LOCO | Checkout</title><link rel="stylesheet" href="style.css"></head>
 <body class="loco-store-body">
 <?php include_once 'nav.php'; ?>
 <main class="store-wrapper loco-sandbox-page" style="display:block">
@@ -137,12 +137,12 @@ try {
     <div class="receipt-content">
       <div style="display:flex;align-items:center;gap:12px;margin:0 0 14px">
         <img src="profile_avatar.php?id=<?=$userId?>" alt="LOCO player avatar" style="width:44px;height:44px;object-fit:cover;border:1px solid #b6bec8">
-        <div><strong style="display:block"><?=h($_SESSION['username'])?></strong><small>LOCO demo payer</small></div>
+        <div><strong style="display:block"><?=h($_SESSION['username'])?></strong><small>LOCO player</small></div>
       </div>
       <p style="font-weight:800;font-size:1.2rem;margin:3px 0">₱<?=number_format((float)$receipt['total'],2)?></p>
       <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
       <div class="loco-receipt-row"><span>Player</span><strong><?=h($_SESSION['username'])?></strong></div>
-      <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Demo Card','sandbox_gcash'=>'GCash Simulation','sandbox_paypal'=>'PayPal Simulation'][$receipt['method']]??$receipt['method'])?></strong></div>
+      <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['wallet'=>'LOCO Wallet','sandbox_card'=>'Test Card (Simulation)','sandbox_gcash'=>'GCash Simulation','sandbox_paypal'=>'PayPal Simulation'][$receipt['method']]??$receipt['method'])?></strong></div>
       <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
       <div class="loco-receipt-row"><span>Status</span><strong>Completed (Simulation)</strong></div>
       <?php foreach($receipt['items'] as $item): ?><div class="loco-receipt-row"><span><?=h($item['title'])?></span><strong>₱<?=number_format((float)$item['price'],2)?></strong></div><?php endforeach; ?>
@@ -175,14 +175,14 @@ try {
         <label class="loco-sandbox-label" for="payment-method">Please select a payment method</label>
         <select id="payment-method" name="payment_method" class="loco-sandbox-choice" required>
           <option value="wallet" <?=($_POST['payment_method']??'wallet')==='wallet'?'selected':''?>>LOCO Wallet</option>
-          <option value="sandbox_card" <?=($_POST['payment_method']??'wallet')==='sandbox_card'?'selected':''?>>Visa / Mastercard (Demo Card)</option>
+          <option value="sandbox_card" <?=($_POST['payment_method']??'wallet')==='sandbox_card'?'selected':''?>>Visa / Mastercard (Test Card)</option>
           <option value="sandbox_gcash" <?=($_POST['payment_method']??'wallet')==='sandbox_gcash'?'selected':''?>>GCash (Payment Simulation)</option>
           <option value="sandbox_paypal" <?=($_POST['payment_method']??'wallet')==='sandbox_paypal'?'selected':''?>>PayPal (Payment Simulation)</option>
         </select>
         <p id="wallet-summary" style="font-size:.8rem;color:#c5cdd8">Wallet balance: <strong><?=$walletBalance===false||$walletBalance===null?'Unavailable':'₱'.number_format((float)$walletBalance,2)?></strong>　<a href="wallet.php">Add Funds</a></p>
         <section id="card-panel" class="loco-sandbox-well" style="margin-top:14px" hidden>
           <h2 class="loco-sandbox-heading">SIMULATED CARD PAYMENT</h2>
-          <p class="loco-sandbox-label">Classroom demo only. No real payment processing. Do not enter any card number, expiration date, or CVV.</p>
+          <p class="loco-sandbox-label">Payment simulation only. No real payment processing. Do not enter real card details.</p>
           <label class="loco-sandbox-label" for="demo_card_result">Choose a test outcome</label>
           <select class="loco-sandbox-choice" id="demo_card_result" name="demo_card_result">
             <option value="approved">Approved (simulation)</option>
@@ -204,14 +204,14 @@ try {
               <div class="loco-provider-details">
                 <div class="loco-provider-payer">
                   <img src="profile_avatar.php?id=<?=$userId?>" alt="Your LOCO profile picture">
-                  <div><strong><?=h($_SESSION['username'])?></strong><span>Demo player account</span></div>
+                  <div><strong><?=h($_SESSION['username'])?></strong><span>LOCO player account</span></div>
                 </div>
                 <div class="loco-provider-detail-row"><span>Merchant</span><strong>LOCO / STOKER STUDIOS</strong></div>
-                <div class="loco-provider-detail-row"><span>Demo account</span><strong><?=h($_SESSION['username'])?></strong></div>
+                <div class="loco-provider-detail-row"><span>Player account</span><strong><?=h($_SESSION['username'])?></strong></div>
                 <div class="loco-provider-detail-row"><span>Reference</span><strong>LOCO-SIM-<?=str_pad((string)$userId,4,'0',STR_PAD_LEFT)?></strong></div>
                 <div class="loco-provider-detail-row"><span>Status</span><strong>Pending</strong></div>
               </div>
-              <p class="loco-provider-explanation">Your demo account details were filled automatically. Confirming this payment completes only the local LOCO simulation. No real money is sent.</p>
+              <p class="loco-provider-explanation">Your LOCO account details were filled automatically. Confirming this payment completes only the local LOCO simulation. No real money is sent.</p>
               <input type="hidden" name="demo_confirm" value="yes">
               <button type="submit" class="loco-provider-confirm">Confirm simulated payment</button>
               <button type="button" class="loco-provider-cancel" id="provider-cancel">Cancel and return to merchant</button>
@@ -229,10 +229,10 @@ try {
     <h3>PAYMENT METHODS</h3>
     <p>This classroom sandbox supports simulated card, GCash, and PayPal confirmation.</p>
     <p><span class="loco-pay-demo-badge">VISA</span> <span class="loco-pay-demo-badge">Mastercard</span></p>
-    <p><span class="loco-pay-demo-badge">GCash Demo</span> <span class="loco-pay-demo-badge">PayPal Demo</span></p>
+    <p><span class="loco-pay-demo-badge">GCash (Simulation)</span> <span class="loco-pay-demo-badge">PayPal (Simulation)</span></p>
     <h3 style="margin-top:26px">ORDER TOTAL</h3>
     <p style="font-size:1.4rem;color:#84e28c;font-weight:800">₱<?=number_format($total,2)?></p>
-    <p>All game prices come from the LOCO database. Completed demo purchases are recorded in your account's library.</p>
+    <p>All game prices come from the LOCO database. Completed purchases are recorded in your account's library.</p>
     <a href="wallet.php" class="loco-wishlist-action" style="display:inline-block">ADD WALLET FUNDS</a>
    </aside>
   </div>
