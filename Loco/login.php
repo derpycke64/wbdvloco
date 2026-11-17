@@ -91,20 +91,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="loco-panel">
+            <p class="loco-demo-disclaimer" role="note"><strong>Student project demonstration.</strong> LOCO is not affiliated with Steam, PayPal, or GCash. Purchases and wallet payments are simulated. Do not reuse passwords from other services.</p>
             <form method="POST" action="login.php">
                 <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="loco-group">
                     <label class="loco-label">USERNAME</label>
-                    <input type="text" name="username" class="loco-input" value="<?php echo htmlspecialchars($prefilled_name); ?>" required autocomplete="off">
+                    <input type="text" name="username" class="loco-input" value="<?php echo htmlspecialchars($prefilled_name); ?>" required autocomplete="username">
                 </div>
 
                 <div class="loco-group">
                     <label class="loco-label-password">PASSWORD</label>
-                    <input type="password" name="password" class="loco-input" required>
+                    <input type="password" name="password" class="loco-input" autocomplete="current-password" required>
                 </div>
 
                 <div class="loco-forgot-container">
-                    <a href="#" class="loco-forgot-link">Forgot Password?</a>
+                    <span class="loco-forgot-link">Password reset is not available in this demo.</span>
                 </div>  
                 <?php if(!empty($message)) echo "<p class='loco-alert-error'>$message</p>"; ?>
                 <?php if(!empty($success_msg)) echo "<p class='loco-alert-success'>$success_msg</p>"; ?>
