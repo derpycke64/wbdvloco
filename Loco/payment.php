@@ -268,6 +268,10 @@ try {
   document.querySelector('.loco-sandbox-page').classList.toggle('loco-provider-mode',isProvider);
   document.body.classList.toggle('loco-provider-screen',isProvider);
   if(wallet)wallet.hidden=m!=='wallet';
+  document.getElementById('checkout-card-number').setCustomValidity('');
+  document.getElementById('checkout-card-expiry').setCustomValidity('');
+  document.getElementById('checkout-card-cvv').setCustomValidity('');
+  document.getElementById('checkout-card-message').hidden=true;
   const serverError=document.getElementById('checkout-error');
   if(serverError && serverError.dataset.paymentMethod && serverError.dataset.paymentMethod!==m)serverError.hidden=true;
   if(!isCard)document.getElementById('checkout-card-message').hidden=true;
