@@ -89,7 +89,7 @@ try {
         </div>
         <p style="font-size:.74rem;margin:13px 0 3px">AMOUNT ADDED TO LOCO WALLET</p><h2 style="font-size:1.75rem;margin:3px 0 17px">₱<?=number_format((float)$receipt['amount'],2)?></h2>
         <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
-        <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['sandbox_card'=>'Test Card','sandbox_visa'=>'Visa (Test)','sandbox_mastercard'=>'Mastercard (Test)','sandbox_gcash'=>'GCash (Test)','sandbox_paypal'=>'PayPal (Test)'][$receipt['method']]??'Test payment')?></strong></div>
+        <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['sandbox_card'=>'Card','sandbox_visa'=>'Visa','sandbox_mastercard'=>'Mastercard','sandbox_gcash'=>'GCash','sandbox_paypal'=>'PayPal'][$receipt['method']]??'Test payment')?></strong></div>
         <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
         <div class="loco-receipt-row"><span>Status</span><strong>Completed</strong></div>
       </div>
@@ -109,10 +109,10 @@ try {
         </select>
         <p class="loco-sandbox-label" style="margin-top:16px">Please select a payment method</p>
         <select id="topup-method" name="payment_method" class="loco-sandbox-choice">
-          <option value="sandbox_visa" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_visa'?'selected':''?>>Visa (Test)</option>
-          <option value="sandbox_mastercard" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_mastercard'?'selected':''?>>Mastercard (Test)</option>
-          <option value="sandbox_gcash" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_gcash'?'selected':''?>>GCash (Test)</option>
-          <option value="sandbox_paypal" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_paypal'?'selected':''?>>PayPal (Test)</option>
+          <option value="sandbox_visa" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_visa'?'selected':''?>>Visa</option>
+          <option value="sandbox_mastercard" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_mastercard'?'selected':''?>>Mastercard</option>
+          <option value="sandbox_gcash" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_gcash'?'selected':''?>>GCash</option>
+          <option value="sandbox_paypal" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_paypal'?'selected':''?>>PayPal</option>
         </select>
         <div id="topup-card" style="margin:17px 0" class="loco-sandbox-well">
           <h2 class="loco-sandbox-heading" id="topup-card-title">VISA CARD INFORMATION</h2>
@@ -165,7 +165,7 @@ try {
     <aside class="loco-sandbox-sidebar">
       <h3>LOCO PAYMENT METHODS</h3><p>Card, GCash, and PayPal are available for testing. No real charges are made.</p>
       <p><span class="loco-pay-demo-badge">VISA</span> <span class="loco-pay-demo-badge">Mastercard</span></p>
-      <p><span class="loco-pay-demo-badge">GCash (Test)</span> <span class="loco-pay-demo-badge">PayPal (Test)</span></p>
+      <p><span class="loco-pay-demo-badge">GCash</span> <span class="loco-pay-demo-badge">PayPal</span></p>
       <h3 style="margin-top:25px">TRANSACTION HISTORY</h3><p>Completed wallet top-ups are recorded in your transaction history.</p>
       <a href="transaction_history.php" style="color:#fff">View transaction history →</a>
       <p style="margin-top:25px"><a href="products.php">← Return to LOCO Store</a></p>
