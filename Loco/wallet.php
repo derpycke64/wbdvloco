@@ -192,7 +192,10 @@ try {
   document.getElementById('topup-provider-card').classList.toggle('paypal',m==='sandbox_paypal');
   document.querySelector('.loco-sandbox-page').classList.toggle('loco-provider-mode',!cardMode);
   document.body.classList.toggle('loco-provider-screen',!cardMode);
-  card.querySelectorAll('input:not([type="hidden"])').forEach(f=>f.required=cardMode);
+  card.querySelectorAll('input:not([type="hidden"])').forEach(f=>{
+   f.required=cardMode;
+   f.setCustomValidity('');
+  });
 
  }
  const amountSelect=document.getElementById('amount'),demoAmount=document.getElementById('topup-demo-amount');
