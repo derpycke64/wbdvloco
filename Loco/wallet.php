@@ -114,13 +114,18 @@ try {
           <option value="sandbox_paypal" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_paypal'?'selected':''?>>PayPal (Payment Simulation)</option>
         </select>
         <div id="topup-card" style="margin:17px 0" class="loco-sandbox-well">
-          <h2 class="loco-sandbox-heading">SIMULATED CARD PAYMENT</h2>
-          <p class="loco-sandbox-label">Classroom demo only. No real payment processing. Do not enter card numbers, expiration dates, or CVVs.</p>
-          <label class="loco-sandbox-label" for="demo_card_result">Choose a test outcome</label>
-          <select class="loco-sandbox-choice" name="demo_card_result" id="demo_card_result">
-            <option value="approved">Approved (simulation)</option>
-            <option value="declined">Declined (simulation)</option>
-          </select>
+          <h2 class="loco-sandbox-heading">CARD INFORMATION</h2>
+          <p class="loco-sandbox-label">Only demo cards are supported: approved 4242 4242 4242 4242, declined 4000 0000 0000 0002. Do not enter real card details.</p>
+          <div style="display:grid;gap:9px">
+            <label class="loco-sandbox-label" for="card_number">Test card number</label>
+            <input class="loco-sandbox-field" id="card_number" placeholder="4242 4242 4242 4242" maxlength="23" inputmode="numeric" autocomplete="off">
+            <label class="loco-sandbox-label" for="card_expiry">Expiration month</label>
+            <input class="loco-sandbox-field" id="card_expiry" type="month" autocomplete="off">
+            <label class="loco-sandbox-label" for="card_cvv">Test security code</label>
+            <input class="loco-sandbox-field" id="card_cvv" maxlength="4" placeholder="123" inputmode="numeric" autocomplete="off">
+          </div>
+          <!-- Only the approved/declined simulation token is submitted; card-style fields have no name attributes. -->
+          <input type="hidden" name="demo_card_result" id="demo_card_result" value="">
         </div>
         <section id="topup-provider" class="loco-provider-stage" style="display:none" aria-label="Simulated wallet top-up provider">
           <div class="loco-checkout-receipt loco-provider-card" id="topup-provider-card">
@@ -180,13 +185,40 @@ try {
   document.getElementById('topup-provider-card').classList.toggle('paypal',m==='sandbox_paypal');
   document.querySelector('.loco-sandbox-page').classList.toggle('loco-provider-mode',!cardMode);
   document.body.classList.toggle('loco-provider-screen',!cardMode);
-  card.querySelectorAll('select').forEach(f=>f.required=cardMode);
+  card.querySelectorAll('input:not([type="hidden"])').forEach(f=>f.required=cardMode);
 
  }
  const amountSelect=document.getElementById('amount'),demoAmount=document.getElementById('topup-demo-amount');
  function updateAmount(){if(demoAmount)demoAmount.textContent=amountSelect.value?'PHP '+Number(amountSelect.value).toLocaleString('en-PH',{minimumFractionDigits:2}):'Select an amount';}
  amountSelect.addEventListener('change',updateAmount);updateAmount();
  document.getElementById('topup-provider-cancel').addEventListener('click',function(){sel.value='sandbox_card';update();sel.focus();});
+ const cardNumber=document.getElementById('card_number');
+ const cardExpiry=document.getElementById('card_expiry');
+ const cardCvv=document.getElementById('card_cvv');
+ const cardResult=document.getElementById('demo_card_result');
+ cardNumber.addEventListener('input',()=>cardNumber.setCustomValidity(''));
+ cardExpiry.addEventListener('input',()=>cardExpiry.setCustomValidity(''));
+ cardCvv.addEventListener('input',()=>cardCvv.setCustomValidity(''));
+ document.getElementById('wallet-topup-form').addEventListener('submit',function(event){
+  if(sel.value!=='sandbox_card')return;
+  // Never transmit card-style entries. Only allow the two published demo numbers.
+  const digits=cardNumber.value.replace(/\D/g,'');
+  if(digits!=='4242424242424242' && digits!=='4000000000000002'){
+   cardNumber.setCustomValidity('Use only one of the two displayed test card numbers.');
+   cardNumber.reportValidity();event.preventDefault();return;
+  }
+  const now=new Date();
+  const currentMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(cardExpiry.value) || cardExpiry.value<currentMonth){
+   cardExpiry.setCustomValidity('Choose the current month or a future month for this demo.');
+   cardExpiry.reportValidity();event.preventDefault();return;
+  }
+  if(!/^\d{3,4}$/.test(cardCvv.value)){
+   cardCvv.setCustomValidity('Enter a 3- or 4-digit test security code.');
+   cardCvv.reportValidity();event.preventDefault();return;
+  }
+  cardResult.value=digits==='4242424242424242'?'approved':'declined';
+ });
  sel.addEventListener('change',update);update();
 })();
 </script>
