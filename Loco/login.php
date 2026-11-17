@@ -8,7 +8,7 @@ if(isset($_SESSION['username'])){
 }
 
 $message = "";
-$prefilled_name = isset($_GET['Registered']) ? $_GET['Registered'] : '';
+$prefilled_name = isset($_GET['registered']) ? $_GET['registered'] : '';
 $success_msg = !empty($prefilled_name) ? "Registration Successful" : "";
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
@@ -37,7 +37,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             }
         }
         catch (\PDOException $e) {
-            $message = "Database login error: " . $e->getMessage();
+            error_log('LOCO login database error: ' . $e->getMessage());
+            $message = 'Unable to sign in right now. Please try again later.';
         }
     }
     else {
