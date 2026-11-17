@@ -711,7 +711,7 @@ try {
     <?php if($tab==='workshop'): ?>
     <section class="loco-community-panel" id="workshop"><div class="loco-section-heading"><div><h2>LOCO Workshop</h2><p>Publish game creations, subscribe to other creators, and download ZIP archives. Files are community-uploaded; only open files you trust.</p></div></div>
     <details class="loco-workshop-publish"><summary class="loco-brand-gloss-btn">＋ Publish a creation</summary>
-        <form method="post" enctype="multipart/form-data" class="loco-form-grid" style="margin-top:18px">
+        <form method="post" action="community.php?tab=workshop" enctype="multipart/form-data" class="loco-form-grid" style="margin-top:18px">
           <input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="publish_workshop">
           <label>Creation title<input name="workshop_title" required maxlength="150" placeholder="Name your creation"></label>
           <label>Game<select name="workshop_game_id" required><option value="">Choose game</option><?php foreach($workshopGames as $game): ?><option value="<?=$game['id']?>"><?=h($game['title'])?></option><?php endforeach; ?></select></label>
@@ -733,9 +733,9 @@ try {
         <div class="loco-workshop-actions">
         <?php if($isOwner): ?>
           <?php if(!empty($creation['archive_filename'])): ?><a class="loco-button-small" href="workshop_download.php?id=<?=$creation['id']?>">Download your ZIP</a><?php endif; ?>
-          <form method="post" onsubmit="return confirm('Delete this creation and its subscriptions?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="delete_workshop"><input type="hidden" name="creation_id" value="<?=$creation['id']?>"><button type="submit" class="loco-danger-link">Delete</button></form>
+          <form method="post" action="community.php?tab=workshop" onsubmit="return confirm('Delete this creation and its subscriptions?')"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="delete_workshop"><input type="hidden" name="creation_id" value="<?=$creation['id']?>"><button type="submit" class="loco-danger-link">Delete</button></form>
         <?php else: ?>
-          <form method="post"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="toggle_workshop_subscription"><input type="hidden" name="creation_id" value="<?=$creation['id']?>"><button type="submit" class="loco-button-small"><?=$creation['subscribed']?'✓ Unsubscribe':'＋ Subscribe'?></button></form>
+          <form method="post" action="community.php?tab=workshop"><input type="hidden" name="csrf" value="<?=h($csrf)?>"><input type="hidden" name="action" value="toggle_workshop_subscription"><input type="hidden" name="creation_id" value="<?=$creation['id']?>"><button type="submit" class="loco-button-small"><?=$creation['subscribed']?'✓ Unsubscribe':'＋ Subscribe'?></button></form>
           <?php if($creation['subscribed'] && !empty($creation['archive_filename'])): ?><a class="loco-button-small" href="workshop_download.php?id=<?=$creation['id']?>">Download ZIP</a><?php endif; ?>
         <?php endif; ?>
         </div>
