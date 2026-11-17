@@ -164,7 +164,7 @@ $formAction = $editingGame ? 'edit' : 'add';
     <section class="records-panel">
         <p class="loco-eyebrow">DATABASE MANAGEMENT</p>
         <h1>Game Records</h1>
-        <p class="records-note">Use this page to demonstrate adding, editing, and deleting records in the <code>games</code> table of <code>loco_db</code>. This is a basic project CRUD page.</p>
+        <p class="records-note">Use this page to add, edit, and delete records in the <code>games</code> table of <code>loco_db</code>. This is a basic project CRUD page.</p>
         <?php if ($message !== ''): ?>
             <div class="records-message <?=h($messageType)?>" role="status"><?=h($message)?></div>
         <?php endif; ?>
