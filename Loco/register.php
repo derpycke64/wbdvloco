@@ -53,7 +53,8 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
             if($e->getCode() == 23000){
                 $message = "Username or Email already exists.";
             } else {
-                 $message = "Database Error: " . $e->getMessage(); 
+                 error_log('LOCO registration database error: ' . $e->getMessage());
+                 $message = 'Registration is temporarily unavailable. Please try again later.'; 
             }
         }
     }
