@@ -14,7 +14,7 @@ function h($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'
 function walletSandboxCardError(string $result): ?string {
     if ($result === 'approved') return null;
     if ($result === 'declined') return 'Card declined. No funds were added.';
-    return 'Choose a simulated card result. Never enter real payment details.';
+    return 'Card details incomplete. Use the listed test card numbers.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $paymentError=null;
         if(!in_array($method,['sandbox_card','sandbox_gcash','sandbox_paypal'],true))$paymentError='Choose a supported payment method.';
         elseif($method==='sandbox_card')$paymentError=walletSandboxCardError((string)($_POST['demo_card_result'] ?? ''));
-        elseif((string)($_POST['demo_confirm']??'')!=='yes')$paymentError='Confirm that this is a simulated provider payment.';
+        elseif((string)($_POST['demo_confirm']??'')!=='yes')$paymentError='Confirm the test payment to continue.';
         if ($paymentError !== null) {
             $error = $paymentError;
         } else {
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $txStmt->execute([':user_id' => $userId, ':amount' => $value, ':reference' => $reference, ':notes'=>'Simulated '.str_replace('sandbox_','',$method).' wallet top-up; no real payment processed']);
                 $pdo->commit();
-                $_SESSION['wallet_notice']='Simulated top-up complete. ₱'.number_format($value,2).' added to your LOCO wallet.';
+                $_SESSION['wallet_notice']='Top-up complete. ₱'.number_format($value,2).' added to your LOCO wallet.';
                 $_SESSION['last_wallet_receipt']=['reference'=>$reference,'amount'=>$value,'method'=>$method];
                 $_SESSION['wallet_csrf']=bin2hex(random_bytes(32));
                 header('Location: wallet.php?receipt=1');
@@ -75,13 +75,13 @@ try {
 <body class="loco-store-body">
 <?php include_once 'nav.php'; ?>
 <main class="store-wrapper loco-sandbox-page" style="display:block">
-  <div class="loco-sandbox-step">LOCO WALLET　›　 ADD FUNDS <span style="float:right">PAYMENT SIMULATION</span></div>
+  <div class="loco-sandbox-step">LOCO WALLET　›　 ADD FUNDS <span style="float:right">TEST PAYMENTS ONLY</span></div>
   <?php if($message): ?><p role="status" class="loco-notice success" style="margin:12px"><?=h($message)?></p><?php endif; ?>
   <?php if($error): ?><p role="alert" class="loco-notice error" style="margin:12px"><?=h($error)?></p><?php endif; ?>
   <?php if($receipt): ?>
     <div class="loco-checkout-receipt loco-provider-card <?=($receipt['method']==='sandbox_paypal')?'paypal':''?>">
       <div class="receipt-brand"><span><?=h($receipt['method']==='sandbox_gcash'?'GCash':($receipt['method']==='sandbox_paypal'?'PayPal':'LOCO'))?></span><small>LOCO wallet receipt</small></div>
-      <div class="loco-payment-warning"><strong>Payment simulation</strong><span>No real account or funds were used. This confirms a local wallet top-up test.</span></div>
+      <div class="loco-payment-warning"><strong>Test payment</strong><span>No real account or funds were used. This confirms a local wallet top-up test.</span></div>
       <div class="receipt-content">
         <div style="display:flex;gap:12px;align-items:center">
           <img src="profile_avatar.php?id=<?=$userId?>" alt="Player avatar" style="width:44px;height:44px;object-fit:cover;border:1px solid #cbd0dc">
@@ -89,9 +89,9 @@ try {
         </div>
         <p style="font-size:.74rem;margin:13px 0 3px">AMOUNT ADDED TO LOCO WALLET</p><h2 style="font-size:1.75rem;margin:3px 0 17px">₱<?=number_format((float)$receipt['amount'],2)?></h2>
         <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
-        <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['sandbox_card'=>'Test Card (Simulation)','sandbox_gcash'=>'GCash Simulation','sandbox_paypal'=>'PayPal Simulation'][$receipt['method']]??'Payment simulation')?></strong></div>
+        <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['sandbox_card'=>'Test Card','sandbox_gcash'=>'GCash (Test)','sandbox_paypal'=>'PayPal (Test)'][$receipt['method']]??'Test payment')?></strong></div>
         <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
-        <div class="loco-receipt-row"><span>Status</span><strong>Completed (Simulation)</strong></div>
+        <div class="loco-receipt-row"><span>Status</span><strong>Completed</strong></div>
       </div>
     </div>
     <p style="padding:12px 20px"><a href="wallet.php" class="loco-wishlist-action">ADD MORE FUNDS</a>　<a href="products.php">RETURN TO STORE</a>　<a href="transaction_history.php">Transaction History</a></p>
@@ -110,8 +110,8 @@ try {
         <p class="loco-sandbox-label" style="margin-top:16px">Please select a payment method</p>
         <select id="topup-method" name="payment_method" class="loco-sandbox-choice">
           <option value="sandbox_card" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_card'?'selected':''?>>Visa / Mastercard (Test Card)</option>
-          <option value="sandbox_gcash" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_gcash'?'selected':''?>>GCash (Payment Simulation)</option>
-          <option value="sandbox_paypal" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_paypal'?'selected':''?>>PayPal (Payment Simulation)</option>
+          <option value="sandbox_gcash" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_gcash'?'selected':''?>>GCash (Test)</option>
+          <option value="sandbox_paypal" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_paypal'?'selected':''?>>PayPal (Test)</option>
         </select>
         <div id="topup-card" style="margin:17px 0" class="loco-sandbox-well">
           <h2 class="loco-sandbox-heading">CARD INFORMATION</h2>
@@ -127,13 +127,13 @@ try {
           <!-- Only the approved/declined simulation token is submitted; card-style fields have no name attributes. -->
           <input type="hidden" name="demo_card_result" id="demo_card_result" value="">
         </div>
-        <section id="topup-provider" class="loco-provider-stage" style="display:none" aria-label="Simulated wallet top-up provider">
+        <section id="topup-provider" class="loco-provider-stage" style="display:none" aria-label="Test wallet top-up provider">
           <div class="loco-checkout-receipt loco-provider-card" id="topup-provider-card">
             <div class="receipt-brand">
               <span class="loco-provider-wordmark" id="topup-provider-brand">GCash</span>
               <small>LOCO wallet checkout</small>
             </div>
-            <div class="loco-payment-warning"><strong>Payment simulation</strong><span>No real PayPal or GCash account, OTP, wallet, or funds are used.</span></div>
+            <div class="loco-payment-warning"><strong>Test payment</strong><span>No real PayPal or GCash account, OTP, wallet, or funds are used.</span></div>
             <div class="receipt-content">
               <div class="loco-provider-amount">
                 <span>Amount due</span>
@@ -149,11 +149,11 @@ try {
                 <div class="loco-provider-detail-row"><span>Reference</span><strong>LOCO-WALLET-<?=str_pad((string)$userId,4,'0',STR_PAD_LEFT)?></strong></div>
                 <div class="loco-provider-detail-row"><span>Status</span><strong>Pending</strong></div>
               </div>
-              <p class="loco-provider-explanation">Your LOCO account details were filled automatically. This only adds simulated funds to your LOCO wallet; no real funds move.</p>
+              <p class="loco-provider-explanation">Your LOCO account details were filled automatically. This adds test funds to your LOCO wallet; no real funds move.</p>
               <input type="hidden" name="demo_confirm" value="yes">
-              <button class="loco-provider-confirm" type="submit">Confirm simulated payment</button>
+              <button class="loco-provider-confirm" type="submit">Confirm test payment</button>
               <button class="loco-provider-cancel" type="button" id="topup-provider-cancel">Cancel and return to merchant</button>
-              <p class="loco-provider-footer-note">Local payment sandbox hosted by LOCO / Stoker Studios</p>
+              <p class="loco-provider-footer-note">Test checkout hosted by LOCO / Stoker Studios</p>
             </div>
           </div>
         </section>
@@ -162,10 +162,10 @@ try {
       </form>
     </section>
     <aside class="loco-sandbox-sidebar">
-      <h3>LOCO PAYMENT METHODS</h3><p>Card test data, GCash-style simulated confirmation, and PayPal-style simulated confirmation.</p>
+      <h3>LOCO PAYMENT METHODS</h3><p>Card, GCash, and PayPal are available for testing. No real charges are made.</p>
       <p><span class="loco-pay-demo-badge">VISA</span> <span class="loco-pay-demo-badge">Mastercard</span></p>
-      <p><span class="loco-pay-demo-badge">GCash (Simulation)</span> <span class="loco-pay-demo-badge">PayPal (Simulation)</span></p>
-      <h3 style="margin-top:25px">TRANSACTION HISTORY</h3><p>All completed simulated wallet top-ups are recorded in MySQL.</p>
+      <p><span class="loco-pay-demo-badge">GCash (Test)</span> <span class="loco-pay-demo-badge">PayPal (Test)</span></p>
+      <h3 style="margin-top:25px">TRANSACTION HISTORY</h3><p>Completed wallet top-ups are recorded in your transaction history.</p>
       <a href="transaction_history.php" style="color:#fff">View transaction history →</a>
       <p style="margin-top:25px"><a href="products.php">← Return to LOCO Store</a></p>
     </aside>
