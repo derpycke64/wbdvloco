@@ -52,10 +52,10 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
             </div>
 
             <!-- Dynamic Promotional Slideshow Carousel Viewport Container -->
-            <div class="store-hero" id="carousel-viewport"></div>
+            <a class="store-hero" id="carousel-viewport" href="products.php" aria-label="View featured game details"></a>
             <div class="carousel-control-bar">
                 <div class="carousel-tabs" id="carousel-tabs-row"></div>    
-                <span class="carousel-status-text" id="carousel-label">Loading...</span>
+                <a class="carousel-status-text" id="carousel-label" href="products.php">Loading...</a>
                 <span class="carousel-price-tag" id="carousel-price">$0.00</span>
             </div>
             
@@ -380,15 +380,12 @@ if (($_SESSION['loco_game_catalog_version'] ?? '') !== 'original-games-v2') {
         label.textContent = activeSlide.title;
         priceTag.textContent = activeSlide.price;
 
-        viewport.onclick = function(e) {
-            handleAddToCart(
-                e, 
-                activeSlide.title, 
-                activeSlide.price, 
-                activeSlide.img
-            );
-        };
-        viewport.style.cursor = 'pointer';
+        // The featured artwork and title always open the game page,
+        // including when the signed-in user already owns the game.
+        const detailsUrl = 'game_details.php?id=' + encodeURIComponent(activeSlide.id);
+        viewport.href = detailsUrl;
+        viewport.setAttribute('aria-label', 'View ' + activeSlide.title + ' details');
+        label.href = detailsUrl;
 
         const tabs = 
             tabsRow.querySelectorAll('.carousel-tab-item');
