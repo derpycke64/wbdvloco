@@ -1716,18 +1716,6 @@ body.loco-store-body.loco-provider-screen{background:#edf4fb!important;padding-t
  .loco-profile-main .loco-library-game-card .loco-library-artwork{min-height:112px}
 }
 
-/* Clear identity and payment-simulation notice on auth pages. */
-.loco-demo-disclaimer {
-  margin: 0 0 18px;
-  padding: 12px 14px;
-  border: 1px solid #b98452;
-  background: #30251f;
-  color: #f8ede1;
-  font-size: .86rem;
-  line-height: 1.5;
-}
-.loco-demo-disclaimer strong { font-weight: 700; }
-
 /* High-contrast feedback on the dark LOCO sign-in and registration panels. */
 .loco-panel .loco-alert-error,
 .loco-panel .loco-alert-danger {
