@@ -13,7 +13,7 @@ $allowedAmounts = ['100.00', '250.00', '500.00', '1000.00'];
 function h($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 function walletSandboxCardError(string $result): ?string {
     if ($result === 'approved') return null;
-    if ($result === 'declined') return 'The demo simulated a declined card. No balance was added.';
+    if ($result === 'declined') return 'Card declined. No funds were added.';
     return 'Choose a simulated card result. Never enter real payment details.';
 }
 
@@ -23,11 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($_SESSION['wallet_csrf'], $csrf)) {
         $error = 'Your session token expired. Refresh the page and try again.';
     } elseif (!in_array($amount, $allowedAmounts, true)) {
-        $error = 'Choose one of the available demo top-up amounts.';
+        $error = 'Choose one of the available top-up amounts.';
     } else {
         $method=(string)($_POST['payment_method']??'sandbox_card');
         $paymentError=null;
-        if(!in_array($method,['sandbox_card','sandbox_gcash','sandbox_paypal'],true))$paymentError='Choose a supported demo payment method.';
+        if(!in_array($method,['sandbox_card','sandbox_gcash','sandbox_paypal'],true))$paymentError='Choose a supported payment method.';
         elseif($method==='sandbox_card')$paymentError=walletSandboxCardError((string)($_POST['demo_card_result'] ?? ''));
         elseif((string)($_POST['demo_confirm']??'')!=='yes')$paymentError='Confirm that this is a simulated provider payment.';
         if ($paymentError !== null) {
@@ -89,7 +89,7 @@ try {
         </div>
         <p style="font-size:.74rem;margin:13px 0 3px">AMOUNT ADDED TO LOCO WALLET</p><h2 style="font-size:1.75rem;margin:3px 0 17px">₱<?=number_format((float)$receipt['amount'],2)?></h2>
         <div class="loco-receipt-row"><span>Merchant</span><strong>LOCO / Stoker Studios</strong></div>
-        <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['sandbox_card'=>'Demo Card','sandbox_gcash'=>'GCash Simulation','sandbox_paypal'=>'PayPal Simulation'][$receipt['method']]??'Demo')?></strong></div>
+        <div class="loco-receipt-row"><span>Payment</span><strong><?=h(['sandbox_card'=>'Test Card (Simulation)','sandbox_gcash'=>'GCash Simulation','sandbox_paypal'=>'PayPal Simulation'][$receipt['method']]??'Payment simulation')?></strong></div>
         <div class="loco-receipt-row"><span>Reference</span><strong><?=h($receipt['reference'])?></strong></div>
         <div class="loco-receipt-row"><span>Status</span><strong>Completed (Simulation)</strong></div>
       </div>
@@ -109,13 +109,13 @@ try {
         </select>
         <p class="loco-sandbox-label" style="margin-top:16px">Please select a payment method</p>
         <select id="topup-method" name="payment_method" class="loco-sandbox-choice">
-          <option value="sandbox_card" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_card'?'selected':''?>>Visa / Mastercard (Demo Card)</option>
+          <option value="sandbox_card" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_card'?'selected':''?>>Visa / Mastercard (Test Card)</option>
           <option value="sandbox_gcash" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_gcash'?'selected':''?>>GCash (Payment Simulation)</option>
           <option value="sandbox_paypal" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_paypal'?'selected':''?>>PayPal (Payment Simulation)</option>
         </select>
         <div id="topup-card" style="margin:17px 0" class="loco-sandbox-well">
           <h2 class="loco-sandbox-heading">CARD INFORMATION</h2>
-          <p class="loco-sandbox-label">Only demo cards are supported: approved 4242 4242 4242 4242, declined 4000 0000 0000 0002. Do not enter real card details.</p>
+          <p class="loco-sandbox-label">Only test card numbers are supported: approved 4242 4242 4242 4242, declined 4000 0000 0000 0002. Do not enter real card details.</p>
           <div style="display:grid;gap:9px">
             <label class="loco-sandbox-label" for="card_number">Test card number</label>
             <input class="loco-sandbox-field" id="card_number" placeholder="4242 4242 4242 4242" maxlength="23" inputmode="numeric" autocomplete="off">
@@ -142,14 +142,14 @@ try {
               <div class="loco-provider-details">
                 <div class="loco-provider-payer">
                   <img src="profile_avatar.php?id=<?=$userId?>" alt="Your LOCO profile picture">
-                  <div><strong><?=h($_SESSION['username'])?></strong><span>Demo player account</span></div>
+                  <div><strong><?=h($_SESSION['username'])?></strong><span>LOCO player account</span></div>
                 </div>
                 <div class="loco-provider-detail-row"><span>Merchant</span><strong>LOCO / STOKER STUDIOS</strong></div>
-                <div class="loco-provider-detail-row"><span>Demo account</span><strong><?=h($_SESSION['username'])?></strong></div>
+                <div class="loco-provider-detail-row"><span>Player account</span><strong><?=h($_SESSION['username'])?></strong></div>
                 <div class="loco-provider-detail-row"><span>Reference</span><strong>LOCO-WALLET-<?=str_pad((string)$userId,4,'0',STR_PAD_LEFT)?></strong></div>
                 <div class="loco-provider-detail-row"><span>Status</span><strong>Pending</strong></div>
               </div>
-              <p class="loco-provider-explanation">Your demo payer details were filled automatically. This only adds simulated funds to your LOCO wallet; no real funds move.</p>
+              <p class="loco-provider-explanation">Your LOCO account details were filled automatically. This only adds simulated funds to your LOCO wallet; no real funds move.</p>
               <input type="hidden" name="demo_confirm" value="yes">
               <button class="loco-provider-confirm" type="submit">Confirm simulated payment</button>
               <button class="loco-provider-cancel" type="button" id="topup-provider-cancel">Cancel and return to merchant</button>
@@ -158,13 +158,13 @@ try {
           </div>
         </section>
         <p class="loco-sandbox-label" style="margin:18px 0">No real provider is contacted, no real money is charged, and no card details are stored.</p>
-        <button type="submit" class="loco-brand-gloss-btn" style="border-radius:0">CONFIRM DEMO TOP-UP</button>
+        <button type="submit" class="loco-brand-gloss-btn" style="border-radius:0">CONFIRM TOP-UP</button>
       </form>
     </section>
     <aside class="loco-sandbox-sidebar">
       <h3>LOCO PAYMENT METHODS</h3><p>Card test data, GCash-style simulated confirmation, and PayPal-style simulated confirmation.</p>
       <p><span class="loco-pay-demo-badge">VISA</span> <span class="loco-pay-demo-badge">Mastercard</span></p>
-      <p><span class="loco-pay-demo-badge">GCash Demo</span> <span class="loco-pay-demo-badge">PayPal Demo</span></p>
+      <p><span class="loco-pay-demo-badge">GCash (Simulation)</span> <span class="loco-pay-demo-badge">PayPal (Simulation)</span></p>
       <h3 style="margin-top:25px">TRANSACTION HISTORY</h3><p>All completed simulated wallet top-ups are recorded in MySQL.</p>
       <a href="transaction_history.php" style="color:#fff">View transaction history →</a>
       <p style="margin-top:25px"><a href="products.php">← Return to LOCO Store</a></p>
@@ -201,7 +201,7 @@ try {
  cardCvv.addEventListener('input',()=>cardCvv.setCustomValidity(''));
  document.getElementById('wallet-topup-form').addEventListener('submit',function(event){
   if(sel.value!=='sandbox_card')return;
-  // Never transmit card-style entries. Only allow the two published demo numbers.
+  // Never transmit card-style entries. Only allow the two published test card numbers.
   const digits=cardNumber.value.replace(/\D/g,'');
   if(digits!=='4242424242424242' && digits!=='4000000000000002'){
    cardNumber.setCustomValidity('Use only one of the two displayed test card numbers.');
@@ -210,7 +210,7 @@ try {
   const now=new Date();
   const currentMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(cardExpiry.value) || cardExpiry.value<currentMonth){
-   cardExpiry.setCustomValidity('Choose the current month or a future month for this demo.');
+   cardExpiry.setCustomValidity('Choose the current month or a future month for this test card.');
    cardExpiry.reportValidity();event.preventDefault();return;
   }
   if(!/^\d{3,4}$/.test(cardCvv.value)){
