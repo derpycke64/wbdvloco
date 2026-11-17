@@ -242,5 +242,5 @@ $prefill=(int)($_GET['sell']??0);
     <?php endforeach; ?>
   </section>
   <?php endif; ?>
-  <p class="loco-muted" style="margin-top:18px">Game keys shown by LOCO are simulated internal license IDs, not Steam keys. Selling a game transfers its LOCO entitlement only.</p>
+  <p class="loco-muted" style="margin-top:18px">Game keys shown by LOCO are internal LOCO license IDs, not Steam keys. Selling a game transfers its LOCO entitlement only.</p>
 </main></body></html>
