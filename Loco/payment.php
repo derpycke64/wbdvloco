@@ -203,7 +203,7 @@ try {
               <span id="provider-brand" class="loco-provider-wordmark">GCash</span>
               <small>LOCO checkout</small>
             </div>
-            <div class="loco-payment-warning"><strong>Payment simulation</strong><span>No real PayPal or GCash account, OTP, wallet, or funds are used.</span></div>
+            <div class="loco-payment-warning"><strong>Test payment</strong><span>No real PayPal or GCash account, OTP, wallet, or funds are used.</span></div>
             <div class="receipt-content">
               <div class="loco-provider-amount">
                 <span>Amount due</span>
