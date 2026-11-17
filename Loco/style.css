@@ -1451,6 +1451,23 @@ body.loco-store-body{background:#300000!important;color:var(--loco-text);padding
 .loco-sandbox-label{font-size:.76rem;color:#cbd5e1}
 .loco-sandbox-choice{border:1px solid #4c525f;background:#263d50;color:#fff;padding:10px;font:inherit;width:100%;max-width:310px}
 .loco-sandbox-field{width:100%;box-sizing:border-box;padding:10px;background:#080d13;color:#fff;border:1px solid #555e70;border-radius:0}
+
+/* Keep the native month picker and its calendar icon visible on dark checkout forms. */
+.loco-sandbox-field[type="month"]{
+  color-scheme:dark;
+  background:#203447;
+  color:#fff;
+  border-color:#9eafc0;
+  min-height:42px;
+}
+.loco-sandbox-field[type="month"]::-webkit-calendar-picker-indicator{
+  opacity:1;
+  cursor:pointer;
+}
+.loco-sandbox-field[type="month"]:focus-visible{
+  outline:2px solid #9dc6f4;
+  outline-offset:2px;
+}
 .loco-sandbox-sidebar{background:#121820;border:1px solid #36414e;padding:14px;align-self:start}
 .loco-sandbox-sidebar h3{font-size:.85rem;letter-spacing:.5px;color:#fff;margin:0 0 10px}
 .loco-sandbox-sidebar p{font-size:.76rem;color:#c5d0db;line-height:1.5}
