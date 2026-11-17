@@ -111,8 +111,8 @@ try {
         <select id="topup-method" name="payment_method" class="loco-sandbox-choice">
           <option value="sandbox_visa" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_visa'?'selected':''?>>Visa (Test)</option>
           <option value="sandbox_mastercard" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_mastercard'?'selected':''?>>Mastercard (Test)</option>
-          <option value="sandbox_gcash" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_gcash'?'selected':''?>>GCash (Test)</option>
-          <option value="sandbox_paypal" <?=($_POST['payment_method']??'sandbox_card')==='sandbox_paypal'?'selected':''?>>PayPal (Test)</option>
+          <option value="sandbox_gcash" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_gcash'?'selected':''?>>GCash (Test)</option>
+          <option value="sandbox_paypal" <?=($_POST['payment_method']??'sandbox_visa')==='sandbox_paypal'?'selected':''?>>PayPal (Test)</option>
         </select>
         <div id="topup-card" style="margin:17px 0" class="loco-sandbox-well">
           <h2 class="loco-sandbox-heading" id="topup-card-title">VISA CARD INFORMATION</h2>
