@@ -8,10 +8,10 @@ try{
     $q->execute([':id'=>$id]);$stored=$q->fetchColumn();
 }catch(PDOException $e){error_log('Avatar lookup failed: '.$e->getMessage());http_response_code(500);exit('Avatar unavailable.');}
 if(!is_string($stored) || !preg_match('~^uploads/avatars/([a-f0-9]{32})\\.(jpg|png|webp)$~D',$stored,$m)){
-    header('Location: images/default_avatar.png',true,302);exit;
+    header('Location: images/default_avatar.jpg',true,302);exit;
 }
 $file=__DIR__.'/uploads/avatars/'.$m[1].'.'.$m[2];
-if(!is_file($file) || !is_readable($file)){header('Location: images/default_avatar.png',true,302);exit;}
+if(!is_file($file) || !is_readable($file)){header('Location: images/default_avatar.jpg',true,302);exit;}
 $types=['jpg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp'];
 header('Content-Type: '.$types[$m[2]]);
 header('X-Content-Type-Options: nosniff');
